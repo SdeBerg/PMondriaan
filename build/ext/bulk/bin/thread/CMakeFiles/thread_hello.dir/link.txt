@@ -1,0 +1,1 @@
+/usr/bin/c++.exe   -Wl,--enable-auto-import CMakeFiles/thread_hello.dir/__/__/__/examples/hello.cpp.o  -o thread_hello.exe -Wl,--out-implib,libthread_hello.dll.a -Wl,--major-image-version,0,--minor-image-version,0 -lpthread 

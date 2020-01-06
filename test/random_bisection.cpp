@@ -1,0 +1,31 @@
+#include <iostream>
+#include <fstream>
+
+#ifdef BACKEND_MPI
+#include <bulk/backends/mpi/mpi.hpp>
+using environment = bulk::mpi::environment;
+#else
+#include <bulk/backends/thread/thread.hpp>
+using environment = bulk::thread::environment;
+#endif
+
+#include <readhypergraph.hpp>
+#include <bisect.hpp>
+
+int main() {
+	
+	environment env;
+	
+    env.spawn(env.available_processors(), [](bulk::world& world) {
+        //int s = world.rank();
+        //int p = world.active_processors();
+
+		auto hypergraph = pmondriaan::read_hypergraph("../test/data/matrices/cage3/cage3.mtx", world);
+		
+		auto weights = bisect_random(world, hypergraph, 0.05);
+		world.log("weight part 0: %d, weight part 1: %d", weights[0], weights[1]);
+		
+    });
+
+    return 0;
+}

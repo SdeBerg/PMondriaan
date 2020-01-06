@@ -1,0 +1,2 @@
+/usr/bin/ar.exe qc libPMondriaan.a  CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.o
+/usr/bin/ranlib.exe libPMondriaan.a

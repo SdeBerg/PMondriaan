@@ -1,0 +1,17 @@
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/CMakeFiles/rebuild_cache.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/CMakeFiles/edit_cache.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/bin/mpi/CMakeFiles/rebuild_cache.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/bin/mpi/CMakeFiles/edit_cache.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/bin/thread/CMakeFiles/thread_densematrix_sharedmemory.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/bin/thread/CMakeFiles/thread_hello_thread.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/bin/thread/CMakeFiles/thread_benchmark.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/bin/thread/CMakeFiles/thread_psc.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/bin/thread/CMakeFiles/edit_cache.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/bin/thread/CMakeFiles/thread_partitioning.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/bin/thread/CMakeFiles/thread.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/bin/thread/CMakeFiles/thread_messaging.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/bin/thread/CMakeFiles/thread_hello.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/bin/thread/CMakeFiles/thread_word_count.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/bin/thread/CMakeFiles/rebuild_cache.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/bin/thread/CMakeFiles/thread_communication.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/bin/thread/CMakeFiles/thread_dot_product.dir

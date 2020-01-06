@@ -1,0 +1,1 @@
+/usr/bin/c++.exe   -Wl,--enable-auto-import CMakeFiles/partition.dir/test/partition.cpp.o  -o partition.exe -Wl,--out-implib,libpartition.dll.a -Wl,--major-image-version,0,--minor-image-version,0 libPMondriaan.a -lpthread 
