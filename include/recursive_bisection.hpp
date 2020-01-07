@@ -25,12 +25,17 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 	int label_low = 0;
 	int label_high = k - 1;
 	
-	auto weight_parts = std::vector<long>(2);
+	bulk::var<long> weight_part_0(world);
+	bulk::var<long> weight_part_1(world);
 	// while we need to give more than one label, we bisect the hypergraph
 	while (label_high - label_low > 1) {
 		if (mode == "random") {
-			weight_parts = bisect_random(world, H, epsilon, label_high - label_low + 1);
+			auto weight_parts = bisect_random(world, H, epsilon, label_high - label_low + 1, label_low, label_high);
+			weight_part_0 = weight_parts[0];
+			weight_part_1 = weight_parts[1];
 		}
+		
+		world.sync();
 		
 		//TODO: reorder the hypergraph
 		label_high = 

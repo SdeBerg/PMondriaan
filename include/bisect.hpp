@@ -10,15 +10,14 @@ namespace pmondriaan {
 /**
  * Randomly bisects a hypergraph under the balance constraint and returns the weights of the two parts.
  */
-std::vector<long> bisect_random(bulk::world& world, pmondriaan::hypergraph& H, double epsilon, int k = 2) {
+std::vector<long> bisect_random(bulk::world& world, pmondriaan::hypergraph& H, double epsilon, int k = 2, int label_0 = 0, int label_1 = 1) {
 	
-	double max_weight = (double)H.total_weight() * math.ceil((double)k/2.0) / (double)k;
-	long max_weight_part = avg_weight * (1.0 + epsilon);
+	auto max_weight_parts = std::vector<long>(2);
+	max_weight_parts[0] = ((double)H.total_weight() * math.ceil((double)k/2.0) / (double)k) * (1.0 + epsilon);
+	max_weight_parts[1] = ((double)H.total_weight() * (double)(k/2) / (double)k) * (1.0 + epsilon);
 	
-	if (max_weight_part * 2.0 < avg_weight * 2.0) {
-		max_weight_part++;
-	}
-	world.log("%d", max_weight_part);
+	world.log("max weight 0: %d", max_weight_parts[0]);
+	world.log("max weight 1: %d", max_weight_parts[1]);
 
 	auto weight_parts = std::vector<long>(2);
 	
@@ -26,11 +25,16 @@ std::vector<long> bisect_random(bulk::world& world, pmondriaan::hypergraph& H, d
 		int random = rand();
 		int part = random%2;
 		// if the max weight is exceeded, we add the vertex to the other part
-		if (weight_parts[part] + H(i).weight() > max_weight_part) {
+		if (weight_parts[part] + H(i).weight() > max_weight_parts[part]) {
 			part = (part + 1)%2;
 		}
 		
-		H(i).set_part(part);
+		if (part == 0) {
+			H(i).set_part(label_0);
+		}
+		else {
+			H(i).set_part(label_1);
+		}
 		weight_parts[part] += H(i).weight();
 	}
 	
