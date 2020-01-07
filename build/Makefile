@@ -56,17 +56,6 @@ CMAKE_BINARY_DIR = /cygdrive/c/users/sarit/Documents/MasterThesis/programming/bu
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target edit_cache
-edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
-	/usr/bin/ccmake.exe -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : edit_cache
-
-# Special rule for the target edit_cache
-edit_cache/fast: edit_cache
-
-.PHONY : edit_cache/fast
-
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
@@ -77,6 +66,17 @@ rebuild_cache:
 rebuild_cache/fast: rebuild_cache
 
 .PHONY : rebuild_cache/fast
+
+# Special rule for the target edit_cache
+edit_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
+	/usr/bin/ccmake.exe -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : edit_cache
+
+# Special rule for the target edit_cache
+edit_cache/fast: edit_cache
+
+.PHONY : edit_cache/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -124,19 +124,6 @@ random_bisection/fast:
 .PHONY : random_bisection/fast
 
 #=============================================================================
-# Target rules for targets named parallel_hypergraph
-
-# Build rule for target.
-parallel_hypergraph: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 parallel_hypergraph
-.PHONY : parallel_hypergraph
-
-# fast build rule for target.
-parallel_hypergraph/fast:
-	$(MAKE) -f CMakeFiles/parallel_hypergraph.dir/build.make CMakeFiles/parallel_hypergraph.dir/build
-.PHONY : parallel_hypergraph/fast
-
-#=============================================================================
 # Target rules for targets named PMondriaan
 
 # Build rule for target.
@@ -150,17 +137,30 @@ PMondriaan/fast:
 .PHONY : PMondriaan/fast
 
 #=============================================================================
-# Target rules for targets named hypergraph
+# Target rules for targets named parallel_hypergraph
 
 # Build rule for target.
-hypergraph: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 hypergraph
-.PHONY : hypergraph
+parallel_hypergraph: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 parallel_hypergraph
+.PHONY : parallel_hypergraph
 
 # fast build rule for target.
-hypergraph/fast:
-	$(MAKE) -f CMakeFiles/hypergraph.dir/build.make CMakeFiles/hypergraph.dir/build
-.PHONY : hypergraph/fast
+parallel_hypergraph/fast:
+	$(MAKE) -f CMakeFiles/parallel_hypergraph.dir/build.make CMakeFiles/parallel_hypergraph.dir/build
+.PHONY : parallel_hypergraph/fast
+
+#=============================================================================
+# Target rules for targets named test_hypergraph
+
+# Build rule for target.
+test_hypergraph: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_hypergraph
+.PHONY : test_hypergraph
+
+# fast build rule for target.
+test_hypergraph/fast:
+	$(MAKE) -f CMakeFiles/test_hypergraph.dir/build.make CMakeFiles/test_hypergraph.dir/build
+.PHONY : test_hypergraph/fast
 
 #=============================================================================
 # Target rules for targets named thread_densematrix_sharedmemory
@@ -318,6 +318,60 @@ thread_dot_product/fast:
 	$(MAKE) -f ext/bulk/Bulk-develop/bin/thread/CMakeFiles/thread_dot_product.dir/build.make ext/bulk/Bulk-develop/bin/thread/CMakeFiles/thread_dot_product.dir/build
 .PHONY : thread_dot_product/fast
 
+src/bisect.o: src/bisect.cpp.o
+
+.PHONY : src/bisect.o
+
+# target to build an object file
+src/bisect.cpp.o:
+	$(MAKE) -f CMakeFiles/PMondriaan.dir/build.make CMakeFiles/PMondriaan.dir/src/bisect.cpp.o
+.PHONY : src/bisect.cpp.o
+
+src/bisect.i: src/bisect.cpp.i
+
+.PHONY : src/bisect.i
+
+# target to preprocess a source file
+src/bisect.cpp.i:
+	$(MAKE) -f CMakeFiles/PMondriaan.dir/build.make CMakeFiles/PMondriaan.dir/src/bisect.cpp.i
+.PHONY : src/bisect.cpp.i
+
+src/bisect.s: src/bisect.cpp.s
+
+.PHONY : src/bisect.s
+
+# target to generate assembly for a file
+src/bisect.cpp.s:
+	$(MAKE) -f CMakeFiles/PMondriaan.dir/build.make CMakeFiles/PMondriaan.dir/src/bisect.cpp.s
+.PHONY : src/bisect.cpp.s
+
+src/hypergraph.o: src/hypergraph.cpp.o
+
+.PHONY : src/hypergraph.o
+
+# target to build an object file
+src/hypergraph.cpp.o:
+	$(MAKE) -f CMakeFiles/PMondriaan.dir/build.make CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.o
+.PHONY : src/hypergraph.cpp.o
+
+src/hypergraph.i: src/hypergraph.cpp.i
+
+.PHONY : src/hypergraph.i
+
+# target to preprocess a source file
+src/hypergraph.cpp.i:
+	$(MAKE) -f CMakeFiles/PMondriaan.dir/build.make CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.i
+.PHONY : src/hypergraph.cpp.i
+
+src/hypergraph.s: src/hypergraph.cpp.s
+
+.PHONY : src/hypergraph.s
+
+# target to generate assembly for a file
+src/hypergraph.cpp.s:
+	$(MAKE) -f CMakeFiles/PMondriaan.dir/build.make CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.s
+.PHONY : src/hypergraph.cpp.s
+
 src/readhypergraph.o: src/readhypergraph.cpp.o
 
 .PHONY : src/readhypergraph.o
@@ -344,33 +398,6 @@ src/readhypergraph.s: src/readhypergraph.cpp.s
 src/readhypergraph.cpp.s:
 	$(MAKE) -f CMakeFiles/PMondriaan.dir/build.make CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.s
 .PHONY : src/readhypergraph.cpp.s
-
-test/hypergraph.o: test/hypergraph.cpp.o
-
-.PHONY : test/hypergraph.o
-
-# target to build an object file
-test/hypergraph.cpp.o:
-	$(MAKE) -f CMakeFiles/hypergraph.dir/build.make CMakeFiles/hypergraph.dir/test/hypergraph.cpp.o
-.PHONY : test/hypergraph.cpp.o
-
-test/hypergraph.i: test/hypergraph.cpp.i
-
-.PHONY : test/hypergraph.i
-
-# target to preprocess a source file
-test/hypergraph.cpp.i:
-	$(MAKE) -f CMakeFiles/hypergraph.dir/build.make CMakeFiles/hypergraph.dir/test/hypergraph.cpp.i
-.PHONY : test/hypergraph.cpp.i
-
-test/hypergraph.s: test/hypergraph.cpp.s
-
-.PHONY : test/hypergraph.s
-
-# target to generate assembly for a file
-test/hypergraph.cpp.s:
-	$(MAKE) -f CMakeFiles/hypergraph.dir/build.make CMakeFiles/hypergraph.dir/test/hypergraph.cpp.s
-.PHONY : test/hypergraph.cpp.s
 
 test/parallel_hypergraph.o: test/parallel_hypergraph.cpp.o
 
@@ -426,18 +453,45 @@ test/random_bisection.cpp.s:
 	$(MAKE) -f CMakeFiles/random_bisection.dir/build.make CMakeFiles/random_bisection.dir/test/random_bisection.cpp.s
 .PHONY : test/random_bisection.cpp.s
 
+test/test_hypergraph.o: test/test_hypergraph.cpp.o
+
+.PHONY : test/test_hypergraph.o
+
+# target to build an object file
+test/test_hypergraph.cpp.o:
+	$(MAKE) -f CMakeFiles/test_hypergraph.dir/build.make CMakeFiles/test_hypergraph.dir/test/test_hypergraph.cpp.o
+.PHONY : test/test_hypergraph.cpp.o
+
+test/test_hypergraph.i: test/test_hypergraph.cpp.i
+
+.PHONY : test/test_hypergraph.i
+
+# target to preprocess a source file
+test/test_hypergraph.cpp.i:
+	$(MAKE) -f CMakeFiles/test_hypergraph.dir/build.make CMakeFiles/test_hypergraph.dir/test/test_hypergraph.cpp.i
+.PHONY : test/test_hypergraph.cpp.i
+
+test/test_hypergraph.s: test/test_hypergraph.cpp.s
+
+.PHONY : test/test_hypergraph.s
+
+# target to generate assembly for a file
+test/test_hypergraph.cpp.s:
+	$(MAKE) -f CMakeFiles/test_hypergraph.dir/build.make CMakeFiles/test_hypergraph.dir/test/test_hypergraph.cpp.s
+.PHONY : test/test_hypergraph.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
+	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... random_bisection"
-	@echo "... parallel_hypergraph"
 	@echo "... PMondriaan"
-	@echo "... rebuild_cache"
-	@echo "... hypergraph"
+	@echo "... parallel_hypergraph"
+	@echo "... test_hypergraph"
 	@echo "... thread_densematrix_sharedmemory"
 	@echo "... thread_hello_thread"
 	@echo "... thread_unittests"
@@ -450,18 +504,24 @@ help:
 	@echo "... thread_word_count"
 	@echo "... thread_communication"
 	@echo "... thread_dot_product"
+	@echo "... src/bisect.o"
+	@echo "... src/bisect.i"
+	@echo "... src/bisect.s"
+	@echo "... src/hypergraph.o"
+	@echo "... src/hypergraph.i"
+	@echo "... src/hypergraph.s"
 	@echo "... src/readhypergraph.o"
 	@echo "... src/readhypergraph.i"
 	@echo "... src/readhypergraph.s"
-	@echo "... test/hypergraph.o"
-	@echo "... test/hypergraph.i"
-	@echo "... test/hypergraph.s"
 	@echo "... test/parallel_hypergraph.o"
 	@echo "... test/parallel_hypergraph.i"
 	@echo "... test/parallel_hypergraph.s"
 	@echo "... test/random_bisection.o"
 	@echo "... test/random_bisection.i"
 	@echo "... test/random_bisection.s"
+	@echo "... test/test_hypergraph.o"
+	@echo "... test/test_hypergraph.i"
+	@echo "... test/test_hypergraph.s"
 .PHONY : help
 
 

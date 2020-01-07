@@ -279,8 +279,6 @@ string
 ../include/hypergraph.hpp
 vector
 -
-math.h
--
 bulk/bulk.hpp
 -
 bulk/backends/mpi/mpi.hpp

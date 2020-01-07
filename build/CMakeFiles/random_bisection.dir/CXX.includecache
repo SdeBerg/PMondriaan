@@ -277,8 +277,6 @@ string
 -
 
 ../include/bisect.hpp
-stdlib.h
--
 vector
 -
 hypergraph.hpp
@@ -286,8 +284,6 @@ hypergraph.hpp
 
 ../include/hypergraph.hpp
 vector
--
-math.h
 -
 bulk/bulk.hpp
 -

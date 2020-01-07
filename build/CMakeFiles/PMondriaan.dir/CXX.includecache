@@ -279,8 +279,6 @@ string
 ../include/hypergraph.hpp
 vector
 -
-math.h
--
 bulk/bulk.hpp
 -
 bulk/backends/mpi/mpi.hpp
@@ -288,31 +286,9 @@ bulk/backends/mpi/mpi.hpp
 bulk/backends/thread/thread.hpp
 -
 
-../include/readhypergraph.hpp
-cstring
--
-bulk/bulk.hpp
--
-bulk/backends/mpi/mpi.hpp
--
-bulk/backends/thread/thread.hpp
--
-hypergraph.hpp
--
-
-/cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/readhypergraph.cpp
-readhypergraph.hpp
-/cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/readhypergraph.hpp
-fstream
--
-iostream
--
-string
--
+/cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph.cpp
 vector
 -
-cstring
--
 bulk/bulk.hpp
 -
 bulk/backends/mpi/mpi.hpp
@@ -320,5 +296,5 @@ bulk/backends/mpi/mpi.hpp
 bulk/backends/thread/thread.hpp
 -
 hypergraph.hpp
--
+/cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph.hpp
 
