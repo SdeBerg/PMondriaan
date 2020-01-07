@@ -13,8 +13,8 @@ namespace pmondriaan {
 std::vector<long> bisect_random(bulk::world& world, pmondriaan::hypergraph& H, double epsilon, int k = 2, int label_0 = 0, int label_1 = 1) {
 	
 	auto max_weight_parts = std::vector<long>(2);
-	max_weight_parts[0] = ((double)H.total_weight() * math.ceil((double)k/2.0) / (double)k) * (1.0 + epsilon);
-	max_weight_parts[1] = ((double)H.total_weight() * (double)(k/2) / (double)k) * (1.0 + epsilon);
+	max_weight_parts[0] = ceil(((double)H.total_weight() * ceil((double)k/2.0) / (double)k) * (1.0 + epsilon));
+	max_weight_parts[1] = ceil(((double)H.total_weight() * (double)(k/2) / (double)k) * (1.0 + epsilon));
 	
 	world.log("max weight 0: %d", max_weight_parts[0]);
 	world.log("max weight 1: %d", max_weight_parts[1]);

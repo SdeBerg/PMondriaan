@@ -6,5 +6,5 @@ CXX_FLAGS =   -Wfatal-errors -Werror -Wall -O3 -std=gnu++1z
 
 CXX_DEFINES = -DBACKEND_THREAD
 
-CXX_INCLUDES = -I/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/include -I/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/backends/thread/build/.. -I/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/ext/bulk/include 
+CXX_INCLUDES = -I/cygdrive/c/users/sarit/Documents/MasterThesis/programming/include -I/cygdrive/c/users/sarit/Documents/MasterThesis/programming/ext/bulk/Bulk-develop/backends/thread/build/.. -I/cygdrive/c/users/sarit/Documents/MasterThesis/programming/ext/bulk/Bulk-develop/include 
 

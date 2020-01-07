@@ -17,8 +17,10 @@ int main() {
 	environment env;
 	
     env.spawn(env.available_processors(), [](bulk::world& world) {
-        //int s = world.rank();
+        int s = world.rank();
         //int p = world.active_processors();
+		
+		srand(s + 1);
 
 		auto hypergraph = pmondriaan::read_hypergraph("../test/data/matrices/cage3/cage3.mtx", world);
 		

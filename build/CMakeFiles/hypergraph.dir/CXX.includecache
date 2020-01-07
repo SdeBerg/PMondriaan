@@ -6,17 +6,17 @@
 
 #IncludeRegexTransform: 
 
-../ext/bulk/include/bulk/algorithm.hpp
+../ext/bulk/Bulk-develop/include/bulk/algorithm.hpp
 vector
 -
 coarray.hpp
-../ext/bulk/include/bulk/coarray.hpp
+../ext/bulk/Bulk-develop/include/bulk/coarray.hpp
 communication.hpp
-../ext/bulk/include/bulk/communication.hpp
+../ext/bulk/Bulk-develop/include/bulk/communication.hpp
 world.hpp
-../ext/bulk/include/bulk/world.hpp
+../ext/bulk/Bulk-develop/include/bulk/world.hpp
 
-../ext/bulk/include/bulk/array.hpp
+../ext/bulk/Bulk-develop/include/bulk/array.hpp
 cstddef
 -
 iostream
@@ -26,13 +26,19 @@ memory
 type_traits
 -
 future.hpp
-../ext/bulk/include/bulk/future.hpp
+../ext/bulk/Bulk-develop/include/bulk/future.hpp
 variable.hpp
-../ext/bulk/include/bulk/variable.hpp
+../ext/bulk/Bulk-develop/include/bulk/variable.hpp
 
-../ext/bulk/include/bulk/backends/thread/environment.hpp
+../ext/bulk/Bulk-develop/include/bulk/backends/mpi/mpi.hpp
+environment.hpp
+../ext/bulk/Bulk-develop/include/bulk/backends/mpi/environment.hpp
 world.hpp
-../ext/bulk/include/bulk/backends/thread/world.hpp
+../ext/bulk/Bulk-develop/include/bulk/backends/mpi/world.hpp
+
+../ext/bulk/Bulk-develop/include/bulk/backends/thread/environment.hpp
+world.hpp
+../ext/bulk/Bulk-develop/include/bulk/backends/thread/world.hpp
 algorithm
 -
 bulk/environment.hpp
@@ -44,11 +50,11 @@ thread
 vector
 -
 
-../ext/bulk/include/bulk/backends/thread/thread.hpp
+../ext/bulk/Bulk-develop/include/bulk/backends/thread/thread.hpp
 environment.hpp
-../ext/bulk/include/bulk/backends/thread/environment.hpp
+../ext/bulk/Bulk-develop/include/bulk/backends/thread/environment.hpp
 
-../ext/bulk/include/bulk/bulk.hpp
+../ext/bulk/Bulk-develop/include/bulk/bulk.hpp
 bulk/algorithm.hpp
 -
 bulk/array.hpp
@@ -86,7 +92,7 @@ bulk/util/report.hpp
 bulk/util/timer.hpp
 -
 
-../ext/bulk/include/bulk/coarray.hpp
+../ext/bulk/Bulk-develop/include/bulk/coarray.hpp
 cassert
 -
 cstddef
@@ -94,33 +100,35 @@ cstddef
 vector
 -
 array.hpp
-../ext/bulk/include/bulk/array.hpp
+../ext/bulk/Bulk-develop/include/bulk/array.hpp
 communication.hpp
-../ext/bulk/include/bulk/communication.hpp
+../ext/bulk/Bulk-develop/include/bulk/communication.hpp
+util/span.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/span.hpp
 
-../ext/bulk/include/bulk/communication.hpp
+../ext/bulk/Bulk-develop/include/bulk/communication.hpp
 future.hpp
-../ext/bulk/include/bulk/future.hpp
+../ext/bulk/Bulk-develop/include/bulk/future.hpp
 variable.hpp
-../ext/bulk/include/bulk/variable.hpp
+../ext/bulk/Bulk-develop/include/bulk/variable.hpp
 world.hpp
-../ext/bulk/include/bulk/world.hpp
+../ext/bulk/Bulk-develop/include/bulk/world.hpp
 
-../ext/bulk/include/bulk/environment.hpp
+../ext/bulk/Bulk-develop/include/bulk/environment.hpp
 functional
 -
 
-../ext/bulk/include/bulk/future.hpp
+../ext/bulk/Bulk-develop/include/bulk/future.hpp
 util/meta_helpers.hpp
-../ext/bulk/include/bulk/util/meta_helpers.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/meta_helpers.hpp
 util/serialize.hpp
-../ext/bulk/include/bulk/util/serialize.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/serialize.hpp
 bulk/world.hpp
 -
 memory
 -
 
-../ext/bulk/include/bulk/messages.hpp
+../ext/bulk/Bulk-develop/include/bulk/messages.hpp
 cstddef
 -
 cstring
@@ -132,31 +140,31 @@ tuple
 vector
 -
 util/meta_helpers.hpp
-../ext/bulk/include/bulk/util/meta_helpers.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/meta_helpers.hpp
 util/serialize.hpp
-../ext/bulk/include/bulk/util/serialize.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/serialize.hpp
 world.hpp
-../ext/bulk/include/bulk/world.hpp
+../ext/bulk/Bulk-develop/include/bulk/world.hpp
 
-../ext/bulk/include/bulk/partitioned_array.hpp
+../ext/bulk/Bulk-develop/include/bulk/partitioned_array.hpp
 array
 -
 coarray.hpp
-../ext/bulk/include/bulk/coarray.hpp
+../ext/bulk/Bulk-develop/include/bulk/coarray.hpp
 future.hpp
-../ext/bulk/include/bulk/future.hpp
+../ext/bulk/Bulk-develop/include/bulk/future.hpp
 partitionings/partitioning.hpp
-../ext/bulk/include/bulk/partitionings/partitioning.hpp
+../ext/bulk/Bulk-develop/include/bulk/partitionings/partitioning.hpp
 
-../ext/bulk/include/bulk/partitionings/block.hpp
+../ext/bulk/Bulk-develop/include/bulk/partitionings/block.hpp
 partitioning.hpp
-../ext/bulk/include/bulk/partitionings/partitioning.hpp
+../ext/bulk/Bulk-develop/include/bulk/partitionings/partitioning.hpp
 
-../ext/bulk/include/bulk/partitionings/cyclic.hpp
+../ext/bulk/Bulk-develop/include/bulk/partitionings/cyclic.hpp
 partitioning.hpp
-../ext/bulk/include/bulk/partitionings/partitioning.hpp
+../ext/bulk/Bulk-develop/include/bulk/partitionings/partitioning.hpp
 
-../ext/bulk/include/bulk/partitionings/partitioning.hpp
+../ext/bulk/Bulk-develop/include/bulk/partitionings/partitioning.hpp
 array
 -
 functional
@@ -168,17 +176,17 @@ numeric
 vector
 -
 ../util/binary_tree.hpp
-../ext/bulk/include/bulk/util/binary_tree.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/binary_tree.hpp
 ../util/indices.hpp
-../ext/bulk/include/bulk/util/indices.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/indices.hpp
 
-../ext/bulk/include/bulk/partitionings/tree.hpp
+../ext/bulk/Bulk-develop/include/bulk/partitionings/tree.hpp
 partitioning.hpp
-../ext/bulk/include/bulk/partitionings/partitioning.hpp
+../ext/bulk/Bulk-develop/include/bulk/partitionings/partitioning.hpp
 
-../ext/bulk/include/bulk/util/binary_tree.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/binary_tree.hpp
 
-../ext/bulk/include/bulk/util/fit.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/fit.hpp
 cassert
 -
 optional
@@ -186,11 +194,11 @@ optional
 vector
 -
 
-../ext/bulk/include/bulk/util/indices.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/indices.hpp
 array
 -
 
-../ext/bulk/include/bulk/util/meta_helpers.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/meta_helpers.hpp
 type_traits
 -
 utility
@@ -198,7 +206,7 @@ utility
 vector
 -
 
-../ext/bulk/include/bulk/util/report.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/report.hpp
 iomanip
 -
 iostream
@@ -212,7 +220,7 @@ string
 vector
 -
 
-../ext/bulk/include/bulk/util/serialize.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/serialize.hpp
 cstring
 -
 memory
@@ -220,30 +228,50 @@ memory
 type_traits
 -
 
-../ext/bulk/include/bulk/util/timer.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/span.hpp
+cstddef
+-
+
+../ext/bulk/Bulk-develop/include/bulk/util/timer.hpp
 chrono
 -
 
-../ext/bulk/include/bulk/variable.hpp
+../ext/bulk/Bulk-develop/include/bulk/variable.hpp
 memory
 -
 future.hpp
-../ext/bulk/include/bulk/future.hpp
+../ext/bulk/Bulk-develop/include/bulk/future.hpp
 util/meta_helpers.hpp
-../ext/bulk/include/bulk/util/meta_helpers.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/meta_helpers.hpp
 util/serialize.hpp
-../ext/bulk/include/bulk/util/serialize.hpp
+../ext/bulk/Bulk-develop/include/bulk/util/serialize.hpp
 world.hpp
-../ext/bulk/include/bulk/world.hpp
+../ext/bulk/Bulk-develop/include/bulk/world.hpp
 
-../ext/bulk/include/bulk/world.hpp
+../ext/bulk/Bulk-develop/include/bulk/world.hpp
 cstddef
 -
 string
 -
 
+../include/bisect.hpp
+stdlib.h
+-
+vector
+-
+hypergraph.hpp
+../include/hypergraph.hpp
+
 ../include/hypergraph.hpp
 vector
+-
+math.h
+-
+bulk/bulk.hpp
+-
+bulk/backends/mpi/mpi.hpp
+-
+bulk/backends/thread/thread.hpp
 -
 
 ../include/pmondriaan.hpp
@@ -251,24 +279,26 @@ bulk/bulk.hpp
 -
 bulk/backends/thread/thread.hpp
 -
+hypergraph.hpp
+-
 readhypergraph.hpp
+-
+bisect.hpp
 -
 
 ../include/readhypergraph.hpp
-fstream
--
-iostream
--
-string
--
-vector
--
 cstring
+-
+bulk/bulk.hpp
+-
+bulk/backends/mpi/mpi.hpp
+-
+bulk/backends/thread/thread.hpp
 -
 hypergraph.hpp
 -
 
-/cygdrive/c/users/sarit/Documents/MasterThesis/Programming/test/hypergraph.cpp
+/cygdrive/c/users/sarit/Documents/MasterThesis/programming/test/hypergraph.cpp
 iostream
 -
 fstream

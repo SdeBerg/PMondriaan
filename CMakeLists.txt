@@ -27,8 +27,8 @@ set(TEST_DIR "test")
 set(
 	TEST_SOURCES
 	#"test_bulk.cpp"
-	#"hypergraph.cpp"
-	#"parallel_hypergraph.cpp"
+	"hypergraph.cpp"
+	"parallel_hypergraph.cpp"
 	#"partition.cpp"
 	"random_bisection.cpp"
 )

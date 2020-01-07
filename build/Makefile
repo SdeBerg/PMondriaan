@@ -56,17 +56,6 @@ CMAKE_BINARY_DIR = /cygdrive/c/users/sarit/Documents/MasterThesis/programming/bu
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target rebuild_cache
-rebuild_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/usr/bin/cmake.exe -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : rebuild_cache
-
-# Special rule for the target rebuild_cache
-rebuild_cache/fast: rebuild_cache
-
-.PHONY : rebuild_cache/fast
-
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
@@ -77,6 +66,17 @@ edit_cache:
 edit_cache/fast: edit_cache
 
 .PHONY : edit_cache/fast
+
+# Special rule for the target rebuild_cache
+rebuild_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
+	/usr/bin/cmake.exe -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : rebuild_cache
+
+# Special rule for the target rebuild_cache
+rebuild_cache/fast: rebuild_cache
+
+.PHONY : rebuild_cache/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -124,6 +124,19 @@ random_bisection/fast:
 .PHONY : random_bisection/fast
 
 #=============================================================================
+# Target rules for targets named parallel_hypergraph
+
+# Build rule for target.
+parallel_hypergraph: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 parallel_hypergraph
+.PHONY : parallel_hypergraph
+
+# fast build rule for target.
+parallel_hypergraph/fast:
+	$(MAKE) -f CMakeFiles/parallel_hypergraph.dir/build.make CMakeFiles/parallel_hypergraph.dir/build
+.PHONY : parallel_hypergraph/fast
+
+#=============================================================================
 # Target rules for targets named PMondriaan
 
 # Build rule for target.
@@ -137,17 +150,17 @@ PMondriaan/fast:
 .PHONY : PMondriaan/fast
 
 #=============================================================================
-# Target rules for targets named parallel_hypergraph
+# Target rules for targets named hypergraph
 
 # Build rule for target.
-parallel_hypergraph: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 parallel_hypergraph
-.PHONY : parallel_hypergraph
+hypergraph: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 hypergraph
+.PHONY : hypergraph
 
 # fast build rule for target.
-parallel_hypergraph/fast:
-	$(MAKE) -f CMakeFiles/parallel_hypergraph.dir/build.make CMakeFiles/parallel_hypergraph.dir/build
-.PHONY : parallel_hypergraph/fast
+hypergraph/fast:
+	$(MAKE) -f CMakeFiles/hypergraph.dir/build.make CMakeFiles/hypergraph.dir/build
+.PHONY : hypergraph/fast
 
 #=============================================================================
 # Target rules for targets named thread_densematrix_sharedmemory
@@ -332,6 +345,33 @@ src/readhypergraph.cpp.s:
 	$(MAKE) -f CMakeFiles/PMondriaan.dir/build.make CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.s
 .PHONY : src/readhypergraph.cpp.s
 
+test/hypergraph.o: test/hypergraph.cpp.o
+
+.PHONY : test/hypergraph.o
+
+# target to build an object file
+test/hypergraph.cpp.o:
+	$(MAKE) -f CMakeFiles/hypergraph.dir/build.make CMakeFiles/hypergraph.dir/test/hypergraph.cpp.o
+.PHONY : test/hypergraph.cpp.o
+
+test/hypergraph.i: test/hypergraph.cpp.i
+
+.PHONY : test/hypergraph.i
+
+# target to preprocess a source file
+test/hypergraph.cpp.i:
+	$(MAKE) -f CMakeFiles/hypergraph.dir/build.make CMakeFiles/hypergraph.dir/test/hypergraph.cpp.i
+.PHONY : test/hypergraph.cpp.i
+
+test/hypergraph.s: test/hypergraph.cpp.s
+
+.PHONY : test/hypergraph.s
+
+# target to generate assembly for a file
+test/hypergraph.cpp.s:
+	$(MAKE) -f CMakeFiles/hypergraph.dir/build.make CMakeFiles/hypergraph.dir/test/hypergraph.cpp.s
+.PHONY : test/hypergraph.cpp.s
+
 test/parallel_hypergraph.o: test/parallel_hypergraph.cpp.o
 
 .PHONY : test/parallel_hypergraph.o
@@ -392,11 +432,12 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... random_bisection"
-	@echo "... PMondriaan"
 	@echo "... parallel_hypergraph"
+	@echo "... PMondriaan"
+	@echo "... rebuild_cache"
+	@echo "... hypergraph"
 	@echo "... thread_densematrix_sharedmemory"
 	@echo "... thread_hello_thread"
 	@echo "... thread_unittests"
@@ -412,6 +453,9 @@ help:
 	@echo "... src/readhypergraph.o"
 	@echo "... src/readhypergraph.i"
 	@echo "... src/readhypergraph.s"
+	@echo "... test/hypergraph.o"
+	@echo "... test/hypergraph.i"
+	@echo "... test/hypergraph.s"
 	@echo "... test/parallel_hypergraph.o"
 	@echo "... test/parallel_hypergraph.i"
 	@echo "... test/parallel_hypergraph.s"

@@ -5,14 +5,15 @@
 
 int main () {	
 	
-	auto hypergraph = pmondriaan::read_hypergraph("../test/data/matrices/Trec5/Trec5.mtx", 3, 8);
-	for (auto v : hypergraph) {
-		std::cout << "id: " << v.id() << " weight: " << v.weight() << "\n nets: ";
+	auto hypergraph = pmondriaan::read_hypergraph("../test/data/matrices/cage3/cage3.mtx");
+	
+	for (auto i = 0u; i < hypergraph.size(); i++) {
+		auto v = hypergraph(i);
+		std::cout << "id: " << v.id() << " weight: " << v.weight() << "\n";
 		auto nets = v.nets();
 		for (auto n : nets) {
-			std::cout << n;
+			std::cout << n << "\n";
 		}
-		std::cout << "\n\n";
 	}
 	
 	return 0;
