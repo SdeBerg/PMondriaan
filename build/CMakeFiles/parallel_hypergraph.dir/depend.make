@@ -29,7 +29,7 @@ CMakeFiles/parallel_hypergraph.dir/test/parallel_hypergraph.cpp.o: ../ext/bulk/B
 CMakeFiles/parallel_hypergraph.dir/test/parallel_hypergraph.cpp.o: ../ext/bulk/Bulk-develop/include/bulk/util/timer.hpp
 CMakeFiles/parallel_hypergraph.dir/test/parallel_hypergraph.cpp.o: ../ext/bulk/Bulk-develop/include/bulk/variable.hpp
 CMakeFiles/parallel_hypergraph.dir/test/parallel_hypergraph.cpp.o: ../ext/bulk/Bulk-develop/include/bulk/world.hpp
-CMakeFiles/parallel_hypergraph.dir/test/parallel_hypergraph.cpp.o: ../include/hypergraph.hpp
-CMakeFiles/parallel_hypergraph.dir/test/parallel_hypergraph.cpp.o: ../include/readhypergraph.hpp
+CMakeFiles/parallel_hypergraph.dir/test/parallel_hypergraph.cpp.o: ../include/hypergraph/hypergraph.hpp
+CMakeFiles/parallel_hypergraph.dir/test/parallel_hypergraph.cpp.o: ../include/hypergraph/readhypergraph.hpp
 CMakeFiles/parallel_hypergraph.dir/test/parallel_hypergraph.cpp.o: ../test/parallel_hypergraph.cpp
 

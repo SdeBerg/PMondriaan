@@ -31,6 +31,6 @@ CMakeFiles/random_bisection.dir/test/random_bisection.cpp.o
  ../ext/bulk/Bulk-develop/include/bulk/variable.hpp
  ../ext/bulk/Bulk-develop/include/bulk/world.hpp
  ../include/bisect.hpp
- ../include/hypergraph.hpp
- ../include/readhypergraph.hpp
+ ../include/hypergraph/hypergraph.hpp
+ ../include/hypergraph/readhypergraph.hpp
  /cygdrive/c/users/sarit/Documents/MasterThesis/programming/test/random_bisection.cpp

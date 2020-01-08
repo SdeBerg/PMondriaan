@@ -30,6 +30,6 @@ CMakeFiles/parallel_hypergraph.dir/test/parallel_hypergraph.cpp.o
  ../ext/bulk/Bulk-develop/include/bulk/util/timer.hpp
  ../ext/bulk/Bulk-develop/include/bulk/variable.hpp
  ../ext/bulk/Bulk-develop/include/bulk/world.hpp
- ../include/hypergraph.hpp
- ../include/readhypergraph.hpp
+ ../include/hypergraph/hypergraph.hpp
+ ../include/hypergraph/readhypergraph.hpp
  /cygdrive/c/users/sarit/Documents/MasterThesis/programming/test/parallel_hypergraph.cpp

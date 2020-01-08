@@ -30,7 +30,7 @@ CMakeFiles/random_bisection.dir/test/random_bisection.cpp.o: ../ext/bulk/Bulk-de
 CMakeFiles/random_bisection.dir/test/random_bisection.cpp.o: ../ext/bulk/Bulk-develop/include/bulk/variable.hpp
 CMakeFiles/random_bisection.dir/test/random_bisection.cpp.o: ../ext/bulk/Bulk-develop/include/bulk/world.hpp
 CMakeFiles/random_bisection.dir/test/random_bisection.cpp.o: ../include/bisect.hpp
-CMakeFiles/random_bisection.dir/test/random_bisection.cpp.o: ../include/hypergraph.hpp
-CMakeFiles/random_bisection.dir/test/random_bisection.cpp.o: ../include/readhypergraph.hpp
+CMakeFiles/random_bisection.dir/test/random_bisection.cpp.o: ../include/hypergraph/hypergraph.hpp
+CMakeFiles/random_bisection.dir/test/random_bisection.cpp.o: ../include/hypergraph/readhypergraph.hpp
 CMakeFiles/random_bisection.dir/test/random_bisection.cpp.o: ../test/random_bisection.cpp
 

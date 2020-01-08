@@ -57,18 +57,18 @@ include CMakeFiles/PMondriaan.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/PMondriaan.dir/flags.make
 
-CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.o: CMakeFiles/PMondriaan.dir/flags.make
-CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.o: ../src/readhypergraph.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/cygdrive/c/users/sarit/Documents/MasterThesis/programming/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.o"
-	/usr/bin/c++.exe  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.o -c /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/readhypergraph.cpp
+CMakeFiles/PMondriaan.dir/src/hypergraph/readhypergraph.cpp.o: CMakeFiles/PMondriaan.dir/flags.make
+CMakeFiles/PMondriaan.dir/src/hypergraph/readhypergraph.cpp.o: ../src/hypergraph/readhypergraph.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/cygdrive/c/users/sarit/Documents/MasterThesis/programming/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/PMondriaan.dir/src/hypergraph/readhypergraph.cpp.o"
+	/usr/bin/c++.exe  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/PMondriaan.dir/src/hypergraph/readhypergraph.cpp.o -c /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph/readhypergraph.cpp
 
-CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.i"
-	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/readhypergraph.cpp > CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.i
+CMakeFiles/PMondriaan.dir/src/hypergraph/readhypergraph.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/PMondriaan.dir/src/hypergraph/readhypergraph.cpp.i"
+	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph/readhypergraph.cpp > CMakeFiles/PMondriaan.dir/src/hypergraph/readhypergraph.cpp.i
 
-CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.s"
-	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/readhypergraph.cpp -o CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.s
+CMakeFiles/PMondriaan.dir/src/hypergraph/readhypergraph.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PMondriaan.dir/src/hypergraph/readhypergraph.cpp.s"
+	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph/readhypergraph.cpp -o CMakeFiles/PMondriaan.dir/src/hypergraph/readhypergraph.cpp.s
 
 CMakeFiles/PMondriaan.dir/src/bisect.cpp.o: CMakeFiles/PMondriaan.dir/flags.make
 CMakeFiles/PMondriaan.dir/src/bisect.cpp.o: ../src/bisect.cpp
@@ -83,31 +83,31 @@ CMakeFiles/PMondriaan.dir/src/bisect.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PMondriaan.dir/src/bisect.cpp.s"
 	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/bisect.cpp -o CMakeFiles/PMondriaan.dir/src/bisect.cpp.s
 
-CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.o: CMakeFiles/PMondriaan.dir/flags.make
-CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.o: ../src/hypergraph.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/cygdrive/c/users/sarit/Documents/MasterThesis/programming/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.o"
-	/usr/bin/c++.exe  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.o -c /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph.cpp
+CMakeFiles/PMondriaan.dir/src/hypergraph/hypergraph.cpp.o: CMakeFiles/PMondriaan.dir/flags.make
+CMakeFiles/PMondriaan.dir/src/hypergraph/hypergraph.cpp.o: ../src/hypergraph/hypergraph.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/cygdrive/c/users/sarit/Documents/MasterThesis/programming/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/PMondriaan.dir/src/hypergraph/hypergraph.cpp.o"
+	/usr/bin/c++.exe  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/PMondriaan.dir/src/hypergraph/hypergraph.cpp.o -c /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph/hypergraph.cpp
 
-CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.i"
-	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph.cpp > CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.i
+CMakeFiles/PMondriaan.dir/src/hypergraph/hypergraph.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/PMondriaan.dir/src/hypergraph/hypergraph.cpp.i"
+	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph/hypergraph.cpp > CMakeFiles/PMondriaan.dir/src/hypergraph/hypergraph.cpp.i
 
-CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.s"
-	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph.cpp -o CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.s
+CMakeFiles/PMondriaan.dir/src/hypergraph/hypergraph.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PMondriaan.dir/src/hypergraph/hypergraph.cpp.s"
+	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph/hypergraph.cpp -o CMakeFiles/PMondriaan.dir/src/hypergraph/hypergraph.cpp.s
 
 # Object files for target PMondriaan
 PMondriaan_OBJECTS = \
-"CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.o" \
+"CMakeFiles/PMondriaan.dir/src/hypergraph/readhypergraph.cpp.o" \
 "CMakeFiles/PMondriaan.dir/src/bisect.cpp.o" \
-"CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.o"
+"CMakeFiles/PMondriaan.dir/src/hypergraph/hypergraph.cpp.o"
 
 # External object files for target PMondriaan
 PMondriaan_EXTERNAL_OBJECTS =
 
-libPMondriaan.a: CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.o
+libPMondriaan.a: CMakeFiles/PMondriaan.dir/src/hypergraph/readhypergraph.cpp.o
 libPMondriaan.a: CMakeFiles/PMondriaan.dir/src/bisect.cpp.o
-libPMondriaan.a: CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.o
+libPMondriaan.a: CMakeFiles/PMondriaan.dir/src/hypergraph/hypergraph.cpp.o
 libPMondriaan.a: CMakeFiles/PMondriaan.dir/build.make
 libPMondriaan.a: CMakeFiles/PMondriaan.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/cygdrive/c/users/sarit/Documents/MasterThesis/programming/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX static library libPMondriaan.a"

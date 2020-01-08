@@ -7,7 +7,9 @@ add_subdirectory("ext/bulk/Bulk-develop")
 # target_include_directories(bulk INTERFACE "ext/bulk/Bulk-develop")
 
 set(LIB_SOURCES
-  "src/readhypergraph.cpp" 
+  "src/hypergraph/readhypergraph.cpp" 
+  "src/bisect.cpp"
+  "src/hypergraph/hypergraph.cpp"
 )
 add_library(PMondriaan ${LIB_SOURCES})
 
@@ -27,10 +29,11 @@ set(TEST_DIR "test")
 set(
 	TEST_SOURCES
 	#"test_bulk.cpp"
-	"hypergraph.cpp"
-	"parallel_hypergraph.cpp"
+	#"test_hypergraph.cpp"
+	#"parallel_hypergraph.cpp"
 	#"partition.cpp"
-	"random_bisection.cpp"
+	#"random_bisection.cpp"
+	"imbalance.cpp"
 )
 
 foreach(source_file ${TEST_SOURCES})

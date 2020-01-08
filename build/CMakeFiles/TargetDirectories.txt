@@ -1,9 +1,7 @@
 /cygdrive/c/users/sarit/Documents/MasterThesis/programming/build/CMakeFiles/rebuild_cache.dir
 /cygdrive/c/users/sarit/Documents/MasterThesis/programming/build/CMakeFiles/edit_cache.dir
-/cygdrive/c/users/sarit/Documents/MasterThesis/programming/build/CMakeFiles/random_bisection.dir
 /cygdrive/c/users/sarit/Documents/MasterThesis/programming/build/CMakeFiles/PMondriaan.dir
-/cygdrive/c/users/sarit/Documents/MasterThesis/programming/build/CMakeFiles/parallel_hypergraph.dir
-/cygdrive/c/users/sarit/Documents/MasterThesis/programming/build/CMakeFiles/test_hypergraph.dir
+/cygdrive/c/users/sarit/Documents/MasterThesis/programming/build/CMakeFiles/imbalance.dir
 /cygdrive/c/users/sarit/Documents/MasterThesis/programming/build/ext/bulk/Bulk-develop/CMakeFiles/rebuild_cache.dir
 /cygdrive/c/users/sarit/Documents/MasterThesis/programming/build/ext/bulk/Bulk-develop/CMakeFiles/edit_cache.dir
 /cygdrive/c/users/sarit/Documents/MasterThesis/programming/build/ext/bulk/Bulk-develop/bin/mpi/CMakeFiles/rebuild_cache.dir

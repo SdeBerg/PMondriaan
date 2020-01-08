@@ -276,7 +276,7 @@ cstddef
 string
 -
 
-../include/hypergraph.hpp
+../include/hypergraph/hypergraph.hpp
 vector
 -
 bulk/bulk.hpp
@@ -286,7 +286,7 @@ bulk/backends/mpi/mpi.hpp
 bulk/backends/thread/thread.hpp
 -
 
-/cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph.cpp
+/cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph/hypergraph.cpp
 vector
 -
 bulk/bulk.hpp
@@ -295,6 +295,6 @@ bulk/backends/mpi/mpi.hpp
 -
 bulk/backends/thread/thread.hpp
 -
-hypergraph.hpp
-/cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph.hpp
+hypergraph/hypergraph.hpp
+/cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph/hypergraph/hypergraph.hpp
 

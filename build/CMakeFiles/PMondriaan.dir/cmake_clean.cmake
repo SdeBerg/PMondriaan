@@ -1,7 +1,7 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.o"
+  "CMakeFiles/PMondriaan.dir/src/hypergraph/readhypergraph.cpp.o"
   "CMakeFiles/PMondriaan.dir/src/bisect.cpp.o"
-  "CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.o"
+  "CMakeFiles/PMondriaan.dir/src/hypergraph/hypergraph.cpp.o"
   "libPMondriaan.pdb"
   "libPMondriaan.a"
 )

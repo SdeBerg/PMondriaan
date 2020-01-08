@@ -9,7 +9,7 @@
 #include <bulk/backends/thread/thread.hpp>
 #endif
 
-#include <hypergraph.hpp>
+#include <hypergraph/hypergraph.hpp>
 
 namespace pmondriaan {
 

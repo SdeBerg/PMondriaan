@@ -9,7 +9,7 @@ using environment = bulk::mpi::environment;
 using environment = bulk::thread::environment;
 #endif
 
-#include <readhypergraph.hpp>
+#include <hypergraph/readhypergraph.hpp>
 
 int main() {
 	

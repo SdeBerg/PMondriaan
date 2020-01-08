@@ -31,9 +31,9 @@ CMakeFiles/PMondriaan.dir/src/bisect.cpp.o
  ../ext/bulk/Bulk-develop/include/bulk/variable.hpp
  ../ext/bulk/Bulk-develop/include/bulk/world.hpp
  ../include/bisect.hpp
- ../include/hypergraph.hpp
+ ../include/hypergraph/hypergraph.hpp
  /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/bisect.cpp
-CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.o
+CMakeFiles/PMondriaan.dir/src/hypergraph/hypergraph.cpp.o
  ../ext/bulk/Bulk-develop/include/bulk/algorithm.hpp
  ../ext/bulk/Bulk-develop/include/bulk/array.hpp
  ../ext/bulk/Bulk-develop/include/bulk/backends/mpi/environment.hpp
@@ -62,9 +62,9 @@ CMakeFiles/PMondriaan.dir/src/hypergraph.cpp.o
  ../ext/bulk/Bulk-develop/include/bulk/util/timer.hpp
  ../ext/bulk/Bulk-develop/include/bulk/variable.hpp
  ../ext/bulk/Bulk-develop/include/bulk/world.hpp
- ../include/hypergraph.hpp
- /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph.cpp
-CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.o
+ ../include/hypergraph/hypergraph.hpp
+ /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph/hypergraph.cpp
+CMakeFiles/PMondriaan.dir/src/hypergraph/readhypergraph.cpp.o
  ../ext/bulk/Bulk-develop/include/bulk/algorithm.hpp
  ../ext/bulk/Bulk-develop/include/bulk/array.hpp
  ../ext/bulk/Bulk-develop/include/bulk/backends/mpi/environment.hpp
@@ -93,6 +93,6 @@ CMakeFiles/PMondriaan.dir/src/readhypergraph.cpp.o
  ../ext/bulk/Bulk-develop/include/bulk/util/timer.hpp
  ../ext/bulk/Bulk-develop/include/bulk/variable.hpp
  ../ext/bulk/Bulk-develop/include/bulk/world.hpp
- ../include/hypergraph.hpp
- ../include/readhypergraph.hpp
- /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/readhypergraph.cpp
+ ../include/hypergraph/hypergraph.hpp
+ ../include/hypergraph/readhypergraph.hpp
+ /cygdrive/c/users/sarit/Documents/MasterThesis/programming/src/hypergraph/readhypergraph.cpp

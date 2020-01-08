@@ -1,4 +1,4 @@
-#include "readhypergraph.hpp"
+#include "hypergraph/readhypergraph.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -13,7 +13,7 @@
 #include <bulk/backends/thread/thread.hpp>
 #endif
 
-#include <hypergraph.hpp>
+#include <hypergraph/hypergraph.hpp>
 
 namespace pmondriaan {
 
@@ -61,7 +61,7 @@ pmondriaan::hypergraph read_hypergraph(std::string filename) {
 		nets.push_back(pmondriaan::net(i, vertex_list[i]));
 	}
 	
-	return pmondriaan::hypergraph(vertices, nets);;
+	return pmondriaan::hypergraph(V, vertices, nets);;
 }
 
 /**
@@ -152,7 +152,7 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, bulk::world& world)
 		nets.push_back(pmondriaan::net(i, vertex_list[i]));
 	}
 	
-	return pmondriaan::hypergraph(vertices, nets);
+	return pmondriaan::hypergraph(V, vertices, nets);
 }
 
 } // namespace pmondriaan
