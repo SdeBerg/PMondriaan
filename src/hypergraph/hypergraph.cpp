@@ -50,6 +50,7 @@ double compute_load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k
 	auto weight_parts = H.weight_all_parts(k);
 	
 	for (int i = 0; i < k; i++) {
+		weight_parts_var[i] = bulk::var<long>(world);
 		weight_parts_var[i] = weight_parts[i];
 	}
 	
