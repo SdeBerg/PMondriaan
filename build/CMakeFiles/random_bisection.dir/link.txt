@@ -1,1 +1,0 @@
-/usr/bin/c++.exe   -Wl,--enable-auto-import CMakeFiles/random_bisection.dir/test/random_bisection.cpp.o  -o random_bisection.exe -Wl,--out-implib,librandom_bisection.dll.a -Wl,--major-image-version,0,--minor-image-version,0 libPMondriaan.a -lpthread 

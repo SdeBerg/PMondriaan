@@ -1,1 +1,0 @@
-/usr/bin/c++.exe   -Wl,--enable-auto-import CMakeFiles/thread_communication.dir/__/__/__/examples/communication.cpp.o  -o thread_communication.exe -Wl,--out-implib,libthread_communication.dll.a -Wl,--major-image-version,0,--minor-image-version,0 -lpthread 

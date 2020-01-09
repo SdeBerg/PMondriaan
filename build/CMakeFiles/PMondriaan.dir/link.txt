@@ -1,2 +1,0 @@
-/usr/bin/ar.exe qc libPMondriaan.a  CMakeFiles/PMondriaan.dir/src/hypergraph/readhypergraph.cpp.o CMakeFiles/PMondriaan.dir/src/bisect.cpp.o CMakeFiles/PMondriaan.dir/src/hypergraph/hypergraph.cpp.o
-/usr/bin/ranlib.exe libPMondriaan.a
