@@ -8,6 +8,7 @@
 #endif
 
 #include "hypergraph/hypergraph.hpp"
+#include <algorithm.hpp>
 
 namespace pmondriaan {
 
@@ -46,11 +47,10 @@ double compute_load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k
 	bulk::var<long> local_weight(world);
 	local_weight = H.total_weight();
 	
-	auto weight_parts_var = std::vector<bulk::var<long>>(k);
+	auto weight_parts_var = bulk::coarray<long>(world, k);
 	auto weight_parts = H.weight_all_parts(k);
 	
 	for (int i = 0; i < k; i++) {
-		weight_parts_var[i] = bulk::var<long>(world);
 		weight_parts_var[i] = weight_parts[i];
 	}
 	
@@ -58,16 +58,14 @@ double compute_load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k
 	
 	long global_weight = bulk::foldl(local_weight, [](auto& lhs, auto rhs) { lhs += rhs; });
 	
-	//we compute the global part with largest weight
-	long max_weight_part = bulk::foldl(weight_parts[0], [](auto& lhs, auto rhs) { lhs += rhs; });
-	for (int i = 1; i < k; i++) {
-		long w = bulk::foldl(weight_parts[i], [](auto& lhs, auto rhs) { lhs += rhs; } );
-		if (w > max_weight_part) {
-			max_weight_part = w;
-		}
-	}
+	//compute the global part weights
+	weight_parts = pmondriaan::foldl(weight_parts_var, [](auto& lhs, auto rhs) { lhs += rhs; });
 	
-	double eps = (double)max_weight_part / (double)global_weight * (double)k - 1.0;
+	//we compute the global part with largest weight
+	long max_weight_part = *std::max_element(weight_parts.begin(), weight_parts.end());
+	
+	double eps = ((double)(max_weight_part*k) / (double)global_weight) - 1.0;
+	
 	return eps;
 }
 	

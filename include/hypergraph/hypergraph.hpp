@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <iostream>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
@@ -69,7 +70,7 @@ class hypergraph {
 		//computes the weights of all parts upto kbhit
 		std::vector<long> weight_all_parts(int k);
 			
-		pmondriaan::vertex operator()(int index) { return vertices_[index]; }
+		pmondriaan::vertex& operator()(int index) { return vertices_[index]; }
 		
 		auto size() const { return vertices_.size(); }
 		auto global_size() const {return global_size_; }

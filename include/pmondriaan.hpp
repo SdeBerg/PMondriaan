@@ -3,3 +3,4 @@
 #include <hypergraph/hypergraph.hpp>
 #include <hypergraph/readhypergraph.hpp>
 #include <bisect.hpp>
+#include <algorithm.hpp>
