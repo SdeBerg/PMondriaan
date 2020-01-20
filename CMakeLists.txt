@@ -10,6 +10,7 @@ set(LIB_SOURCES
   "src/hypergraph/readhypergraph.cpp" 
   "src/bisect.cpp"
   "src/hypergraph/hypergraph.cpp"
+  "src/recursive_bisection.cpp"
 )
 add_library(PMondriaan ${LIB_SOURCES})
 
@@ -33,7 +34,8 @@ set(
 	#"parallel_hypergraph.cpp"
 	#"partition.cpp"
 	#"random_bisection.cpp"
-	"imbalance.cpp"
+	#"imbalance.cpp"
+	"redistribute.cpp"
 )
 
 foreach(source_file ${TEST_SOURCES})

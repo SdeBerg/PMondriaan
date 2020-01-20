@@ -20,10 +20,11 @@ class vertex {
 		vertex(int id, std::vector<int> nets, long weight = 1) : id_(id), nets_(nets), weight_(weight) {}
 		
 		int id() { return id_; }
-		std::vector<int> nets() { return nets_; }
+		std::vector<int>& nets() { return nets_; }
 		long weight() { return weight_; }
 		int part() { return part_; }
 		
+		void set_id(int value) {id_ = value; }
 		void set_part(int value) { part_ = value; }
 		
 	private:
@@ -70,6 +71,7 @@ class hypergraph {
 		//computes the weights of all parts upto kbhit
 		std::vector<long> weight_all_parts(int k);
 			
+		std::vector<pmondriaan::vertex>& vertices() { return vertices_; }
 		pmondriaan::vertex& operator()(int index) { return vertices_[index]; }
 		
 		auto size() const { return vertices_.size(); }

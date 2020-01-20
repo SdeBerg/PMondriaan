@@ -30,7 +30,7 @@ namespace bulk {
  * \param world the world in which the communication takes place
  *
  * \returns a coarray containing on each processor the argument given by each
- * other processor.
+ * other processor.z
  */
 template <typename T>
 bulk::coarray<T> gather_all(bulk::world& world, T value) {

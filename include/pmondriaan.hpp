@@ -4,3 +4,4 @@
 #include <hypergraph/readhypergraph.hpp>
 #include <bisect.hpp>
 #include <algorithm.hpp>
+#include <recursive_bisection.hpp>
