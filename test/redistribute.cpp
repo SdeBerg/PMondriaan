@@ -7,7 +7,7 @@ int main() {
         //int s = world.rank();
         //int p = world.active_processors();
 		
-        auto H = pmondriaan::read_hypergraph("../test/data/matrices/west0381/west0381.mtx", world);
+		auto H = pmondriaan::read_hypergraph("../test/data/matrices/west0381/west0381.mtx", world);
 
 		recursive_bisect(world, H, "random", 3, 0.05, 0.05);
 		/*for (auto& v : H.vertices()) {

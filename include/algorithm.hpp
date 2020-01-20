@@ -25,12 +25,7 @@ bulk::coarray<T> gather_all(bulk::world& world, std::vector<int> range, T value)
         xs(t)[world.rank() - range[0]] = value;
     }
 	
-	world.log("0S: %d, value %d, range %d %d", world.rank(), value, range[1], range[0]);
-	
     world.sync();
-	
-	//world.log("s: %d, xs: %d %d %d %d", world.rank(), xs[0], xs[1], xs[2], xs[3]);
-	world.log("1S: %d, value %d", world.rank(), value);
 	
     return xs;
 }

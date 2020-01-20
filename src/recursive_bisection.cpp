@@ -106,7 +106,7 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 			* procs_mypart[0] + p_high ... procs_mypart[1] - 1.
 			*/
 			end = redistribute_hypergraph(world, H, procs_mypart, my_part, label_low, label_high, new_max_local_weight, weight_part_0.value(), weight_part_1.value(), p_low);
-			world.log("end %d", end);
+
 			procs_mypart[0] += my_part * p_high;
 			procs_mypart[1] -= (1 - my_part) * p_low;
 			
@@ -130,34 +130,34 @@ int redistribute_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, std::
 					int label_high, long max_local_weight, long weight_part_0, long weight_part_1, int p_low) {
 	
 	long surplus_0 = (1 - my_part) * max_local_weight - weight_part_0;
-	
+	long surplus_1 = my_part * max_local_weight - weight_part_1;
 	auto all_surplus_0 = pmondriaan::gather_all(world, procs_mypart, surplus_0);
+	auto all_surplus_1 = pmondriaan::gather_all(world, procs_mypart, surplus_1);
+	
+	//we move all vertices to of part 1 to a separate vector, be be put at the back of the vertices later
+	//if part 1 is finished
+	auto vertices_1 = std::vector<pmondriaan::vertex>();
 
 	//queue for all received vertices
 	auto q = bulk::queue<int, long, int, int[]>(world);
 	reduce_surplus(world, H, procs_mypart, label_low, all_surplus_0, q);
 	
-	//we move all vertices to of part 1 to a separate vector, be be put at the back of the vertices later
-	//if part 1 is finished
-	auto vertices_1 = std::vector<pmondriaan::vertex>();
-	if(p_low > 0) { 
-		long surplus_1 = my_part * max_local_weight - weight_part_1;
-		auto all_surplus_1 = pmondriaan::gather_all(world, procs_mypart, surplus_1);
+	if(p_low > 0) {
 		reduce_surplus(world, H, procs_mypart, label_high, all_surplus_1, q);
 	}
 	else {
-		auto i = H.size();
+		long i = H.size();
 		while(i >= 0) {
-			if (H(i).part() == label_low) {
+			if (H(i).part() == label_high) {
 				std::move(H.vertices().begin() + i, H.vertices().begin() + i + 1, std::back_inserter(vertices_1));
 				H.vertices().erase(H.vertices().begin() + i);
 			}
-			else {i--;}
+			i--;
 		}
 	}
 	
 	world.sync();
-	
+
 	for (auto& [index, weight, part, nets] : q) {
 		H.vertices().push_back({index, nets, weight});
 		H.vertices().back().set_part(part);
@@ -208,7 +208,7 @@ int reduce_surplus(bulk::world& world, pmondriaan::hypergraph& H, std::vector<in
 					index++;
 				}
 				total_sent += H(index).weight();
-				q(t).send(H(index).id(), H(index).weight(), H(index).part(), H(index).nets());
+				q(t + procs_mypart[0]).send(H(index).id(), H(index).weight(), H(index).part(), H(index).nets());
 				H.vertices().erase(H.vertices().begin() + index);
 			}
 			
