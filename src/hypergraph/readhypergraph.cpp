@@ -20,7 +20,7 @@ namespace pmondriaan {
 /**
  * Creates a hypergraph from a graph in mtx format. 
  */
-pmondriaan::hypergraph read_hypergraph(std::string filename) {
+pmondriaan::hypergraph read_hypergraph(std::string filename, std::string mode_weight) {
 	
 	int E, V;
 	uint64_t L;
@@ -55,7 +55,12 @@ pmondriaan::hypergraph read_hypergraph(std::string filename) {
 	auto vertices = std::vector<pmondriaan::vertex>();
 	auto nets = std::vector<pmondriaan::net>();
 	for (int i = 0; i < V; i++) {
-		vertices.push_back(pmondriaan::vertex(i, nets_list[i]));
+		if (mode_weight == "one") {
+			vertices.push_back(pmondriaan::vertex(i, nets_list[i]));
+		}
+		if (mode_weight == "degree") {
+			vertices.push_back(pmondriaan::vertex(i, nets_list[i], nets_list[i].size()));
+		}
 	}
 	for (int i = 0; i < E; i++) {
 		nets.push_back(pmondriaan::net(i, vertex_list[i]));
@@ -67,7 +72,7 @@ pmondriaan::hypergraph read_hypergraph(std::string filename) {
 /**
  * Creates a distributed hypergraph from a graph in mtx format. 
  */
-pmondriaan::hypergraph read_hypergraph(std::string filename, bulk::world& world) {
+pmondriaan::hypergraph read_hypergraph(std::string filename, bulk::world& world, std::string mode_weight) {
 	
 	int s = world.rank();
     int p = world.active_processors();
@@ -146,7 +151,12 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, bulk::world& world)
 	auto vertices = std::vector<pmondriaan::vertex>();
 	auto nets = std::vector<pmondriaan::net>();
 	for (int i = 0; i < partitioning.local_count(s); i++) {
-		vertices.push_back(pmondriaan::vertex(partitioning.global({i}, s)[0], nets_list[i]));
+		if (mode_weight == "one") {
+			vertices.push_back(pmondriaan::vertex(partitioning.global({i}, s)[0], nets_list[i]));
+		}
+		if (mode_weight == "degree") {
+			vertices.push_back(pmondriaan::vertex(partitioning.global({i}, s)[0], nets_list[i], nets_list[i].size()));
+		}
 	}
 	for (int i = 0; i < E; i++) {
 		nets.push_back(pmondriaan::net(i, vertex_list[i]));

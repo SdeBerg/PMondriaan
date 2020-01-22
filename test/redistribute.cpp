@@ -9,7 +9,7 @@ int main() {
 		
 		auto H = pmondriaan::read_hypergraph("../test/data/matrices/west0381/west0381.mtx", world);
 
-		recursive_bisect(world, H, "random", 3, 0.05, 0.05);
+		recursive_bisect(world, H, "random", 5, 0.05, 0.05);
 		/*for (auto& v : H.vertices()) {
 			if (s == 0 || s == 1) {
 				if (v.part() == 1) {

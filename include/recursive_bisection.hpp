@@ -13,6 +13,8 @@ namespace pmondriaan {
  */
 void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string mode, int k, double epsilon, double eta);
 
+std::vector<long> compute_max_global_weight(int k_, int k_low, int k_high, long weight_mypart, long maxweight);
+
 /**
  * Redistributes the hypergraph such that processors with my_part 0 contain all vertices with label_low and
  * all with my_part 1 contain all vertices with label_high. Returns the end of part 0 if part 1 is not assigned
@@ -27,5 +29,7 @@ int redistribute_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, std::
  */								
 int reduce_surplus(bulk::world& world, pmondriaan::hypergraph& H, std::vector<int> procs_mypart, 
 				int label, bulk::coarray<long>& surplus, bulk::queue<int, long, int, int[]>& q);
+				
+void reorder_hypergraph(pmondriaan::hypergraph& H, int start, int& end, int label_low, int label_high);
 
 } // namespace pmondriaan

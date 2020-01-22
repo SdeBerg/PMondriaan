@@ -8,7 +8,7 @@
 int main () {	
 	
 	
-	auto hypergraph = pmondriaan::read_hypergraph("../test/data/matrices/cage3/cage3.mtx");
+	auto hypergraph = pmondriaan::read_hypergraph("../test/data/matrices/cage3/cage3.mtx", "degree");
 	
 	for (auto i = 0u; i < hypergraph.size(); i++) {
 		auto v = hypergraph(i);

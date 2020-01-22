@@ -30,12 +30,12 @@ set(TEST_DIR "test")
 set(
 	TEST_SOURCES
 	#"test_bulk.cpp"
-	#"test_hypergraph.cpp"
+	"test_hypergraph.cpp"
 	#"parallel_hypergraph.cpp"
 	#"partition.cpp"
 	#"random_bisection.cpp"
 	#"imbalance.cpp"
-	"redistribute.cpp"
+	#"redistribute.cpp"
 )
 
 foreach(source_file ${TEST_SOURCES})
