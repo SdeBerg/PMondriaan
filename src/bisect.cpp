@@ -4,6 +4,7 @@
 
 #include "bisect.hpp"
 #include "hypergraph/hypergraph.hpp"
+#include "multilevel_bisect/sample.hpp"
 
 namespace pmondriaan {
 
@@ -36,5 +37,24 @@ std::vector<long> bisect_random(bulk::world& world, pmondriaan::hypergraph& H, l
 	
 	return weight_parts;
 }
+
+/**
+ * Bisects a hypergraph using the multilevel framework.
+ 
+std::vector<long> bisect_multilevel(bulk::world&, pmondriaan::hypergraph& H, long max_weight_0, long max_weight_1,
+			int start, int end, int label_0 = 0, int label_1 = 1) {
+	
+	long nc = 0;
+
+	while ((HC.global_size() > coarsening_nrvertices) && (nc < coarsening_maxrounds)) {
+		//we first select s samples	
+				
+				
+				
+				
+	}
+				
+				
+}*/
 
 } // namespace pmondriaan

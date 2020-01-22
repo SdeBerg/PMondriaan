@@ -20,6 +20,15 @@ long hypergraph::total_weight() {
 	return total;
 }
 
+long hypergraph::global_weight(bulk::world& world) {
+	
+	bulk::var<long> local_weight(world);
+	local_weight = total_weight();
+	
+	long global_weight = bulk::foldl(local_weight, [](auto& lhs, auto rhs) { lhs += rhs; });
+	return global_weight;
+}
+
 //computes the sum of the weights of vertices in part
 long hypergraph::weight_part(int part) {
 	long total = 0;
@@ -44,8 +53,6 @@ std::vector<long> hypergraph::weight_all_parts(int k) {
  * Compute the global load imbalance of a hypergraph split into k parts.
  */
 double compute_load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k) {
-	bulk::var<long> local_weight(world);
-	local_weight = H.total_weight();
 	
 	auto weight_parts_var = bulk::coarray<long>(world, k);
 	auto weight_parts = H.weight_all_parts(k);
@@ -56,7 +63,7 @@ double compute_load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k
 	
 	world.sync();
 	
-	long global_weight = bulk::foldl(local_weight, [](auto& lhs, auto rhs) { lhs += rhs; });
+	long global_weight = H.global_weight(world);
 	
 	//compute the global part weights
 	weight_parts = pmondriaan::foldl(weight_parts_var, [](auto& lhs, auto rhs) { lhs += rhs; });

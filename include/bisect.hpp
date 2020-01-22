@@ -11,5 +11,11 @@ namespace pmondriaan {
  */
 std::vector<long> bisect_random(bulk::world& world, pmondriaan::hypergraph& H, long max_weight_0, long max_weight_1, 
 			int start, int end, int label_0 = 0, int label_1 = 1);
+			
+/**
+ * Bisects a hypergraph using the multilevel framework.
+ 
+std::vector<long> bisect_multilevel(bulk::world&, pmondriaan::hypergraph& H, long max_weight_0, long max_weight_1,
+			int start, int end, int label_0 = 0, int label_1 = 1);*/
 
 } // namespace pmondriaan

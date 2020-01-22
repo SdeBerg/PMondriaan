@@ -6,3 +6,4 @@
 #include <algorithm.hpp>
 #include <recursive_bisection.hpp>
 #include <work_item.hpp>
+#include <multilevel_bisect/sample.hpp>

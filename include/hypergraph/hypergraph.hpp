@@ -65,10 +65,13 @@ class hypergraph {
 		//computes the total weight of the vertices
 		long total_weight();
 		
+		//global weight of hypergraph in world
+		long global_weight(bulk::world& world);
+		
 		//computes the sum of the weights of vertices in part
 		long weight_part(int part);
 		
-		//computes the weights of all parts upto kbhit
+		//computes the weights of all parts upto k
 		std::vector<long> weight_all_parts(int k);
 			
 		std::vector<pmondriaan::vertex>& vertices() { return vertices_; }
