@@ -53,7 +53,7 @@ std::vector<long> bisect_multilevel(bulk::world& world, pmondriaan::hypergraph& 
 	//long nc = 0;
 
 	//while ((HC.global_size() > options.coarsening_nrvertices) && (nc < options.coarsening_maxrounds)) {
-		//we first select s samples	
+		//we first select ns samples	
 		//auto indices_samples = sample_random(HC, options.sample_size);
 		auto indices_samples = sample_random(H, 10);
 		auto local_samples = std::vector<std::vector<int>>(indices_samples.size());

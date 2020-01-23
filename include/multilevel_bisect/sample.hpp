@@ -7,8 +7,8 @@
 namespace pmondriaan {
 
 /**
- * Returns a vector of s randomly selected sample vertices.
+ * Returns a vector of ns randomly selected sample vertices.
  */
-std::vector<int> sample_random(pmondriaan::hypergraph& H, int s);
+std::vector<int> sample_random(pmondriaan::hypergraph& H, int ns);
 
 } // namespace pmondriaan

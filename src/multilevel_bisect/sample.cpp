@@ -8,10 +8,10 @@ namespace pmondriaan {
 /**
  * Returns a vector of s randomly selected sample vertices. This is given as a list of indices.
  */
-std::vector<int> sample_random(pmondriaan::hypergraph& H, int s) {
+std::vector<int> sample_random(pmondriaan::hypergraph& H, int ns) {
 	auto samples = std::vector<int>();
 	double size = (double)H.size();
-	double s_left = (double)s;
+	double s_left = (double)ns;
 	int current = 0;
 	
 	while(s_left > 0) {
