@@ -214,6 +214,7 @@ int redistribute_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, std::
 		long i = H.size();
 		while(i >= 0) {
 			if (H(i).part() == label_low) {
+				//H.remove_from_nets(i.id());
 				std::move(H.vertices().begin() + i, H.vertices().begin() + i + 1, std::back_inserter(vertices_0));
 				H.vertices().erase(H.vertices().begin() + i);
 			}

@@ -49,6 +49,23 @@ std::vector<long> hypergraph::weight_all_parts(int k) {
 	return total;
 }
 
+void hypergraph::add_to_nets(pmondriaan::vertex& v) {
+	for (auto net_id : v.nets()) {
+		nets_[net_id].vertices().push_back(v.id());
+	}
+}
+
+//removes id from all nets
+void hypergraph::remove_from_nets(int id) {
+	for (auto& net : nets_) {
+		auto it = std::find(net.vertices().begin(), net.vertices().end(), id);
+		if (it != net.vertices().end()) {
+			std::iter_swap(it, net.vertices().end() - 1);
+			net.vertices().erase(net.vertices().end() - 1);
+		}
+	}
+}
+
 /**
  * Compute the global load imbalance of a hypergraph split into k parts.
  */

@@ -20,6 +20,7 @@ class vertex {
 		vertex(int id, std::vector<int> nets, long weight = 1) : id_(id), nets_(nets), weight_(weight) {}
 		
 		int id() { return id_; }
+		//int local_id() { return local_id_; }
 		std::vector<int>& nets() { return nets_; }
 		long weight() { return weight_; }
 		int part() { return part_; }
@@ -29,6 +30,7 @@ class vertex {
 		
 	private:
 		int id_;
+		//int local_id_;
 		std::vector<int> nets_;
 		long weight_;
 		int part_;
@@ -42,7 +44,7 @@ class net {
 		net(int id, std::vector<int> vertices, long cost = 1) : id_(id), vertices_(vertices), cost_(cost) {}
 		
 		int id() { return id_; }
-		std::vector<int> vertices() { return vertices_; }
+		std::vector<int>& vertices() { return vertices_; }
 		long cost() { return cost_; }
 		
 		void add_vertex(int v) { vertices_.push_back(v); }
@@ -73,9 +75,15 @@ class hypergraph {
 		
 		//computes the weights of all parts upto k
 		std::vector<long> weight_all_parts(int k);
+		
+		void add_to_nets(pmondriaan::vertex& v);
+		//removes id from all nets
+		void remove_from_nets(int id);
 			
 		std::vector<pmondriaan::vertex>& vertices() { return vertices_; }
 		pmondriaan::vertex& operator()(int index) { return vertices_[index]; }
+		
+		pmondriaan::net& net(int index) { return nets_[index]; }
 		
 		auto size() const { return vertices_.size(); }
 		auto global_size() const {return global_size_; }
