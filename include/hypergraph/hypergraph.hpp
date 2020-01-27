@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <iostream>
+#include <unordered_map>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
@@ -62,7 +63,12 @@ class hypergraph {
 	
 	public:
 		hypergraph(int global_size, std::vector<pmondriaan::vertex> vertices, std::vector<pmondriaan::net> nets)
-			: global_size_(global_size), vertices_(std::move(vertices)), nets_(std::move(nets)) {}
+			: global_size_(global_size), vertices_(std::move(vertices)), nets_(std::move(nets)) {
+				global_to_local = std::unordered_map<int,int>();
+				for (auto i = 0u; i < vertices_.size(); i++) {
+					global_to_local[vertices_[i].id()] = i;
+				}
+			}
 		
 		//computes the total weight of the vertices
 		long total_weight();
@@ -92,6 +98,7 @@ class hypergraph {
 		int global_size_;
 		std::vector<pmondriaan::vertex> vertices_;
 		std::vector<pmondriaan::net> nets_;
+		std::unordered_map<int, int> global_to_local;
 };
 
 /**

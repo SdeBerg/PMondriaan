@@ -214,7 +214,6 @@ int redistribute_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, std::
 		long i = H.size();
 		while(i >= 0) {
 			if (H(i).part() == label_low) {
-				//H.remove_from_nets(i.id());
 				std::move(H.vertices().begin() + i, H.vertices().begin() + i + 1, std::back_inserter(vertices_0));
 				H.vertices().erase(H.vertices().begin() + i);
 			}
@@ -224,9 +223,10 @@ int redistribute_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, std::
 	
 	world.sync();
 
-	for (auto& [index, weight, part, nets] : q) {
-		H.vertices().push_back({index, nets, weight});
+	for (auto& [id, weight, part, nets] : q) {
+		H.vertices().push_back({id, nets, weight});
 		H.vertices().back().set_part(part);
+		H.add_to_nets(H.vertices().back());
 	}	
 	
 	if(p_low == 0) {
@@ -275,6 +275,7 @@ int reduce_surplus(bulk::world& world, pmondriaan::hypergraph& H, std::vector<in
 				}
 				total_sent += H(index).weight();
 				q(t + procs_mypart[0]).send(H(index).id(), H(index).weight(), H(index).part(), H(index).nets());
+				H.remove_from_nets(H(index).id());
 				H.vertices().erase(H.vertices().begin() + index);
 			}
 			
