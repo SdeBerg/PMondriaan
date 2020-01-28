@@ -66,6 +66,12 @@ void hypergraph::remove_from_nets(int id) {
 	}
 }
 
+void hypergraph::renumber_vertices() {
+	for (auto i = 0u; i < vertices_.size(); i++) {
+		global_to_local[vertices_[i].id()] = i;
+	}
+}
+
 /**
  * Compute the global load imbalance of a hypergraph split into k parts.
  */

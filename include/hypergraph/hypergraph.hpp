@@ -65,9 +65,7 @@ class hypergraph {
 		hypergraph(int global_size, std::vector<pmondriaan::vertex> vertices, std::vector<pmondriaan::net> nets)
 			: global_size_(global_size), vertices_(std::move(vertices)), nets_(std::move(nets)) {
 				global_to_local = std::unordered_map<int,int>();
-				for (auto i = 0u; i < vertices_.size(); i++) {
-					global_to_local[vertices_[i].id()] = i;
-				}
+				renumber_vertices();
 			}
 		
 		//computes the total weight of the vertices
@@ -85,14 +83,19 @@ class hypergraph {
 		void add_to_nets(pmondriaan::vertex& v);
 		//removes id from all nets
 		void remove_from_nets(int id);
+		
+		void renumber_vertices();
+		
+		int local_id(int global_id) {return global_to_local[global_id]; }
 			
 		std::vector<pmondriaan::vertex>& vertices() { return vertices_; }
 		pmondriaan::vertex& operator()(int index) { return vertices_[index]; }
 		
 		pmondriaan::net& net(int index) { return nets_[index]; }
 		
-		auto size() const { return vertices_.size(); }
+		auto size() { return vertices_.size(); }
 		auto global_size() const {return global_size_; }
+		auto& map() { return global_to_local; }
 
 	private:
 		int global_size_;

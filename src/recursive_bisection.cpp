@@ -52,6 +52,11 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 	
 	int k_, k_low, k_high, p_low, p_high, my_part;
 	long weight_mypart = global_weight;
+	
+	if (p == 1) {
+		jobs.push(pmondriaan::work_item(start, end, label_low, label_high, weight_mypart));
+	}
+	
 	// while we need to give more than one label and need to use more than one processor, we bisect the hypergraph in parallel
 	while (label_high - label_low > 0 && p > 1) {
 		
@@ -202,13 +207,13 @@ int redistribute_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, std::
 	//we move all vertices to of part 1 to a separate vector, be be put at the back of the vertices later
 	//if part 1 is finished
 	auto vertices_0 = std::vector<pmondriaan::vertex>();
-
+	
 	//queue for all received vertices
 	auto q = bulk::queue<int, long, int, int[]>(world);
-	reduce_surplus(world, H, procs_mypart, label_low, all_surplus_1, q);
+	reduce_surplus(world, H, procs_mypart, label_high, all_surplus_1, q);
 	
 	if(p_low > 0) {
-		reduce_surplus(world, H, procs_mypart, label_high, all_surplus_0, q);
+		reduce_surplus(world, H, procs_mypart, label_low, all_surplus_0, q);
 	}
 	else {
 		long i = H.size();
@@ -229,9 +234,13 @@ int redistribute_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, std::
 		H.add_to_nets(H.vertices().back());
 	}	
 	
+	
 	if(p_low == 0) {
 		H.vertices().insert(end(H.vertices()), begin(vertices_0), end(vertices_0));
 	}
+	
+	H.renumber_vertices();
+	
 	return H.size() - vertices_0.size();
 }
 
@@ -241,17 +250,16 @@ int redistribute_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, std::
  */		
 int reduce_surplus(bulk::world& world, pmondriaan::hypergraph& H, std::vector<int> procs_mypart, 
 				int label, bulk::coarray<long>& surplus, bulk::queue<int, long, int, int[]>& q) {
-	
+
 	int s_loc = world.rank() - procs_mypart[0];
 	int p_loc = procs_mypart[1] - procs_mypart[0];
-	
+
 	if (surplus[s_loc] >= 0) {
 		return 0;
 	}
 	
 	//index of next vertex to be sent
 	int index = 0;
-	
 	long surplus_others = 0;
 	int t = s_loc + 1;
 	while (surplus[s_loc] < 0) {
@@ -264,18 +272,23 @@ int reduce_surplus(bulk::world& world, pmondriaan::hypergraph& H, std::vector<in
 		}
 		surplus_others += surplus[t];
 		if (surplus[t] > 0 && surplus_others > 0) {
+
 			long max = std::min(surplus[t], surplus_others);
 			max = std::min(max, -1*surplus[s_loc]);
-			long total_sent = 0;
 			
+			long total_sent = 0;
 			while (total_sent < max) {
 				//search for the next vertex to be sent
 				while(H(index).part() != label) {
 					index++;
 				}
+				
 				total_sent += H(index).weight();
 				q(t + procs_mypart[0]).send(H(index).id(), H(index).weight(), H(index).part(), H(index).nets());
-				H.remove_from_nets(H(index).id());
+				
+				int id = H(index).id();
+				H.remove_from_nets(id);
+				H.map().erase(id);
 				H.vertices().erase(H.vertices().begin() + index);
 			}
 			
@@ -284,6 +297,7 @@ int reduce_surplus(bulk::world& world, pmondriaan::hypergraph& H, std::vector<in
 		}
 		t++;
 	}
+	
 	return 0;
 }
 
