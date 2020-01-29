@@ -98,6 +98,23 @@ double compute_load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k
 	
 	return eps;
 }
+
+/**
+ * Creates a new hypergraph that only contains the vertices of H with local id between start and end.
+ TODO: implement this function
+ */
+pmondriaan::hypergraph create_new_hypergraph(pmondriaan::hypergraph& H, int start, int end) {
+	
+	std::vector<pmondriaan::vertex> new_vertices(H.vertices().begin() + start, H.vertices().begin() + end);
+	auto new_nets = std::vector<pmondriaan::net>(H.nets().size());
+	for (auto& v : new_vertices) {
+		for (auto n : v.nets()) {
+			new_nets[n].push_back(v.id());
+		}
+	}
+	
+	return pmondriaan::hypergraph(end - start, new_vertices, new_nets);
+}
 	
 	
 } // namespace pmondriaan

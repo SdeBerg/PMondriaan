@@ -108,6 +108,11 @@ class hypergraph {
  * Compute the global load imbalance of a hypergraph.
  */
 double compute_load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k);
+
+/**
+ * Creates a new hypergraph that only contains the vertices of H with local id between start and end.
+ */
+pmondriaan::hypergraph create_new_hypergraph(pmondriaan::hypergraph& H, int start, int end);
 	
 	
 } // namespace pmondriaan

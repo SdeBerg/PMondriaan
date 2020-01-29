@@ -46,7 +46,7 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 		ids[t][number_samples[t]] = sample_id;
 		for (auto n_id : sample_nets) {
 			for (auto u_id : H.net(n_id).vertices()) {
-				//ip[H.local_id(u_id)][t * options.sample_size + samples[t]]++;
+				//ip[H.local_id(u_id)][t * options.sample_size() + samples[t]]++;
 				ip[H.local_id(u_id)][t * 1 + number_samples[t]]++;
 			}
 		}

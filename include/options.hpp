@@ -7,7 +7,8 @@ namespace pmondriaan {
  */
 class options {
 	public:
-
+		
+		int sample_size() {return sample_size_; }
 		
 	private:
 		int k_;
@@ -17,9 +18,7 @@ class options {
 		double eta_;
 		
 		std::string hypergraph_weigths_;
-		
 		std::string metric_;
-		
 		std::string bisection_mode_;
 		
 		int sample_size_;
