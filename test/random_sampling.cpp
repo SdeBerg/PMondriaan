@@ -18,7 +18,7 @@ int main () {
 
     env.spawn(env.available_processors(), [](bulk::world& world) {
 		srand(world.rank() + 1);
-		auto hypergraph = pmondriaan::read_hypergraph("../test/data/matrices/gemat11/gemat11.mtx", world, "degree");
+		auto hypergraph = pmondriaan::read_hypergraph("../test/data/matrices/cage3/cage3.mtx", world, "degree");
 	
 		pmondriaan::coarsen_hypergraph(world, hypergraph);
 	});

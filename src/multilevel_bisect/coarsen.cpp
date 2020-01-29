@@ -23,30 +23,37 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 	int p = world.active_processors();
 	
 	//we first select ns samples	
-	//auto indices_samples = sample_random(HC, options.sample_size);
-	auto indices_samples = sample_random(H, 10);
+	//auto indices_samples = sample_random(HC, options.sample_size());
+	auto indices_samples = sample_random(H, 1);
 	
 	//we now send the samples and the processor id to all processors
 	auto sample_queue = bulk::queue<int, int, int[]>(world);
 	for (auto i = 0u; i < indices_samples.size(); i++) {
 		for (int t = 0; t < p; t++) {
-			sample_queue(t).send(s, indices_samples[i], H(indices_samples[i]).nets());
+			sample_queue(t).send(s, H(indices_samples[i]).id(), H(indices_samples[i]).nets());
 		}
 	}
 	world.sync();
 	
-	/*auto samples = std::vector<std::vector<int[]>>(p);
-	auto ip = std::array<std::array<int, p * options.sample_size>, H.size()>();
+	auto number_samples = std::vector<int>(p, 0);
+	//auto ip = std::vector<std::vector<int>>(H.size(), std::vector<int>(p * options.sample_size(), 0));
+	auto ip = std::vector<std::vector<int>>(H.size(), std::vector<int>(p * 1, 0));
 	
-		for (const auto& [id, index, sample] : std::move(sample_queue)) {
-			world.log("t: %d, index: %d, sample[0]: %d", id, index, sample[0]);
-			samples[id].push_back(sample);
-			for (auto n : sample) {
-				for (auto u : H.net(n).vertices()) {
-					ip[H.global_id(u.id())][nr_sample]++;
-				}
+	//we store the ids of the received samples
+	auto ids = std::vector<std::vector<int>>(p, std::vector<int>(options.sample_size(), 0));
+	
+	for (auto& [t, sample_id, sample_nets] : std::move(sample_queue)) {
+		ids[t][number_samples[t]] = sample_id;
+		for (auto n_id : sample_nets) {
+			for (auto u_id : H.net(n_id).vertices()) {
+				//ip[H.local_id(u_id)][t * options.sample_size + samples[t]]++;
+				ip[H.local_id(u_id)][t * 1 + number_samples[t]]++;
 			}
-		}*/
+		}
+		number_samples[t]++;
+	}
+	
+	
 	
 
 	return H;

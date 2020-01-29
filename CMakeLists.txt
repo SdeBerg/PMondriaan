@@ -38,8 +38,8 @@ set(
 	#"random_bisection.cpp"
 	#"imbalance.cpp"
 	#"redistribute.cpp"
-	#"random_sampling.cpp"
-	"renumbering.cpp"
+	"random_sampling.cpp"
+	#"renumbering.cpp"
 )
 
 foreach(source_file ${TEST_SOURCES})
