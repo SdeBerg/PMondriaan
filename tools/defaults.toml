@@ -1,0 +1,11 @@
+# The default settings for PMondriaan
+
+k = 2
+eps = 0.03
+eta = 0.03
+weights = "degree"
+bisect = "random"
+metric = "lambda1"
+
+sample_size = 200
+max_cluster_size = 20

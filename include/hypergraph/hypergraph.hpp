@@ -25,6 +25,7 @@ class vertex {
 		std::vector<int>& nets() { return nets_; }
 		long weight() { return weight_; }
 		int part() { return part_; }
+		auto degree() { return nets_.size(); }
 		
 		void set_id(int value) {id_ = value; }
 		void set_part(int value) { part_ = value; }
@@ -47,6 +48,7 @@ class net {
 		int id() { return id_; }
 		std::vector<int>& vertices() { return vertices_; }
 		long cost() { return cost_; }
+		auto size() { return vertices_.size(); }
 		
 		void add_vertex(int v) { vertices_.push_back(v); }
 		
@@ -91,6 +93,7 @@ class hypergraph {
 		std::vector<pmondriaan::vertex>& vertices() { return vertices_; }
 		pmondriaan::vertex& operator()(int index) { return vertices_[index]; }
 		
+		std::vector<pmondriaan::net>& nets() { return nets_; }
 		pmondriaan::net& net(int index) { return nets_[index]; }
 		
 		auto size() { return vertices_.size(); }

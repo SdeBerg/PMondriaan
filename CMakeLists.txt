@@ -4,7 +4,8 @@ include(FeatureSummary)
 project(PMondriaan)
 
 add_subdirectory("ext/bulk/Bulk-develop")
-# target_include_directories(bulk INTERFACE "ext/bulk/Bulk-develop")
+
+add_subdirectory("ext/CLI11")
 
 set(LIB_SOURCES
   "src/hypergraph/readhypergraph.cpp" 
@@ -17,6 +18,7 @@ set(LIB_SOURCES
 add_library(PMondriaan ${LIB_SOURCES})
 
 target_link_libraries(PMondriaan PUBLIC bulk_thread)
+target_link_libraries(PMondriaan PUBLIC CLI11::CLI11)
 
 target_include_directories(PMondriaan PUBLIC "include")
 target_compile_features(PMondriaan PUBLIC cxx_std_17)
@@ -40,6 +42,7 @@ set(
 	#"redistribute.cpp"
 	"random_sampling.cpp"
 	#"renumbering.cpp"
+	"test_CLI11.cpp"
 )
 
 foreach(source_file ${TEST_SOURCES})
@@ -47,4 +50,7 @@ foreach(source_file ${TEST_SOURCES})
 	add_executable(${source_name} ${TEST_DIR}/${source_file})
 	target_link_libraries(${source_name} PMondriaan)
 endforeach(source_file)
+
+add_executable(Run_PMondriaan "tools/PMondriaan.cpp")
+target_link_libraries(Run_PMondriaan PMondriaan)
 

@@ -8,3 +8,4 @@
 #include <work_item.hpp>
 #include <multilevel_bisect/sample.hpp>
 #include <multilevel_bisect/coarsen.hpp>
+#include <options.hpp>
