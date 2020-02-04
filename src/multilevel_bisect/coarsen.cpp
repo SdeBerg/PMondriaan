@@ -18,13 +18,13 @@ namespace pmondriaan {
 /**
  * Coarses the hypergraph H and returns a hypergraph HC.
  */
-pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hypergraph& H) {
+pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::options& opts) {
 	
 	/*int s = world.rank();
 	int p = world.active_processors();
 	
 	//we first select ns samples	
-	auto indices_samples = sample_random(HC, options.sample_size());
+	auto indices_samples = sample_random(HC, opts.sample_size);
 	//auto indices_samples = sample_random(H, 1);
 	
 	//we now send the samples and the processor id to all processors
@@ -36,17 +36,17 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 	}
 	world.sync();
 	
-	int total_samples = p * options.sample_size();
+	int total_samples = p * opts.sample_size;
 	
 	auto ip = std::vector<std::vector<double>>(H.size(), std::vector<double>(total_samples, 0.0));
 	
 	auto degree_samples = std::vector<int>(total_samples);
 	
 	for (auto& [t, number_sample, sample_nets] : std::move(sample_queue)) {
-		degree_samples[t * options.sample_size() + number_sample] = sample_nets.size();
+		degree_samples[t * opts.sample_size + number_sample] = sample_nets.size();
 		for (auto n_id : sample_nets) {
 			for (auto u_id : H.net(n_id).vertices()) {
-				ip[H.local_id(u_id)][t * options.sample_size() + number_sample] += 1.0/(double)H.net(n_id).size();
+				ip[H.local_id(u_id)][t * opts.sample_size + number_sample] += 1.0/(double)H.net(n_id).size();
 				//ip[H.local_id(u_id)][t * 1 + number_sample]+= 1.0/(double)H.net(n_id).size();
 			}
 		}
@@ -54,7 +54,7 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 	
 	//we set the ip of all local samples with itself to 0, so they will not match themselves
 	for (auto i = 0u; i < indices_samples.size(); i++) {
-		ip[indices_samples[i]][s * options.sample_size() + i] = 0;
+		ip[indices_samples[i]][s * opts.sample_size + i] = 0;
 	}
 	
 	//find best sample for vertex v and add it to the list of that sample

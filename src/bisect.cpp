@@ -5,6 +5,7 @@
 #include "bisect.hpp"
 #include "hypergraph/hypergraph.hpp"
 #include "multilevel_bisect/coarsen.hpp"
+#include "options.hpp"
 
 namespace pmondriaan {
 
@@ -42,8 +43,8 @@ std::vector<long> bisect_random(bulk::world& world, pmondriaan::hypergraph& H, l
  * Bisects a hypergraph using the multilevel framework.
  * TODO: make sure the correct world is used (so not always all procs).
  */
-std::vector<long> bisect_multilevel(bulk::world& world, pmondriaan::hypergraph& H, long max_weight_0, long max_weight_1,
-			int start, int end, int label_0, int label_1) {
+std::vector<long> bisect_multilevel(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::options& opts, std::string metric, 
+			long max_weight_0, long max_weight_1, int start, int end, int label_0, int label_1) {
 	
 	auto weight_parts = std::vector<long>(2);
 	

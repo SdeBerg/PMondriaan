@@ -14,6 +14,7 @@ set(LIB_SOURCES
   "src/recursive_bisection.cpp"
   "src/multilevel_bisect/sample.cpp"
   "src/multilevel_bisect/coarsen.cpp"
+  "src/multilevel_bisect/label_propagation.cpp"
 )
 add_library(PMondriaan ${LIB_SOURCES})
 
@@ -40,9 +41,10 @@ set(
 	#"random_bisection.cpp"
 	#"imbalance.cpp"
 	#"redistribute.cpp"
-	"random_sampling.cpp"
+	#"random_sampling.cpp"
 	#"renumbering.cpp"
-	"test_CLI11.cpp"
+	#"test_CLI11.cpp"
+	"test_label_propagation.cpp"
 )
 
 foreach(source_file ${TEST_SOURCES})

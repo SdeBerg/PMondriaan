@@ -82,7 +82,9 @@ class hypergraph {
 		//computes the weights of all parts upto k
 		std::vector<long> weight_all_parts(int k);
 		
+		//adds vertex to all nets
 		void add_to_nets(pmondriaan::vertex& v);
+		
 		//removes id from all nets
 		void remove_from_nets(int id);
 		

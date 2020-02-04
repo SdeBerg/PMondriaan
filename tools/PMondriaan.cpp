@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
 		
 		auto H = pmondriaan::read_hypergraph(matrix_file, world, hypergraph_weigths);
 
-		recursive_bisect(world, H, bisection_mode, k, eps, eta);
+		recursive_bisect(world, H, bisection_mode, metric, k, eps, eta, options);
 		
 	});
 

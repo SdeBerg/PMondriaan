@@ -16,6 +16,6 @@ namespace pmondriaan {
 /**
  * Coarses the hypergraph H and returns a hypergraph HC.
  */
-pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hypergraph& H);
+pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::options& opts);
 
 } // namespace pmondriaan

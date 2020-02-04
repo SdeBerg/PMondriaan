@@ -1,5 +1,5 @@
 file="../test/data/matrices/cage3/cage3.mtx"
-p=2
+p=4
 k=4
 eps=0.03
 eta=0.03
