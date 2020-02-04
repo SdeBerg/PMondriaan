@@ -1,11 +1,10 @@
-# The default settings for PMondriaan
-
-k = 2
-eps = 0.03
-eta = 0.03
-weights = "degree"
-bisect = "random"
-metric = "lambda1"
-
-sample_size = 200
-max_cluster_size = 20
+file="../test/data/matrices/cage3/cage3.mtx"
+p=2
+k=4
+eps=0.03
+eta=0.03
+weights="degree"
+bisect="random"
+metric="lambda1"
+sample_size=200
+max_cluster_size=20
