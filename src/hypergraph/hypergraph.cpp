@@ -1,4 +1,5 @@
 #include <vector>
+#include <iostream>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
@@ -69,6 +70,16 @@ void hypergraph::remove_from_nets(int id) {
 void hypergraph::renumber_vertices() {
 	for (auto i = 0u; i < vertices_.size(); i++) {
 		global_to_local[vertices_[i].id()] = i;
+	}
+}
+
+void hypergraph::print() {
+	for (auto& v : vertices_) {
+		std::cout << v.id() << ": ";
+		for (auto n : v.nets()) {
+			std::cout << n << " ";
+		}
+		std::cout << "\n";
 	}
 }
 

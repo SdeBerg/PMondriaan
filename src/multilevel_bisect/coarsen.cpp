@@ -18,16 +18,21 @@ namespace pmondriaan {
 /**
  * Coarses the hypergraph H and returns a hypergraph HC.
  */
-pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::options& opts) {
+pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::options& opts, std::string sampling_mode) {
 	
-	/*int s = world.rank();
+	int s = world.rank();
 	int p = world.active_processors();
 	
-	//we first select ns samples	
-	auto indices_samples = sample_random(HC, opts.sample_size);
-	//auto indices_samples = sample_random(H, 1);
+	/* We first select ns samples */
+	auto indices_samples = std::vector<int>();
+	if (sampling_mode == "random") {
+		indices_samples = sample_random(H, opts.sample_size);
+	}
+	else if (sampling_mode == "label propagation") {
+		indices_samples = sample_lp(H, opts);
+	}
 	
-	//we now send the samples and the processor id to all processors
+	/* We now send the samples and the processor id to all processors */
 	auto sample_queue = bulk::queue<int, int, int[]>(world);
 	for (auto i = 0u; i < indices_samples.size(); i++) {
 		for (int t = 0; t < p; t++) {
@@ -38,8 +43,8 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 	
 	int total_samples = p * opts.sample_size;
 	
+	/* Compute the inner products of the samples and the local vertices */
 	auto ip = std::vector<std::vector<double>>(H.size(), std::vector<double>(total_samples, 0.0));
-	
 	auto degree_samples = std::vector<int>(total_samples);
 	
 	for (auto& [t, number_sample, sample_nets] : std::move(sample_queue)) {
@@ -52,21 +57,21 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 		}
 	}
 	
-	//we set the ip of all local samples with itself to 0, so they will not match themselves
+	/* We set the ip of all local samples with itself to 0, so they will not match themselves */
 	for (auto i = 0u; i < indices_samples.size(); i++) {
 		ip[indices_samples[i]][s * opts.sample_size + i] = 0;
 	}
 	
-	//find best sample for vertex v and add it to the list of that sample
+	/* Find best sample for vertex v and add it to the list of that sample */
 	auto requested_matches = std::vector<std::vector<std::pair<int, double>>>(total_samples);
 	for (auto& v : H.vertices()) {
 		double max_ip = 0.0;
-		int best_match;
+		int best_match = 0;
 		auto local_id = H.local_id(v.id());
 		for (auto u = 0; u < total_samples; u++) {
 			double ip_vu = ip[local_id][u];
 			if (ip_vu > 0) {
-				ip_vu *= 1.0/(double)std::min(v.degree(), degree_samples[u]);
+				ip_vu *= 1.0/(double)std::min((int)v.degree(), degree_samples[u]);
 				if (ip_vu > max_ip) {
 					max_ip = ip_vu;
 					best_match = u;
@@ -77,11 +82,26 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 	}
 	
 	for (auto& match_list : requested_matches) {
-		std::sort(match_list.begin(), match_list.end(), [] (std::pair const& match1, std::pair const& ,match2) { return match1.second > match2.second; });
-	}*/
+		std::sort(match_list.begin(), match_list.end(), [](const std::pair<int,double>& match1, const std::pair<int,double>& match2) -> bool { return match1.second > match2.second; });
+	}
 	
+	/* Queue for the vertex requests with the vertex to match with, the id of the vertex that wants to match and their ip */
+	auto request_queue = bulk::queue<int, int, double>(world);
+	for (int sample = 0; sample < total_samples; sample++) {
+		int t = sample/opts.sample_size;
+		int number_to_send = std::min((int)requested_matches[sample].size(), opts.coarsening_max_clustersize);
+		for (int i = 0; i < number_to_send; i++) {
+			request_queue(t).send(sample - t * opts.sample_size, H(requested_matches[sample][i].first).id(), requested_matches[sample][i].second);
+		}
+	}
 	
+	world.sync();
 	
+	for (auto& [sample, proposer, scip] : request_queue) {
+		world.log("sample global id: %d, proposer: %d, scip: %lf", H(sample).id(), proposer, scip);
+	}
+	
+	world.sync();
 
 	return H;
 }

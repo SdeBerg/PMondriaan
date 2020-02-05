@@ -68,8 +68,6 @@ std::vector<int> label_propagation(pmondriaan::hypergraph& H, int l, int max_ite
 		iterations++;
 	}
 	
-	std::cout << "iter: " << iterations << "\n";
-	
 	return L;
 }
 

@@ -101,6 +101,8 @@ class hypergraph {
 		auto size() { return vertices_.size(); }
 		auto global_size() const {return global_size_; }
 		auto& map() { return global_to_local; }
+		
+		void print();
 
 	private:
 		int global_size_;

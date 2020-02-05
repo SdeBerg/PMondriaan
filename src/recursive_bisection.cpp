@@ -20,7 +20,7 @@ namespace pmondriaan {
  * Recursively bisects a hypergraph into k parts with imbalance parameter epsilon.
  * Eta is the load imbalance parameter for the imbalance over the processors during computation.
  */
-void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string mode, std::string metric, 
+void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string mode, std::string sampling_mode, std::string metric, 
 				int k, double epsilon, double eta, pmondriaan::options& opts) {
 	
 	int s = world.rank();

@@ -2,6 +2,8 @@
 
 #include "multilevel_bisect/sample.hpp"
 #include "hypergraph/hypergraph.hpp"
+#include "options.hpp"
+#include "multilevel_bisect/label_propagation.hpp"
 
 namespace pmondriaan {
 
@@ -20,6 +22,36 @@ std::vector<int> sample_random(pmondriaan::hypergraph& H, int ns) {
 			samples.push_back(current);
 		}
 		size = size - 1.0;
+		current++;
+	}
+	
+	return samples;
+}
+
+
+/**
+ * Returns a vector of ns samples seleccted using the label propagation algorithm.
+ */
+std::vector<int> sample_lp(pmondriaan::hypergraph& H, pmondriaan::options& opts) {
+	
+	auto labels = pmondriaan::label_propagation(H, opts.sample_size, opts.lp_max_iterations);
+	auto count_label = std::vector<double>(opts.sample_size, 0.0);
+	for (auto l : labels) {
+		count_label[l]++;
+	}
+	
+	auto samples = std::vector<int>();
+	auto found_sample = std::vector<bool>(opts.sample_size, false);
+	int number_samples_found = 0;
+	auto current = 0u;
+	while (number_samples_found < opts.sample_size && current < H.size()) {
+		int l = labels[current];
+		if (!found_sample[l] && ((double) rand() / (RAND_MAX)) < 1.0/count_label[l]) {
+			found_sample[l] = true;
+			number_samples_found++;
+			samples.push_back(current);
+		}
+		count_label[l]--;
 		current++;
 	}
 	
