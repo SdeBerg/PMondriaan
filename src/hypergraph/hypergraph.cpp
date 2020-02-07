@@ -13,6 +13,7 @@
 
 namespace pmondriaan {
 
+
 long hypergraph::total_weight() {
 	long total = 0;
 	for (auto v : vertices_) {
@@ -125,6 +126,24 @@ std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph&
 	net_sizes = pmondriaan::foldl(net_sizes_coar, [](auto& lhs, auto rhs) { lhs += rhs; });
 	return net_sizes;
 }
+
+
+/**
+ * Removes all free nets.
+ */
+void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H) {
+	auto net_sizes = global_net_sizes(world, H);
+	for (auto n = 0u; n < H.nets().size(); n++) {
+		if (net_sizes[n] == 1) {
+			if (H.net(n).size() == 1) {
+				int v = H.net(n).vertices()[0];
+				H.net(n).vertices().clear();
+				H(H.local_id(v)).remove_net(n);
+			}
+		}
+	}
+}
+
 
 
 /**

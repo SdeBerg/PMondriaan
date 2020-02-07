@@ -166,7 +166,11 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, bulk::world& world,
 		nets.push_back(pmondriaan::net(i, vertex_list[i]));
 	}
 	
-	return pmondriaan::hypergraph(V, vertices, nets);
+	auto H = pmondriaan::hypergraph(V, vertices, nets);
+	
+	remove_free_nets(world, H);
+	
+	return H;
 }
 
 } // namespace pmondriaan

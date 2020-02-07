@@ -38,7 +38,7 @@ set(
 	#"test_hypergraph.cpp"
 	#"parallel_hypergraph.cpp"
 	#"partition.cpp"
-	"random_bisection.cpp"
+	#"random_bisection.cpp"
 	#"imbalance.cpp"
 	#"redistribute.cpp"
 	#"random_sampling.cpp"

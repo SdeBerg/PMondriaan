@@ -21,7 +21,6 @@ class vertex {
 		vertex(int id, std::vector<int> nets, long weight = 1) : id_(id), nets_(nets), weight_(weight) {}
 		
 		int id() { return id_; }
-		//int local_id() { return local_id_; }
 		std::vector<int>& nets() { return nets_; }
 		long weight() { return weight_; }
 		int part() { return part_; }
@@ -30,6 +29,8 @@ class vertex {
 		void set_id(int value) {id_ = value; }
 		void set_part(int value) { part_ = value; }
 		
+		void remove_net(int n) { nets_.erase(std::remove(nets_.begin(), nets_.end(), n)); }
+	
 	private:
 		int id_;
 		//int local_id_;
@@ -120,6 +121,11 @@ double compute_load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k
  * Compute the global net sizes of a hypergraph.
  */
 std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph& H);
+
+/**
+ * Removes all free nets.
+ */
+void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H);
 
 /**
  * Creates a new hypergraph that only contains the vertices of H with local id between start and end.
