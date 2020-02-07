@@ -38,7 +38,7 @@ set(
 	#"test_hypergraph.cpp"
 	#"parallel_hypergraph.cpp"
 	#"partition.cpp"
-	#"random_bisection.cpp"
+	"random_bisection.cpp"
 	#"imbalance.cpp"
 	#"redistribute.cpp"
 	#"random_sampling.cpp"
@@ -46,7 +46,7 @@ set(
 	#"test_CLI11.cpp"
 	#"test_label_propagation.cpp"
 	#"lp_sampling.cpp"
-	"coarsening.cpp"
+	#"coarsening.cpp"
 )
 
 foreach(source_file ${TEST_SOURCES})

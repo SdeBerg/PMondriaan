@@ -24,8 +24,16 @@ int main() {
 
 		auto hypergraph = pmondriaan::read_hypergraph("../test/data/matrices/cage3/cage3.mtx", world);
 		
-		auto weights = bisect_random(world, hypergraph, 0.05);
-		world.log("weight part 0: %d, weight part 1: %d", weights[0], weights[1]);
+		auto sizes = pmondriaan::global_net_sizes(world, hypergraph);
+		
+		if (s == 0) {
+			for (auto s : sizes) {
+				world.log("%d", s);
+			}
+		}
+		
+		//auto weights = bisect_random(world, hypergraph, 0.05);
+		//world.log("weight part 0: %d, weight part 1: %d", weights[0], weights[1]);
 		
     });
 

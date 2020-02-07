@@ -95,8 +95,6 @@ double compute_load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k
 		weight_parts_var[i] = weight_parts[i];
 	}
 	
-	world.sync();
-	
 	long global_weight = H.global_weight(world);
 	
 	//compute the global part weights
@@ -109,6 +107,25 @@ double compute_load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k
 	
 	return eps;
 }
+
+
+/**
+ * Compute the global net sizes of a hypergraph.
+ */
+std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph& H) {
+	auto nets = H.nets();
+	auto net_sizes_coar = bulk::coarray<size_t>(world, nets.size());
+	auto net_sizes = std::vector<size_t>(nets.size());
+	
+	for (auto i = 0u; i < nets.size(); i++) {
+		net_sizes_coar[i] = nets[i].size();
+	}
+	
+	//compute the global part weights
+	net_sizes = pmondriaan::foldl(net_sizes_coar, [](auto& lhs, auto rhs) { lhs += rhs; });
+	return net_sizes;
+}
+
 
 /**
  * Creates a new hypergraph that only contains the vertices of H with local id between start and end.

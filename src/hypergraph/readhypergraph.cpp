@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <sstream>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
@@ -42,10 +43,13 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, std::string mode_we
 	auto vertex_list = std::vector<std::vector<int>>(E);
 		
 	// Read the data
-	for (auto l = 0u; l < L; l++) {
+	std::string line;
+	std::getline(fin, line);
+	while (std::getline(fin, line))
+	{
 		int e, v;
-		double data;
-		fin >> e >> v >> data;
+		std::istringstream iss(line);
+		if (!(iss >> e >> v)) { break; }
 		nets_list[v-1].push_back(e-1);
 		vertex_list[e-1].push_back(v-1);
 	}
@@ -122,14 +126,14 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, bulk::world& world,
 			fin.ignore(2048, '\n');
 		}
 		
-		// Reading the first line again:
-		fin >> E >> V >> L;
-		
 		// Read the data
-		for (auto l = 0u; l < L; l++) {
+		std::string line;
+		std::getline(fin, line);
+		while (std::getline(fin, line))
+		{
 			int e, v;
-			double data;
-			fin >> e >> v >> data;
+			std::istringstream iss(line);
+			if (!(iss >> e >> v)) { break; } // error
 			vertices_queue(partitioning.owner({v-1})).send(v-1, e-1);
 		}
 		fin.close();

@@ -117,6 +117,11 @@ class hypergraph {
 double compute_load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k);
 
 /**
+ * Compute the global net sizes of a hypergraph.
+ */
+std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph& H);
+
+/**
  * Creates a new hypergraph that only contains the vertices of H with local id between start and end.
  */
 pmondriaan::hypergraph create_new_hypergraph(pmondriaan::hypergraph& H, int start, int end);
