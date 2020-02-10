@@ -13,6 +13,13 @@
 
 namespace pmondriaan {
 
+void vertex::remove_net(int n) {
+	auto it = std::find(nets_.begin(), nets_.end(), n);
+	if (it != nets_.end()) {
+		std::iter_swap(it, nets_.end() - 1);
+		nets_.erase(nets_.end() - 1);
+	}
+}
 
 long hypergraph::total_weight() {
 	long total = 0;
@@ -74,7 +81,15 @@ void hypergraph::renumber_vertices() {
 	}
 }
 
+void hypergraph::set_global_net_sizes (std::vector<size_t>& sizes) {
+	for (auto i = 0u; i < nets_.size(); i++) {
+		nets_[i].set_global_size(sizes[i]);
+	}
+	
+}
+
 void hypergraph::print() {
+	
 	for (auto& v : vertices_) {
 		std::cout << v.id() << ": ";
 		for (auto n : v.nets()) {
@@ -82,6 +97,7 @@ void hypergraph::print() {
 		}
 		std::cout << "\n";
 	}
+	
 }
 
 /**
@@ -114,7 +130,7 @@ double compute_load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k
  * Compute the global net sizes of a hypergraph.
  */
 std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph& H) {
-	auto nets = H.nets();
+	auto& nets = H.nets();
 	auto net_sizes_coar = bulk::coarray<size_t>(world, nets.size());
 	auto net_sizes = std::vector<size_t>(nets.size());
 	
@@ -124,6 +140,9 @@ std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph&
 	
 	//compute the global part weights
 	net_sizes = pmondriaan::foldl(net_sizes_coar, [](auto& lhs, auto rhs) { lhs += rhs; });
+	
+	H.set_global_net_sizes(net_sizes);
+	
 	return net_sizes;
 }
 
@@ -132,13 +151,16 @@ std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph&
  * Removes all free nets.
  */
 void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H) {
+	
 	auto net_sizes = global_net_sizes(world, H);
+	
 	for (auto n = 0u; n < H.nets().size(); n++) {
 		if (net_sizes[n] == 1) {
+			H.net(n).set_global_size(0);
 			if (H.net(n).size() == 1) {
 				int v = H.net(n).vertices()[0];
-				H.net(n).vertices().clear();
 				H(H.local_id(v)).remove_net(n);
+				H.net(n).vertices().clear();
 			}
 		}
 	}

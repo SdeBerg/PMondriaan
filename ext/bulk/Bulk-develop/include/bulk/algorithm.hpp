@@ -39,9 +39,9 @@ bulk::coarray<T> gather_all(bulk::world& world, T value) {
     for (int t = 0; t < world.active_processors(); ++t) {
         xs(t)[world.rank()] = value;
     }
-
+	
     world.sync();
-
+	
     return xs;
 }
 

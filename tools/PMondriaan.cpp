@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 	CLI::Option *copt = app.add_option("--sampling", sampling_mode, "Sampling mode to be used");
 	CLI::Option *mopt = app.add_option("--metric", metric, "Metric to optimized");
 	
-	wopt->check(CLI::IsMember({"ones", "degree"}));
+	wopt->check(CLI::IsMember({"one", "degree"}));
 	bopt->check(CLI::IsMember({"random", "multilevel"}));
 	copt->check(CLI::IsMember({"random", "label propagation"}));
 	mopt->check(CLI::IsMember({"cutnet", "lambda1"}));

@@ -149,7 +149,7 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, bulk::world& world,
 		std::tie(v, n) = vertex_net;
 		int v_loc = partitioning.local({v})[0];
 		nets_list[v_loc].push_back(n);
-		vertex_list[n].push_back(v_loc);
+		vertex_list[n].push_back(v);
 	}
 	
 	auto vertices = std::vector<pmondriaan::vertex>();
@@ -158,8 +158,14 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, bulk::world& world,
 		if (mode_weight == "one") {
 			vertices.push_back(pmondriaan::vertex(partitioning.global({i}, s)[0], nets_list[i]));
 		}
+		else {
 		if (mode_weight == "degree") {
 			vertices.push_back(pmondriaan::vertex(partitioning.global({i}, s)[0], nets_list[i], nets_list[i].size()));
+		}
+		else {
+			std::cerr << "Error: unknown mode_weight";
+			break;
+		}
 		}
 	}
 	for (int i = 0; i < E; i++) {

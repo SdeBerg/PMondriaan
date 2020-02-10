@@ -21,13 +21,15 @@ int main () {
 		int s = world.rank();
 		
 		srand(world.rank() + 1);
-		auto H = pmondriaan::read_hypergraph("../test/data/matrices/dolphins/dolphins.mtx", world, "degree");
+		auto H = pmondriaan::read_hypergraph("../test/data/matrices/dolphins/dolphins.mtx", world, "one");
+
 		int count = 0;
 		while (count < p) {
 			if (s == count) { H.print(); }
 			world.sync();
 			count ++;
 		}
+		
 		auto opts = pmondriaan::options();
 		opts.sample_size = 10;
 		opts.coarsening_max_clustersize = 5;

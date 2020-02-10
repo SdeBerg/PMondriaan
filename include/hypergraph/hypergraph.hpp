@@ -29,11 +29,10 @@ class vertex {
 		void set_id(int value) {id_ = value; }
 		void set_part(int value) { part_ = value; }
 		
-		void remove_net(int n) { nets_.erase(std::remove(nets_.begin(), nets_.end(), n)); }
+		void remove_net(int n);
 	
 	private:
 		int id_;
-		//int local_id_;
 		std::vector<int> nets_;
 		long weight_;
 		int part_;
@@ -44,19 +43,22 @@ class vertex {
  */
 class net {
 	public:
-		net(int id, std::vector<int> vertices, long cost = 1) : id_(id), vertices_(vertices), cost_(cost) {}
+		net(int id, std::vector<int> vertices, long cost = 1) : id_(id), vertices_(vertices), cost_(cost) { global_size_ = 0;}
 		
 		int id() { return id_; }
 		std::vector<int>& vertices() { return vertices_; }
 		long cost() { return cost_; }
 		auto size() { return vertices_.size(); }
+		auto global_size() { return global_size_; }
 		
+		void set_global_size(size_t size) { global_size_ = size; }
 		void add_vertex(int v) { vertices_.push_back(v); }
 		
 	private:
 		int id_;
 		std::vector<int> vertices_;
 		long cost_;
+		size_t global_size_;
 };
 
 /**
@@ -92,6 +94,8 @@ class hypergraph {
 		void renumber_vertices();
 		
 		int local_id(int global_id) {return global_to_local[global_id]; }
+		
+		void set_global_net_sizes (std::vector<size_t>& sizes);
 			
 		std::vector<pmondriaan::vertex>& vertices() { return vertices_; }
 		pmondriaan::vertex& operator()(int index) { return vertices_[index]; }

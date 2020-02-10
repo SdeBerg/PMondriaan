@@ -46,7 +46,7 @@ set(
 	#"test_CLI11.cpp"
 	#"test_label_propagation.cpp"
 	#"lp_sampling.cpp"
-	#"coarsening.cpp"
+	"coarsening.cpp"
 )
 
 foreach(source_file ${TEST_SOURCES})
