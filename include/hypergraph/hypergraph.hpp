@@ -122,6 +122,11 @@ class hypergraph {
 double compute_load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k);
 
 /**
+ * Compute the cutsize with the correct metric
+ */
+long compute_cutsize(bulk::world& world, pmondriaan::hypergraph& H, int k, std::string metric);
+
+/**
  * Compute the global net sizes of a hypergraph.
  */
 std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph& H);

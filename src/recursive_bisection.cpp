@@ -80,7 +80,7 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 		
 		auto total_weight_0 = pmondriaan::foldl(weight_part_0, [](auto& lhs, auto rhs) { lhs += rhs; }, procs_mypart);
 		auto total_weight_1 = pmondriaan::foldl(weight_part_1, [](auto& lhs, auto rhs) { lhs += rhs; }, procs_mypart);
-		
+
 		// number of processors working on the low and high part respectively
 		p_low = (double)total_weight_0/(double)(total_weight_0 + total_weight_1) * (double)p + 0.5;
 		if((k_low == 1) & (k_high > 1)) {
@@ -98,7 +98,7 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 		//personal low and high label for the next round
 		int new_label_low = label_low + my_part * k_low;
 		int new_label_high = label_high - (1 - my_part) * k_high;
-		
+
 		if (new_label_high - new_label_low > 0) {
 			
 			long new_max_local_weight; 
@@ -125,6 +125,7 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 				jobs.push(pmondriaan::work_item(start, end, new_label_low, new_label_high, weight_mypart));
 			}
 		}
+		
 		world.log("weight part %d: %d, weight part %d: %d", label_low, total_weight_0, label_high, total_weight_1);
 		
 		//personal low and high label for the next round
@@ -175,6 +176,8 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 			label_high = label_high_0;
 		}
 	}
+	
+	world.sync();
 }
 
 std::vector<long> compute_max_global_weight(int k_, int k_low, int k_high, long weight_mypart, long maxweight) {

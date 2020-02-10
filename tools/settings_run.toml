@@ -1,10 +1,12 @@
+file="../test/data/matrices/gemat11/gemat11.mtx"
+p=4
 k=4
 eps=0.03
 eta=0.03
 weights="degree"
 bisect="random"
-metric="cutnet"
 sampling="label propagation"
+metric="cutnet"
 sample_size=200
 max_cluster_size=20
 lp_max_iter=5

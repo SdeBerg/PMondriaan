@@ -125,6 +125,39 @@ double compute_load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k
 	return eps;
 }
 
+/**
+ * Compute the cutsize with the correct metric
+ */
+long compute_cutsize(bulk::world& world, pmondriaan::hypergraph& H, int k, std::string metric) {
+	
+	long result = 0;
+	if (metric == "cutnet") {
+		auto cut = bulk::coarray<bool>(world, H.nets().size());
+		for (auto& net : H.nets()) {
+			cut[net.id()] = false;
+			if (net.size() > 0u) {
+				auto& vertices = net.vertices();
+				auto part = H(H.local_id(vertices[0])).part();
+				for (auto& v : vertices) {
+					if (H(H.local_id(v)).part() != part) {
+						cut[net.id()] = true;
+						break;
+					}
+				}
+			}
+		}
+		
+		auto total_cut = pmondriaan::foldl(cut, [](auto lhs, auto rhs) { return lhs || rhs; });
+		for (auto c : total_cut) {
+			if (!c) {
+				result++;
+			}
+		}
+	}
+	
+	return result;
+}
+
 
 /**
  * Compute the global net sizes of a hypergraph.

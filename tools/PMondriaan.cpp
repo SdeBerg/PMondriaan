@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
 	
 	/* Write the settings to the defaults file */
 	auto conf = app.config_to_str();
-	std::ofstream out("../tools/defaults.toml");
+	std::ofstream out("../tools/settings_run.toml");
 	out << conf;
 	out.close();
 	
@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
 			app.prefix_command(true);
 			app.option_defaults()->required();
 			
-			app.set_config("--config", "../tools/defaults.toml", "Read a TOML file", true);
+			app.set_config("--config", "../tools/settings_run.toml", "Read a TOML file", true);
 			
 			app.add_option("-f, --file", matrix_file, "File including the hypergraph to be partitioned in matrixmarket format");
 			
@@ -121,6 +121,16 @@ int main(int argc, char **argv) {
 		auto H = pmondriaan::read_hypergraph(matrix_file, world, hypergraph_weigths);
 
 		recursive_bisect(world, H, bisection_mode, sampling_mode, metric, k, eps, eta, options);
+		
+		auto lb = pmondriaan::compute_load_balance(world, H, k);
+		auto cutsize = pmondriaan::compute_cutsize(world, H, k, metric);
+		
+		if (s == 0) {
+			world.log("Load balance of partitioning found: %lf", lb);
+			world.log("Cutsize of partitioning found: %d", cutsize);
+		}
+		
+		world.sync();
 		
 	});
 
