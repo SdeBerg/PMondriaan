@@ -9,6 +9,7 @@
 #include <bulk/backends/thread/thread.hpp>
 #endif
 
+#include "multilevel_bisect/coarsen.hpp"
 #include "bisect.hpp"
 #include "hypergraph/hypergraph.hpp"
 #include "multilevel_bisect/sample.hpp"
@@ -32,11 +33,6 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 		indices_samples = sample_lp(H, opts);
 	}
 	
-	for (auto i : indices_samples) {
-		world.log("s: %d, sample: %d", s, H(i).id());
-	}
-	world.sync();
-	
 	/* We now send the samples and the processor id to all processors */
 	auto sample_queue = bulk::queue<int, int, int[]>(world);
 	for (auto i = 0u; i < indices_samples.size(); i++) {
@@ -44,7 +40,31 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 			sample_queue(t).send(s, i, H(indices_samples[i]).nets());
 		}
 	}
+	
 	world.sync();
+	
+	auto accepted_matches = bulk::queue<int, int>(world);
+	/* After his funtion, accepted matches contains the matches that have been accepted */
+	request_matches(H, sample_queue, accepted_matches, indices_samples, opts);
+	
+	for (auto& [sample, proposer] : accepted_matches) {
+		world.log("sample: %d, proposer: %d", sample, proposer);
+	}
+	
+	world.sync();
+
+	return H;
+}
+
+/* Sends match request to the owners of the best matches found using the improduct computation.
+ * Returns the local matches. 
+ */
+void request_matches(pmondriaan::hypergraph& H, auto& sample_queue, bulk::queue<int,int>& accepted_matches, const std::vector<int>& indices_samples, pmondriaan::options& opts) {
+	
+	auto& world = sample_queue.world();
+	int s = world.rank();
+	int p = world.active_processors();
+	size_t number_local_samples = indices_samples.size();
 	
 	int total_samples = p * opts.sample_size;
 	
@@ -62,7 +82,7 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 	}
 	
 	/* We set the ip of all local samples with itself to 0, so they will not match themselves */
-	for (auto i = 0u; i < indices_samples.size(); i++) {
+	for (auto i = 0u; i < number_local_samples; i++) {
 		ip[indices_samples[i]][s * opts.sample_size + i] = 0;
 	}
 	
@@ -83,7 +103,7 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 			}
 		}
 		if (best_match != -1) {
-			requested_matches[best_match].push_back(std::make_pair(local_id, max_ip));
+			requested_matches[best_match].push_back(std::make_pair(v.id(), max_ip));
 		}
 	}
 	
@@ -91,25 +111,36 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 		std::sort(match_list.begin(), match_list.end(), [](const auto& match1, const auto& match2) -> bool { return match1.second > match2.second; });
 	}
 	
-	/* Queue for the vertex requests with the vertex to match with, the id of the vertex that wants to match and their ip */
-	auto request_queue = bulk::queue<int, int, double>(world);
+	/* Queue for the vertex requests with the sender, the vertex to match with, the id of the vertex that wants to match and their ip */
+	auto request_queue = bulk::queue<int, int, int, double>(world);
 	for (int sample = 0; sample < total_samples; sample++) {
 		int t = sample/opts.sample_size;
 		int number_to_send = std::min((int)requested_matches[sample].size(), opts.coarsening_max_clustersize);
 		for (int i = 0; i < number_to_send; i++) {
-			request_queue(t).send(sample - t * opts.sample_size, H(requested_matches[sample][i].first).id(), requested_matches[sample][i].second);
+			request_queue(t).send(s, sample - t * opts.sample_size, requested_matches[sample][i].first, requested_matches[sample][i].second);
 		}
 	}
 	
 	world.sync();
 	
-	for (auto& [sample, proposer, scip] : request_queue) {
-		world.log("sample global id: %d, proposer: %d, scip: %lf", H(indices_samples[sample]).id(), proposer, scip);
+	auto matches = std::vector<std::vector<std::tuple<int, int, double>>>(number_local_samples);
+	for (const auto& [sender, sample, proposer, scip] : request_queue) {
+		world.log("sample: %d, proposer: %d, scip: %lf", s * opts.sample_size + sample, proposer, scip);
+		matches[sample].push_back(std::make_tuple(sender, proposer, scip));
+	}
+	
+	for (auto i = 0u; i < indices_samples.size(); i++) {
+		auto& match_list = matches[i];
+		std::sort(match_list.begin(), match_list.end(), [](const auto& match1, const auto& match2) -> bool { return std::get<2>(match1) > std::get<2>(match2); });
+		
+		int number_to_send = std::min((int)match_list.size(), opts.coarsening_max_clustersize);
+		for (int j = 0; j < number_to_send; j++) {
+			auto& match = match_list[j];
+			accepted_matches(std::get<0>(match)).send(i + s * opts.sample_size, std::get<1>(match));
+		}
 	}
 	
 	world.sync();
-
-	return H;
 }
 
 } // namespace pmondriaan

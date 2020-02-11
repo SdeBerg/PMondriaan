@@ -19,4 +19,9 @@ namespace pmondriaan {
  */
 pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::options& opts, std::string sampling_mode);
 
+
+/** Sends match request to the owners of the best matches found using the improduct computation.
+ * Returns the local matches. 
+ */
+void request_matches(pmondriaan::hypergraph& H, auto& sample_queue, bulk::queue<int,int>& accepted_matches, const std::vector<int>& indices_samples, pmondriaan::options& opts);
 } // namespace pmondriaan
