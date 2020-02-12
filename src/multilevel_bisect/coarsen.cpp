@@ -175,7 +175,10 @@ pmondriaan::hypergraph contract_hypergraph(pmondriaan::hypergraph& H, const std:
 	for (auto index = 0u; index < H.size(); index++) {
 		if (!matched[index]) {
 			auto& v = H(index);
-			auto new_v = pmondriaan::vertex(v.id(), v.nets(), v.weight()); ///////////////////TODO: testen of die niet nets veranderd als de originele nets veranderd
+			
+			auto new_v_nets = std::vector<int>();
+			new_v_nets.insert(new_v_nets.begin(), v.nets().begin(), v.nets().end());
+			auto new_v = pmondriaan::vertex(v.id(), new_v_nets, v.weight());
 			new_vertices.push_back(new_v);
 			
 			for (auto n : new_v.nets()) {

@@ -44,6 +44,14 @@ int main () {
 			world.sync();
 			count ++;
 		}
+		
+		for (auto net : HC.nets()) {
+			world.log("net: %d", net.id());
+			for (auto v : net.vertices()) {
+				world.log("%d", v);
+			}
+			world.sync();
+		}
 	});
 	return 0;
 }
