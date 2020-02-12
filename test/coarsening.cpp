@@ -36,7 +36,14 @@ int main () {
 		opts.lp_max_iterations = 4;
 
 		
-		pmondriaan::coarsen_hypergraph(world, H, opts, "label propagation");
+		auto HC = pmondriaan::coarsen_hypergraph(world, H, opts, "label propagation");
+		
+		count = 0;
+		while (count < p) {
+			if (s == count) { HC.print(); }
+			world.sync();
+			count ++;
+		}
 	});
 	return 0;
 }

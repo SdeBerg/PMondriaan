@@ -27,6 +27,7 @@ class vertex {
 		auto degree() { return nets_.size(); }
 		
 		void set_id(int value) {id_ = value; }
+		void add_weight(long value) {weight_ += value; }
 		void set_part(int value) { part_ = value; }
 		
 		void remove_net(int n);
@@ -94,6 +95,7 @@ class hypergraph {
 		void renumber_vertices();
 		
 		int local_id(int global_id) {return global_to_local[global_id]; }
+		bool is_local(int global_id) {return (global_to_local.count(global_id) > 0); }
 		
 		void set_global_net_sizes (std::vector<size_t>& sizes);
 			

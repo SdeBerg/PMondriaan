@@ -13,6 +13,7 @@
 #include "bisect.hpp"
 #include "hypergraph/hypergraph.hpp"
 #include "multilevel_bisect/sample.hpp"
+#include "hypergraph/contraction.hpp"
 
 namespace pmondriaan {
 
@@ -34,7 +35,7 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 	}
 	
 	/* We now send the samples and the processor id to all processors */
-	auto sample_queue = bulk::queue<int, int, int[]>(world);
+	auto sample_queue = bulk::queue<int, long, int[]>(world);
 	for (auto i = 0u; i < indices_samples.size(); i++) {
 		for (int t = 0; t < p; t++) {
 			sample_queue(t).send(s, i, H(indices_samples[i]).nets());
@@ -47,19 +48,36 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 	/* After his funtion, accepted matches contains the matches that have been accepted */
 	request_matches(H, sample_queue, accepted_matches, indices_samples, opts);
 	
+	/* We use the sample_queue again to send the information about the accepted samples */
+	auto matched = std::vector<bool>(H.size(), false);
 	for (auto& [sample, proposer] : accepted_matches) {
-		world.log("sample: %d, proposer: %d", sample, proposer);
+		matched[H.local_id(proposer)] = true;
+		auto v = H(H.local_id(proposer));
+		int t = sample % opts.sample_size;
+		sample_queue(t).send(sample - t * opts.sample_size, v.weight(), v.nets());
 	}
-	
-	world.sync();
 
-	return H;
+	world.sync();
+	
+	/* We compute the number of new vertices (in the matched vector samples are also labeled as unmatched */
+	int new_vertices = 0;
+	for (auto m : matched) {
+		if (!m) {
+			new_vertices++;
+		}
+	}
+	auto contraction = pmondriaan::contraction(new_vertices);
+	auto HC = pmondriaan::contract_hypergraph(H, indices_samples, contraction, sample_queue, matched);
+	
+
+	return HC;
 }
+
 
 /* Sends match request to the owners of the best matches found using the improduct computation.
  * Returns the local matches. 
  */
-void request_matches(pmondriaan::hypergraph& H, auto& sample_queue, bulk::queue<int,int>& accepted_matches, const std::vector<int>& indices_samples, pmondriaan::options& opts) {
+void request_matches(pmondriaan::hypergraph& H, auto& sample_queue, auto& accepted_matches, const std::vector<int>& indices_samples, pmondriaan::options& opts) {
 	
 	auto& world = sample_queue.world();
 	int s = world.rank();
@@ -81,9 +99,11 @@ void request_matches(pmondriaan::hypergraph& H, auto& sample_queue, bulk::queue<
 		}
 	}
 	
-	/* We set the ip of all local samples with itself to 0, so they will not match themselves */
+	/* We set the ip of all local samples with all samples to 0, so they will not match eachother */
 	for (auto i = 0u; i < number_local_samples; i++) {
-		ip[indices_samples[i]][s * opts.sample_size + i] = 0;
+		for (auto j = 0; j < total_samples; j++) {
+			ip[indices_samples[i]][j] = 0;
+		}
 	}
 	
 	/* Find best sample for vertex v and add it to the list of that sample */
@@ -142,5 +162,72 @@ void request_matches(pmondriaan::hypergraph& H, auto& sample_queue, bulk::queue<
 	
 	world.sync();
 }
+
+pmondriaan::hypergraph contract_hypergraph(pmondriaan::hypergraph& H, const std::vector<int> samples, pmondriaan::contraction& contraction, auto& matches, std::vector<bool>& matched) {
+
+	/* We new nets to which we will later add the vertices */
+	auto new_nets = std::vector<pmondriaan::net>();
+	for (auto& net : H.nets()) {
+		new_nets.push_back(pmondriaan::net(net.id(), std::vector<int>(), net.cost()));
+	}
+	/* For each unmatched vertex we create a new one (samples are also "unmatched") */
+	auto new_vertices = std::vector<pmondriaan::vertex>();
+	for (auto index = 0u; index < H.size(); index++) {
+		if (!matched[index]) {
+			auto& v = H(index);
+			auto new_v = pmondriaan::vertex(v.id(), v.nets(), v.weight()); ///////////////////TODO: testen of die niet nets veranderd als de originele nets veranderd
+			new_vertices.push_back(new_v);
+			
+			for (auto n : new_v.nets()) {
+				new_nets[n].add_vertex(v.id());
+			}
+		}
+	}
+	
+	bulk::var<int> new_size(matches.world());
+	new_size = (int)new_vertices.size();
+	auto new_global_size = bulk::foldl(new_size, [](int& lhs, int rhs) { lhs += rhs; });
+	
+	auto HC = pmondriaan::hypergraph(new_global_size, new_vertices, new_nets);
+	
+	/* We create the new weight and adjacency list for all samples */
+	auto sample_total_weight= std::vector<long>(samples.size(), 0);
+	auto sample_net_lists = std::vector<std::vector<int>>(samples.size());
+	for (auto& [sample, weight, nets] : std::move(matches)) {
+		sample_total_weight[sample] += weight;
+		sample_net_lists[sample].insert(sample_net_lists[sample].end(), nets.begin(), nets.end());
+	}
+	
+	/* This vector keeps track of the nets already include for the current vertex
+	 if included_in_net[n] is equal to the sample number, the net is already included */
+	auto included_in_net = std::vector<int>(H.nets().size(), -1);
+	for (auto index = 0u; index < samples.size(); index++) {
+		int i = (int)index;
+		auto& sample_vertex = HC(HC.local_id(H(samples[i]).id()));
+		auto& nets = sample_vertex.nets();
+		
+		sample_vertex.add_weight(sample_total_weight[i]);
+		
+		for (auto n : nets) {
+			included_in_net[n] = i;
+		}
+		for (auto net : sample_net_lists[i]) {
+			if (included_in_net[net] != i) {
+				nets.push_back(net);
+				HC.net(net).add_vertex(sample_vertex.id());
+				included_in_net[net] = i;
+			}
+		}
+	}
+	
+	return HC;
+}
+
+
+
+
+
+
+
 
 } // namespace pmondriaan

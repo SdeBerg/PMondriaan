@@ -11,6 +11,7 @@
 #include "bisect.hpp"
 #include "hypergraph/hypergraph.hpp"
 #include "multilevel_bisect/sample.hpp"
+#include "hypergraph/contraction.hpp"
 
 namespace pmondriaan {
 
@@ -23,5 +24,9 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 /** Sends match request to the owners of the best matches found using the improduct computation.
  * Returns the local matches. 
  */
-void request_matches(pmondriaan::hypergraph& H, auto& sample_queue, bulk::queue<int,int>& accepted_matches, const std::vector<int>& indices_samples, pmondriaan::options& opts);
+void request_matches(pmondriaan::hypergraph& H, auto& sample_queue, auto& accepted_matches, const std::vector<int>& indices_samples, pmondriaan::options& opts);
+
+pmondriaan::hypergraph contract_hypergraph(pmondriaan::hypergraph& H, const std::vector<int> samples, pmondriaan::contraction& contraction, auto& matches, std::vector<bool>& matched);
+
+
 } // namespace pmondriaan
