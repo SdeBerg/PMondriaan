@@ -6,6 +6,7 @@
 #include "hypergraph/hypergraph.hpp"
 #include "multilevel_bisect/coarsen.hpp"
 #include "options.hpp"
+#include "multilevel_bisect/initial_partitioning.hpp"
 
 namespace pmondriaan {
 
@@ -57,14 +58,14 @@ std::vector<long> bisect_multilevel(bulk::world& world, pmondriaan::hypergraph& 
 	
 	auto HC_list = std::vector<pmondriaan::hypergraph>();
 	HC_list.push_back(H_reduced);
-	//auto HC = H_reduced;
 	
 	while ((HC_list[nc].global_size() > opts.coarsening_nrvertices) && (nc < opts.coarsening_maxrounds)) {
-		//HC = coarsen_hypergraph(world, HC, opts, sampling_mode);
 		HC_list.push_back(coarsen_hypergraph(world, HC_list[nc], opts, sampling_mode));
 		nc++;
 		world.log("After iteration %d, size is %d", nc, HC_list[nc].global_size());
 	}
+	
+	pmondriaan::initial_partitioning(world, HC_list[nc], max_weight_0, max_weight_1, label_0, label_1);
 				
 	return weight_parts;		
 }

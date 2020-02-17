@@ -9,4 +9,5 @@
 #include <multilevel_bisect/sample.hpp>
 #include <multilevel_bisect/coarsen.hpp>
 #include <multilevel_bisect/label_propagation.hpp>
+#include <multilevel_bisect/initial_partitioning.hpp>
 #include <options.hpp>
