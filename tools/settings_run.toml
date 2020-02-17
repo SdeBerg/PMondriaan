@@ -1,4 +1,4 @@
-file="../test/data/matrices/west0381/west0381.mtx"
+file="../test/data/matrices/gemat11/gemat11.mtx"
 p=4
 k=2
 eps=0.03
@@ -7,8 +7,8 @@ weights="degree"
 bisect="multilevel"
 sampling="label propagation"
 metric="cutnet"
-sample_size=25
-max_cluster_size=30
+sample_size=200
+max_cluster_size=400
 lp_max_iter=4
 coarsening_nrvertices=200
 coarsening_max_rounds=13

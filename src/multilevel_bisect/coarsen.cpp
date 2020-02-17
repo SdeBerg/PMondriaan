@@ -34,8 +34,7 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 		indices_samples = sample_lp(H, opts);
 	}
 	
-	world.log("samples: %d", indices_samples.size()); world.sync();
-	
+	world.log("samples: %d", indices_samples.size());
 	
 	/* We now send the samples and the processor id to all processors */
 	auto sample_queue = bulk::queue<int, long, int[]>(world);
@@ -50,8 +49,6 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 	auto accepted_matches = bulk::queue<int, int>(world);
 	/* After his funtion, accepted matches contains the matches that have been accepted */
 	request_matches(H, sample_queue, accepted_matches, indices_samples, opts);
-	
-	world.log("accepted match : %d", accepted_matches.size());
 
 	/* We use the sample_queue again to send the information about the accepted samples */
 	auto matched = std::vector<bool>(H.size(), false);
