@@ -48,6 +48,9 @@ int main(int argc, char **argv) {
 	app.add_option("--sample_size", options.sample_size, "The sample size used in the coarsening");
 	app.add_option("--max_cluster_size", options.coarsening_max_clustersize, "The maximum clustersize during coarsening");
 	app.add_option("--lp_max_iter", options.lp_max_iterations, "The maximum number of iterations in the label propagation");
+	app.add_option("--coarsening_nrvertices", options.coarsening_nrvertices, "The number of vertices in the hypergraph when coarsening stops");
+	app.add_option("--coarsening_max_rounds", options.coarsening_maxrounds, "The maximum number of coarsening rounds");
+
 
 	CLI11_PARSE(app, argc, argv);
 	
@@ -92,6 +95,8 @@ int main(int argc, char **argv) {
 			app.add_option("--sample_size", options.sample_size, "The sample size used in the coarsening");
 			app.add_option("--max_cluster_size", options.coarsening_max_clustersize, "The maximum clustersize during coarsening");
 			app.add_option("--lp_max_iter", options.lp_max_iterations, "The maximum number of iterations in the label propagation");
+			app.add_option("--coarsening_nrvertices", options.coarsening_nrvertices, "The number of vertices in the hypergraph when coarsening stops");
+			app.add_option("--coarsening_max_rounds", options.coarsening_maxrounds, "The maximum number of coarsening rounds");
 
 			const char  arg0[] = "empty";
 			const char* argv[] = { &arg0[0], NULL };

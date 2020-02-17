@@ -1,10 +1,12 @@
-k=4
+k=2
 eps=0.03
 eta=0.03
 weights="degree"
-bisect="random"
+bisect="multilevel"
 metric="cutnet"
 sampling="label propagation"
-sample_size=200
-max_cluster_size=20
-lp_max_iter=5
+sample_size=10
+max_cluster_size=30
+lp_max_iter=4
+coarsening_nrvertices = 200
+coarsening_max_rounds = 13

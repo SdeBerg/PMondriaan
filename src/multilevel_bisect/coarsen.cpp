@@ -34,29 +34,34 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 		indices_samples = sample_lp(H, opts);
 	}
 	
+	world.log("samples: %d", indices_samples.size()); world.sync();
+	
+	
 	/* We now send the samples and the processor id to all processors */
 	auto sample_queue = bulk::queue<int, long, int[]>(world);
 	for (auto i = 0u; i < indices_samples.size(); i++) {
 		for (int t = 0; t < p; t++) {
-			sample_queue(t).send(s, i, H(indices_samples[i]).nets());
+			sample_queue(t).send(s, (long)i, H(indices_samples[i]).nets());
 		}
 	}
-	
+
 	world.sync();
 	
 	auto accepted_matches = bulk::queue<int, int>(world);
 	/* After his funtion, accepted matches contains the matches that have been accepted */
 	request_matches(H, sample_queue, accepted_matches, indices_samples, opts);
 	
+	world.log("accepted match : %d", accepted_matches.size());
+
 	/* We use the sample_queue again to send the information about the accepted samples */
 	auto matched = std::vector<bool>(H.size(), false);
 	for (auto& [sample, proposer] : accepted_matches) {
 		matched[H.local_id(proposer)] = true;
 		auto v = H(H.local_id(proposer));
-		int t = sample % opts.sample_size;
+		int t = sample / opts.sample_size;
 		sample_queue(t).send(sample - t * opts.sample_size, v.weight(), v.nets());
 	}
-
+	
 	world.sync();
 	
 	/* We compute the number of new vertices (in the matched vector samples are also labeled as unmatched */
@@ -66,10 +71,8 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 			new_vertices++;
 		}
 	}
-	auto contraction = pmondriaan::contraction(new_vertices);
-	auto HC = pmondriaan::contract_hypergraph(H, indices_samples, contraction, sample_queue, matched);
-	
-
+	//auto contraction = pmondriaan::contraction(new_vertices);
+	auto HC = pmondriaan::contract_hypergraph(world, H, indices_samples, sample_queue, matched);
 	return HC;
 }
 
@@ -102,7 +105,7 @@ void request_matches(pmondriaan::hypergraph& H, auto& sample_queue, auto& accept
 	/* We set the ip of all local samples with all samples to 0, so they will not match eachother */
 	for (auto i = 0u; i < number_local_samples; i++) {
 		for (auto j = 0; j < total_samples; j++) {
-			ip[indices_samples[i]][j] = 0;
+			ip[indices_samples[i]][j] = 0.0;
 		}
 	}
 	
@@ -145,7 +148,6 @@ void request_matches(pmondriaan::hypergraph& H, auto& sample_queue, auto& accept
 	
 	auto matches = std::vector<std::vector<std::tuple<int, int, double>>>(number_local_samples);
 	for (const auto& [sender, sample, proposer, scip] : request_queue) {
-		world.log("sample: %d, proposer: %d, scip: %lf", s * opts.sample_size + sample, proposer, scip);
 		matches[sample].push_back(std::make_tuple(sender, proposer, scip));
 	}
 	
@@ -163,7 +165,7 @@ void request_matches(pmondriaan::hypergraph& H, auto& sample_queue, auto& accept
 	world.sync();
 }
 
-pmondriaan::hypergraph contract_hypergraph(pmondriaan::hypergraph& H, const std::vector<int> samples, pmondriaan::contraction& contraction, auto& matches, std::vector<bool>& matched) {
+pmondriaan::hypergraph contract_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, const std::vector<int> samples, auto& matches, std::vector<bool>& matched) {
 
 	/* We new nets to which we will later add the vertices */
 	auto new_nets = std::vector<pmondriaan::net>();
@@ -222,6 +224,8 @@ pmondriaan::hypergraph contract_hypergraph(pmondriaan::hypergraph& H, const std:
 			}
 		}
 	}
+	
+	pmondriaan::global_net_sizes(world, HC);
 	
 	return HC;
 }

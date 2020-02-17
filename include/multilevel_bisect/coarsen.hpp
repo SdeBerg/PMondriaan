@@ -26,7 +26,7 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
  */
 void request_matches(pmondriaan::hypergraph& H, auto& sample_queue, auto& accepted_matches, const std::vector<int>& indices_samples, pmondriaan::options& opts);
 
-pmondriaan::hypergraph contract_hypergraph(pmondriaan::hypergraph& H, const std::vector<int> samples, pmondriaan::contraction& contraction, auto& matches, std::vector<bool>& matched);
+pmondriaan::hypergraph contract_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, const std::vector<int> samples, auto& matches, std::vector<bool>& matched);
 
 
 } // namespace pmondriaan

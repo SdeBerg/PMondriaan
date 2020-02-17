@@ -48,15 +48,23 @@ std::vector<long> bisect_multilevel(bulk::world& world, pmondriaan::hypergraph& 
 	
 	auto weight_parts = std::vector<long>(2);
 	
-	/*int s = world.rank();
-	int p = world.active_processors();
+	auto H_reduced = pmondriaan::create_new_hypergraph(world, H, start, end);
+	
+	//int s = world.rank();
+	//int p = world.active_processors();
 	
 	long nc = 0;
-
-	while ((HC.global_size() > options.coarsening_nrvertices) && (nc < options.coarsening_maxrounds)) {
-		coarsen_hypergraph(world, HC);
-				
-	}*/
+	
+	auto HC_list = std::vector<pmondriaan::hypergraph>();
+	HC_list.push_back(H_reduced);
+	//auto HC = H_reduced;
+	
+	while ((HC_list[nc].global_size() > opts.coarsening_nrvertices) && (nc < opts.coarsening_maxrounds)) {
+		//HC = coarsen_hypergraph(world, HC, opts, sampling_mode);
+		HC_list.push_back(coarsen_hypergraph(world, HC_list[nc], opts, sampling_mode));
+		nc++;
+		world.log("After iteration %d, size is %d", nc, HC_list[nc].global_size());
+	}
 				
 	return weight_parts;		
 }

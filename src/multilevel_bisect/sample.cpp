@@ -40,13 +40,20 @@ std::vector<int> sample_lp(pmondriaan::hypergraph& H, pmondriaan::options& opts)
 		count_label[l]++;
 	}
 	
+	int empty_count = 0;
+	for (auto count : count_label) {
+		if (count == 0) {
+			empty_count++;
+		}
+	}
+	
 	auto samples = std::vector<int>();
 	auto found_sample = std::vector<bool>(opts.sample_size, false);
 	int number_samples_found = 0;
 	auto current = 0u;
-	while (number_samples_found < opts.sample_size && current < H.size()) {
+	while (number_samples_found < opts.sample_size - empty_count && current < H.size()) {
 		int l = labels[current];
-		if (!found_sample[l] && ((double) rand() / (RAND_MAX)) < 1.0/count_label[l]) {
+		if (!found_sample[l] && ((double) rand() / (RAND_MAX)) < 1.0/(double)count_label[l]) {
 			found_sample[l] = true;
 			number_samples_found++;
 			samples.push_back(current);

@@ -76,6 +76,12 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 			weight_part_1 = weight_parts[1];
 		}
 		
+		if (mode == "multilevel") {
+			auto weight_parts = bisect_multilevel(world, H, opts, sampling_mode, metric, max_global_weights[0], max_global_weights[1], start, end, label_low, label_high);
+			weight_part_0 = weight_parts[0];
+			weight_part_1 = weight_parts[1];
+		}
+		
 		world.sync();
 		
 		auto total_weight_0 = pmondriaan::foldl(weight_part_0, [](auto& lhs, auto rhs) { lhs += rhs; }, procs_mypart);
@@ -154,6 +160,12 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 			
 			if (mode == "random") {
 				auto weight_parts = bisect_random(world, H, max_global_weights[0], max_global_weights[1], start, end, label_low, label_high);
+				weight_part_0 = weight_parts[0];
+				weight_part_1 = weight_parts[1];
+			}
+			
+			if (mode == "multilevel") {
+				auto weight_parts = bisect_multilevel(world, H, opts, sampling_mode, metric, max_global_weights[0], max_global_weights[1], start, end, label_low, label_high);
 				weight_part_0 = weight_parts[0];
 				weight_part_1 = weight_parts[1];
 			}

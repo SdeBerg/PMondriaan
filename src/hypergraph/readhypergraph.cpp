@@ -176,6 +176,8 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, bulk::world& world,
 	
 	remove_free_nets(world, H);
 	
+	pmondriaan::global_net_sizes(world, H);
+	
 	return H;
 }
 
