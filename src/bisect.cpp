@@ -7,6 +7,7 @@
 #include "multilevel_bisect/coarsen.hpp"
 #include "options.hpp"
 #include "multilevel_bisect/initial_partitioning.hpp"
+#include "multilevel_bisect/uncoarsen.hpp"
 
 namespace pmondriaan {
 
@@ -47,26 +48,36 @@ std::vector<long> bisect_random(bulk::world& world, pmondriaan::hypergraph& H, l
 std::vector<long> bisect_multilevel(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::options& opts, std::string sampling_mode,
 			std::string metric, long max_weight_0, long max_weight_1, int start, int end, int label_0, int label_1) {
 	
-	auto weight_parts = std::vector<long>(2);
-	
 	auto H_reduced = pmondriaan::create_new_hypergraph(world, H, start, end);
-	
-	//int s = world.rank();
-	//int p = world.active_processors();
-	
+
 	long nc = 0;
 	
 	auto HC_list = std::vector<pmondriaan::hypergraph>();
+	auto C_list = std::vector<pmondriaan::contraction>();
 	HC_list.push_back(H_reduced);
-	
+
 	while ((HC_list[nc].global_size() > opts.coarsening_nrvertices) && (nc < opts.coarsening_maxrounds)) {
-		HC_list.push_back(coarsen_hypergraph(world, HC_list[nc], opts, sampling_mode));
+		C_list.push_back(pmondriaan::contraction());
+		HC_list.push_back(coarsen_hypergraph(world, HC_list[nc], C_list[nc], opts, sampling_mode));
 		nc++;
-		world.log("After iteration %d, size is %d", nc, HC_list[nc].global_size());
+		world.log("After iteration %d, size is %d and global weight %d", nc, HC_list[nc].global_size(), HC_list[nc].global_weight(world));
 	}
 	
 	pmondriaan::initial_partitioning(world, HC_list[nc], max_weight_0, max_weight_1, label_0, label_1);
-				
+	
+	while (nc > 0) {
+		nc--;
+		pmondriaan::uncoarsen_hypergraph(world, HC_list[nc+1], HC_list[nc], C_list[nc]);
+	}
+	
+	for (auto& v : HC_list[0].vertices()) {
+		H(H.local_id(v.id())).set_part(v.part());
+	}
+
+	auto weight_parts = std::vector<long>(2);
+	weight_parts[0] = HC_list[0].weight_part(label_0);
+	weight_parts[1] = HC_list[0].weight_part(label_1);
+			
 	return weight_parts;		
 }
 

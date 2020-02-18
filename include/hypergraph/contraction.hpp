@@ -9,19 +9,23 @@
 #include <bulk/backends/thread/thread.hpp>
 #endif
 
+#include "hypergraph/hypergraph.hpp"
+
 namespace pmondriaan {
 
 /**
  * List of vertices matched.
  */
-class match_list {
+class match {
 	public:
-		match_list()  { matches_ = std::vector<std::pair<int,int>>();}
-		void add_match(int proc, int match) { matches_.push_back(std::make_pair(proc, match)); }
+		match(int match, int proc) : id_(match), proc_(proc) {}
 		
-	
+		int id() { return id_; }
+		int proc() {return proc_; }
+		
 	private:
-		std::vector<std::pair<int, int>> matches_;
+		int id_;
+		int proc_;
 };
 
 /**
@@ -29,15 +33,30 @@ class match_list {
  */
 class contraction {
 	public:
-		contraction(size_t size)  {
-			matches_ = std::vector<pmondriaan::match_list>(size, pmondriaan::match_list());
+		contraction()  {
+			ids_samples_ = std::vector<int>();
+			matches_ = std::vector<std::vector<pmondriaan::match>>();
 		}
 		
-		void add_match(int sample, int match, int proc) { matches_[sample].add_match(proc, match); }
+		void add_samples(pmondriaan::hypergraph& H, std::vector<int> indices_samples) {
+			for (auto index : indices_samples) {
+				ids_samples_.push_back(H(index).id());
+			}
+			matches_ = std::vector<std::vector<pmondriaan::match>>(indices_samples.size(), std::vector<pmondriaan::match>());
+		}
+		
+		void add_match(int sample, int match, int proc) { matches_[sample].push_back(pmondriaan::match(match, proc)); }
+		
+		auto& matches(int sample) { return matches_[sample]; }
+		
+		int id_sample(int i) { return ids_samples_[i]; }
+		
+		size_t size() { return ids_samples_.size(); }
 		
 	
 	private:
-		std::vector<pmondriaan::match_list> matches_;
+		std::vector<int> ids_samples_;
+		std::vector<std::vector<pmondriaan::match>> matches_;
 };
 	
 

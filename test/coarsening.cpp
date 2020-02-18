@@ -31,15 +31,16 @@ int main () {
 		}*/
 		
 		auto opts = pmondriaan::options();
-		opts.sample_size = 10;
-		opts.coarsening_max_clustersize = 30;
+		opts.sample_size = 5;
+		opts.coarsening_max_clustersize = 20;
 		opts.lp_max_iterations = 4;
 		opts.coarsening_maxrounds = 10;
 
-		//recursive_bisect(world, H, "multilevel", "label propagation", "cutnet", 2, 0.03, 0.03, opts);
 		auto HC_new = pmondriaan::create_new_hypergraph(world, H, 0, H.size());
-		auto HC = pmondriaan::coarsen_hypergraph(world, HC_new, opts, "label propagation");
-		world.log("global size: %d", HC.global_size()); world.sync();
+		auto C = pmondriaan::contraction();
+		auto HC = pmondriaan::coarsen_hypergraph(world, HC_new, C, opts, "label propagation");
+		world.log("global size: %d and weight: %d", H.global_size(), H.global_weight(world)); world.sync();
+		world.log("global size: %d and weight: %d", HC.global_size(), HC.global_weight(world)); world.sync();
 		/*count = 0;
 		while (count < p) {
 			if (s == count) { HC.print(); }

@@ -205,12 +205,13 @@ void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H) {
  * Creates a new hypergraph that only contains the vertices of H with local id between start and end.
  */
 pmondriaan::hypergraph create_new_hypergraph(bulk::world& new_world, pmondriaan::hypergraph& H, int start, int end) {
-	
+
 	std::vector<pmondriaan::vertex> new_vertices(H.vertices().begin() + start, H.vertices().begin() + end);
 	auto new_nets = std::vector<pmondriaan::net>();
 	for (auto& n : H.nets()) {
 		new_nets.push_back(pmondriaan::net(n.id(), std::vector<int>()));
 	}
+
 	for (auto& v : new_vertices) {
 		for (auto n : v.nets()) {
 			new_nets[n].add_vertex(v.id());
@@ -220,7 +221,7 @@ pmondriaan::hypergraph create_new_hypergraph(bulk::world& new_world, pmondriaan:
 	bulk::var<int> new_size(new_world);
 	new_size = (int)new_vertices.size();
 	auto new_global_size = bulk::foldl(new_size, [](int& lhs, int rhs) { lhs += rhs; });
-	
+
 	auto new_H = pmondriaan::hypergraph(new_global_size, new_vertices, new_nets);
 	global_net_sizes(new_world, new_H);
 	

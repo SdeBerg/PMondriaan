@@ -16,6 +16,7 @@ set(LIB_SOURCES
   "src/multilevel_bisect/coarsen.cpp"
   "src/multilevel_bisect/label_propagation.cpp"
   "src/multilevel_bisect/initial_partitioning.cpp"
+  "src/multilevel_bisect/uncoarsen.cpp"
 )
 add_library(PMondriaan ${LIB_SOURCES})
 

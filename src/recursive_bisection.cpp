@@ -61,7 +61,7 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 	
 	// while we need to give more than one label and need to use more than one processor, we bisect the hypergraph in parallel
 	while (label_high - label_low > 0 && p > 1) {
-		
+
 		k_ = label_high - label_low + 1;
 		p = procs_mypart[1] - procs_mypart[0];
 		

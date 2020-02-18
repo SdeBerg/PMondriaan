@@ -20,7 +20,7 @@ namespace pmondriaan {
 /**
  * Coarses the hypergraph H and returns a hypergraph HC.
  */
-pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::options& opts, std::string sampling_mode) {
+pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::contraction& C, pmondriaan::options& opts, std::string sampling_mode) {
 	
 	int s = world.rank();
 	int p = world.active_processors();
@@ -46,9 +46,10 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 
 	world.sync();
 	
+	C.add_samples(H, indices_samples);
 	auto accepted_matches = bulk::queue<int, int>(world);
 	/* After his funtion, accepted matches contains the matches that have been accepted */
-	request_matches(H, sample_queue, accepted_matches, indices_samples, opts);
+	request_matches(H, C, sample_queue, accepted_matches, indices_samples, opts);
 
 	/* We use the sample_queue again to send the information about the accepted samples */
 	auto matched = std::vector<bool>(H.size(), false);
@@ -60,15 +61,7 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 	}
 	
 	world.sync();
-	
-	/* We compute the number of new vertices (in the matched vector samples are also labeled as unmatched */
-	int new_vertices = 0;
-	for (auto m : matched) {
-		if (!m) {
-			new_vertices++;
-		}
-	}
-	//auto contraction = pmondriaan::contraction(new_vertices);
+
 	auto HC = pmondriaan::contract_hypergraph(world, H, indices_samples, sample_queue, matched);
 	return HC;
 }
@@ -77,7 +70,7 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 /* Sends match request to the owners of the best matches found using the improduct computation.
  * Returns the local matches. 
  */
-void request_matches(pmondriaan::hypergraph& H, auto& sample_queue, auto& accepted_matches, const std::vector<int>& indices_samples, pmondriaan::options& opts) {
+void request_matches(pmondriaan::hypergraph& H, pmondriaan::contraction& C, auto& sample_queue, auto& accepted_matches, const std::vector<int>& indices_samples, pmondriaan::options& opts) {
 	
 	auto& world = sample_queue.world();
 	int s = world.rank();
@@ -148,13 +141,14 @@ void request_matches(pmondriaan::hypergraph& H, auto& sample_queue, auto& accept
 		matches[sample].push_back(std::make_tuple(sender, proposer, scip));
 	}
 	
-	for (auto i = 0u; i < indices_samples.size(); i++) {
+	for (auto i = 0u; i < number_local_samples; i++) {
 		auto& match_list = matches[i];
 		std::sort(match_list.begin(), match_list.end(), [](const auto& match1, const auto& match2) -> bool { return std::get<2>(match1) > std::get<2>(match2); });
 		
 		int number_to_send = std::min((int)match_list.size(), opts.coarsening_max_clustersize);
 		for (int j = 0; j < number_to_send; j++) {
 			auto& match = match_list[j];
+			C.add_match(i, std::get<1>(match), std::get<0>(match));
 			accepted_matches(std::get<0>(match)).send(i + s * opts.sample_size, std::get<1>(match));
 		}
 	}
@@ -186,12 +180,6 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world, pmondriaan::hyper
 		}
 	}
 	
-	bulk::var<int> new_size(matches.world());
-	new_size = (int)new_vertices.size();
-	auto new_global_size = bulk::foldl(new_size, [](int& lhs, int rhs) { lhs += rhs; });
-	
-	auto HC = pmondriaan::hypergraph(new_global_size, new_vertices, new_nets);
-	
 	/* We create the new weight and adjacency list for all samples */
 	auto sample_total_weight= std::vector<long>(samples.size(), 0);
 	auto sample_net_lists = std::vector<std::vector<int>>(samples.size());
@@ -199,6 +187,11 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world, pmondriaan::hyper
 		sample_total_weight[sample] += weight;
 		sample_net_lists[sample].insert(sample_net_lists[sample].end(), nets.begin(), nets.end());
 	}
+	
+	bulk::var<int> new_size(matches.world());
+	new_size = (int)new_vertices.size();
+	auto new_global_size = bulk::foldl(new_size, [](int& lhs, int rhs) { lhs += rhs; });
+	auto HC = pmondriaan::hypergraph(new_global_size, new_vertices, new_nets);
 	
 	/* This vector keeps track of the nets already include for the current vertex
 	 if included_in_net[n] is equal to the sample number, the net is already included */
