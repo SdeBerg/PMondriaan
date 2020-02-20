@@ -83,7 +83,7 @@ void request_matches(pmondriaan::hypergraph& H, pmondriaan::contraction& C, auto
 	auto ip = std::vector<std::vector<double>>(H.size(), std::vector<double>(total_samples, 0.0));
 	auto degree_samples = std::vector<int>(total_samples);
 
-	for (auto& [t, number_sample, sample_nets] : std::move(sample_queue)) {
+	for (const auto& [t, number_sample, sample_nets] : sample_queue) {
 		degree_samples[t * opts.sample_size + number_sample] = sample_nets.size();
 		for (auto n_id : sample_nets) {
 			for (auto u_id : H.net(n_id).vertices()) {

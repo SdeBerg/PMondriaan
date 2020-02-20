@@ -21,7 +21,7 @@ int main () {
 		int s = world.rank();
 		
 		srand(world.rank() + 1);
-		auto H = pmondriaan::read_hypergraph("../test/data/matrices/dolphins/dolphins.mtx", world, "degree");
+		auto H = pmondriaan::read_hypergraph("../test/data/matrices/dolphins/dolphins.mtx", world, "one");
 
 		/*int count = 0;
 		while (count < p) {
@@ -35,12 +35,14 @@ int main () {
 		opts.coarsening_max_clustersize = 20;
 		opts.lp_max_iterations = 4;
 		opts.coarsening_maxrounds = 10;
-
-		auto HC_new = pmondriaan::create_new_hypergraph(world, H, 0, H.size());
-		auto C = pmondriaan::contraction();
-		auto HC = pmondriaan::coarsen_hypergraph(world, HC_new, C, opts, "label propagation");
+		opts.coarsening_nrvertices = 50;
 		
-		for (auto& net : HC.nets()) {
+		recursive_bisect(world, H, "multilevel", "label propagation", "cutnet", 2, 0.03, 0.03, opts);
+		
+		auto lb = pmondriaan::compute_load_balance(world, H, 2);
+		auto cutsize = pmondriaan::compute_cutsize(world, H, 2, "cutnet");
+		
+		for (auto& net : H.nets()) {
 			if (s == 0) {
 				world.log("net: %d", net.id());
 			}
@@ -48,13 +50,19 @@ int main () {
 			while (count < p) {
 				if (s == count) { 
 					for (auto v : net.vertices()) {
-						world.log("%d", v);
+						world.log("%d, part: %d", v, H(H.local_id(v)).part());
 					}
 				}
 				world.sync();
 				count ++;
 			}
 		}
+		
+		if (s == 0) {
+			world.log("Load balance of partitioning found: %lf", lb);
+			world.log("Cutsize of partitioning found: %d", cutsize);
+		}
+		world.sync();
 	});
 	return 0;
 }

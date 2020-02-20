@@ -97,7 +97,6 @@ void hypergraph::print() {
 		}
 		std::cout << "\n";
 	}
-	
 }
 
 /**
@@ -132,25 +131,30 @@ long compute_cutsize(bulk::world& world, pmondriaan::hypergraph& H, int k, std::
 	
 	long result = 0;
 	if (metric == "cutnet") {
-		auto cut = bulk::coarray<bool>(world, H.nets().size());
+		/* This coarray contains the label of a net if it is not cut, -1 if there are no vertices in this net and -2 if it is already cut */
+		auto label = bulk::coarray<int>(world, H.nets().size());
 		for (auto& net : H.nets()) {
-			cut[net.id()] = false;
+			label[net.id()] = -1;
 			if (net.size() > 0u) {
 				auto& vertices = net.vertices();
 				auto part = H(H.local_id(vertices[0])).part();
+				label[net.id()] = part;
 				for (auto& v : vertices) {
 					if (H(H.local_id(v)).part() != part) {
-						cut[net.id()] = true;
+						label[net.id()] = -2;
 						break;
 					}
 				}
 			}
 		}
 		
-		auto total_cut = pmondriaan::foldl(cut, [](auto lhs, auto rhs) { return lhs || rhs; });
-		for (auto c : total_cut) {
-			if (!c) {
-				result++;
+		auto total_cut = pmondriaan::foldl(label, [](auto& lhs, auto rhs) { if (lhs == -1) {lhs = rhs;}
+																			else { if ((lhs != rhs) && (rhs != -1)) {lhs = -2; } }
+																			return lhs; }, -1);
+		
+		for (auto i = 0u; i < H.nets().size(); i++) {
+			if (total_cut[i] == -2) {
+				result += H.net(i).cost();
 			}
 		}
 	}
