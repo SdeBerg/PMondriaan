@@ -20,7 +20,7 @@ namespace pmondriaan {
  * Recursively bisects a hypergraph into k parts with imbalance parameter epsilon.
  * Eta is the load imbalance parameter for the imbalance over the processors during computation.
  */
-void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string mode, std::string sampling_mode, std::string metric, 
+void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string bisect_mode, std::string sampling_mode, std::string metric, 
 				int k, double epsilon, double eta, pmondriaan::options& opts) {
 	
 	int s = world.rank();
@@ -29,11 +29,8 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 	// we need to make sure every processor uses a different seed to generate random numbers
 	srand(s + 1);
 	
-	//we first compute the max weight of each part
-	bulk::var<long> local_weight(world);
-	local_weight = H.total_weight();
-	auto global_weight = bulk::foldl(local_weight, [](auto& lhs, auto rhs) { lhs += rhs; });
-	long maxweight = ((1 + epsilon) * global_weight) / k;
+	auto global_weight = pmondriaan::global_weight(world, H);
+	long maxweight = ((1.0 + epsilon) * global_weight) / k;
 	
 	// the processors working with processor s on the same part are procs_mypart[0],..., procs_mypart[1] - 1.
 	auto procs_mypart = std::vector<int>(2);
@@ -47,12 +44,7 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 
 	int label_low = 0;
 	int label_high = k - 1;
-	
-	// part 0 will always have the smallest weight
-	bulk::var<long> weight_part_0(world);
-	bulk::var<long> weight_part_1(world);
-	
-	int k_, k_low, k_high, p_low, p_high, my_part;
+
 	long weight_mypart = global_weight;
 	
 	if (p == 1) {
@@ -60,45 +52,36 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 	}
 	
 	// while we need to give more than one label and need to use more than one processor, we bisect the hypergraph in parallel
-	while (label_high - label_low > 0 && p > 1) {
+	while ((label_high - label_low > 0) && (p > 1)) {
 
-		k_ = label_high - label_low + 1;
-		p = procs_mypart[1] - procs_mypart[0];
+		int k_ = label_high - label_low + 1;
 		
-		k_low = k_/2;
-        k_high = (k_%2==0 ? k_low : k_low+1);
+		int k_low = k_/2;
+        int k_high = k_ - k_low;
 		
 		auto max_global_weights = compute_max_global_weight(k_, k_low, k_high, weight_mypart, maxweight);
 		
-		if (mode == "random") {
-			auto weight_parts = bisect_random(world, H, max_global_weights[0]/p, max_global_weights[1]/p, start, end, label_low, label_high);
-			weight_part_0 = weight_parts[0];
-			weight_part_1 = weight_parts[1];
-		}
+		// part 0 will always have the smallest weight
+		bulk::var<long> weight_part_0(world);
+		bulk::var<long> weight_part_1(world);
 		
-		if (mode == "multilevel") {
-			auto weight_parts = bisect_multilevel(world, H, opts, sampling_mode, metric, max_global_weights[0], max_global_weights[1], start, end, label_low, label_high);
-			weight_part_0 = weight_parts[0];
-			weight_part_1 = weight_parts[1];
-		}
-		
-		world.sync();
+		auto weight_parts = bisect(world, H, bisect_mode, sampling_mode, opts, metric, max_global_weights[0], max_global_weights[1], start, end, label_low, label_high);
+		weight_part_0 = weight_parts[0];
+		weight_part_1 = weight_parts[1];
 		
 		auto total_weight_0 = pmondriaan::foldl(weight_part_0, [](auto& lhs, auto rhs) { lhs += rhs; }, procs_mypart);
 		auto total_weight_1 = pmondriaan::foldl(weight_part_1, [](auto& lhs, auto rhs) { lhs += rhs; }, procs_mypart);
 
 		// number of processors working on the low and high part respectively
-		p_low = (double)total_weight_0/(double)(total_weight_0 + total_weight_1) * (double)p + 0.5;
+		int p_low = (double)total_weight_0/(double)(total_weight_0 + total_weight_1) * (double)p + 0.5;
 		if((k_low == 1) & (k_high > 1)) {
 			p_low = 0;
 		}
-		p_high = p - p_low;
+		int p_high = p - p_low;
 		
+		int my_part = 1;
 		if (s - procs_mypart[0] < p_low){
 			my_part = 0;
-		}
-		else {
-			my_part = 1;
 		}
 		
 		//personal low and high label for the next round
@@ -151,24 +134,14 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 		weight_mypart = job.weight();
 		
 		while(label_high - label_low > 0) {
-			k_ = label_high - label_low + 1;
+			int k_ = label_high - label_low + 1;
 			
-			k_low = k_/2;
-			k_high = (k_%2==0 ? k_low : k_low+1);
+			int k_low = k_/2;
+			int k_high = k_ - k_low;
 			
 			auto max_global_weights = compute_max_global_weight(k_, k_low, k_high, weight_mypart, maxweight);
 			
-			if (mode == "random") {
-				auto weight_parts = bisect_random(world, H, max_global_weights[0], max_global_weights[1], start, end, label_low, label_high);
-				weight_part_0 = weight_parts[0];
-				weight_part_1 = weight_parts[1];
-			}
-			
-			if (mode == "multilevel") {
-				auto weight_parts = bisect_multilevel(world, H, opts, sampling_mode, metric, max_global_weights[0], max_global_weights[1], start, end, label_low, label_high);
-				weight_part_0 = weight_parts[0];
-				weight_part_1 = weight_parts[1];
-			}
+			auto weight_parts = bisect(world, H, bisect_mode, sampling_mode, opts, metric, max_global_weights[0], max_global_weights[1], start, end, label_low, label_high);
 			
 			int label_low_0 = label_low;
 			int label_high_0 = label_high - k_high;
@@ -177,13 +150,12 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 			
 			int end_1 = end;
 			
-			if (label_high_0 - label_low_0 > 0) {
-				reorder_hypergraph(H, start, end, label_low, label_high);
-			}
 			if (label_high_1 - label_low_1 > 0) {
-				jobs.push(pmondriaan::work_item(end, end_1, label_low_1, label_high_1, weight_part_1.value()));
+				reorder_hypergraph(H, start, end, label_low, label_high);
+				jobs.push(pmondriaan::work_item(end, end_1, label_low_1, label_high_1, weight_parts[1]));
 			}
-			world.log("weight part %d: %d, weight part %d: %d", label_low, weight_part_0.value(), label_high, weight_part_1.value());
+			world.log("weight part %d: %d, weight part %d: %d", label_low, weight_parts[0], label_high, weight_parts[1]);
+			weight_mypart = weight_parts[0];
 			label_low = label_low_0;
 			label_high = label_high_0;
 		}
@@ -221,8 +193,8 @@ int redistribute_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, std::
 	auto all_surplus_0 = pmondriaan::gather_all(world, procs_mypart, surplus_0);
 	auto all_surplus_1 = pmondriaan::gather_all(world, procs_mypart, surplus_1);
 	
-	//we move all vertices to of part 1 to a separate vector, be be put at the back of the vertices later
-	//if part 1 is finished
+	/* we move all vertices of part 0 to a separate vector, be be put at the back of the vertices later
+	   if part 0 is finished */
 	auto vertices_0 = std::vector<pmondriaan::vertex>();
 	
 	//queue for all received vertices
@@ -256,7 +228,7 @@ int redistribute_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, std::
 		H.vertices().insert(end(H.vertices()), begin(vertices_0), end(vertices_0));
 	}
 	
-	H.renumber_vertices();
+	H.update_map();
 	
 	return H.size() - vertices_0.size();
 }

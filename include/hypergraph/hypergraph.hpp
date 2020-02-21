@@ -71,14 +71,11 @@ class hypergraph {
 		hypergraph(int global_size, std::vector<pmondriaan::vertex> vertices, std::vector<pmondriaan::net> nets)
 			: global_size_(global_size), vertices_(std::move(vertices)), nets_(std::move(nets)) {
 				global_to_local = std::unordered_map<int,int>();
-				renumber_vertices();
+				update_map();
 			}
 		
 		//computes the total weight of the vertices
 		long total_weight();
-		
-		//global weight of hypergraph in world
-		long global_weight(bulk::world& world);
 		
 		//computes the sum of the weights of vertices in part
 		long weight_part(int part);
@@ -89,10 +86,11 @@ class hypergraph {
 		//adds vertex to all nets
 		void add_to_nets(pmondriaan::vertex& v);
 		
-		//removes id from all nets
+		//removes vertex id from all nets
 		void remove_from_nets(int id);
 		
-		void renumber_vertices();
+		//updates the global_to_local map
+		void update_map();
 		
 		int local_id(int global_id) {return global_to_local[global_id]; }
 		bool is_local(int global_id) {return (global_to_local.count(global_id) > 0); }
@@ -119,14 +117,19 @@ class hypergraph {
 };
 
 /**
+ * Compute the global weight of a hypergraph.
+ */
+long global_weight(bulk::world& world, pmondriaan::hypergraph& H);
+		
+/**
  * Compute the global load imbalance of a hypergraph.
  */
-double compute_load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k);
+double load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k);
 
 /**
  * Compute the cutsize with the correct metric
  */
-long compute_cutsize(bulk::world& world, pmondriaan::hypergraph& H, int k, std::string metric);
+long cutsize(bulk::world& world, pmondriaan::hypergraph& H, int k, std::string metric);
 
 /**
  * Compute the global net sizes of a hypergraph.

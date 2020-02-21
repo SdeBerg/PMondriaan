@@ -12,7 +12,7 @@ namespace pmondriaan {
 /**
  * Recursively bisects a hypergraph into k parts.
  */
-void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string mode, std::string sampling_mode, std::string metric, 
+void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string bisect_mode, std::string sampling_mode, std::string metric, 
 				int k, double epsilon, double eta, pmondriaan::options& opts);
 
 std::vector<long> compute_max_global_weight(int k_, int k_low, int k_high, long weight_mypart, long maxweight);

@@ -86,8 +86,8 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, bulk::world& world,
 	auto L = bulk::var<uint64_t>(world);
 	
 	
-	// Queue where vertices will be assigned to a processor. A message is given
-	// as a vertex id and a net id that contains the vertex.
+	/* Queue used to assign vertices to a processor. A message is given
+	   as a vertex id and a net id that contains the vertex. */
 	auto vertices_queue = bulk::queue<int, int>(world);
 	
 	if (s == 0) {
@@ -144,9 +144,7 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, bulk::world& world,
 	// List of nets for each vertex
 	auto nets_list = std::vector<std::vector<int>>(partitioning.local_count(s));
 	auto vertex_list = std::vector<std::vector<int>>(E);
-	for (auto vertex_net : vertices_queue) {
-		int v, n;
-		std::tie(v, n) = vertex_net;
+	for (const auto& [v,n] : vertices_queue) {
 		int v_loc = partitioning.local({v})[0];
 		nets_list[v_loc].push_back(n);
 		vertex_list[n].push_back(v);
@@ -174,9 +172,7 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, bulk::world& world,
 	
 	auto H = pmondriaan::hypergraph(V, vertices, nets);
 	
-	remove_free_nets(world, H);
-	
-	pmondriaan::global_net_sizes(world, H);
+	pmondriaan::remove_free_nets(world, H);
 	
 	return H;
 }

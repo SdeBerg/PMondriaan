@@ -127,8 +127,8 @@ int main(int argc, char **argv) {
 
 		recursive_bisect(world, H, bisection_mode, sampling_mode, metric, k, eps, eta, options);
 		
-		auto lb = pmondriaan::compute_load_balance(world, H, k);
-		auto cutsize = pmondriaan::compute_cutsize(world, H, k, metric);
+		auto lb = pmondriaan::load_balance(world, H, k);
+		auto cutsize = pmondriaan::cutsize(world, H, k, metric);
 		
 		if (s == 0) {
 			world.log("Load balance of partitioning found: %lf", lb);

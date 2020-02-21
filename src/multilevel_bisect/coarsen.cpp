@@ -18,7 +18,7 @@
 namespace pmondriaan {
 
 /**
- * Coarses the hypergraph H and returns a hypergraph HC.
+ * Coarses the hypergraph H and returns a new hypergraph HC.
  */
 pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::contraction& C, pmondriaan::options& opts, std::string sampling_mode) {
 	

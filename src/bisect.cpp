@@ -12,6 +12,27 @@
 namespace pmondriaan {
 
 /**
+ * Bisect a hypergraph using the given bisection method and returns the weights of the two parts.
+ */
+std::vector<long> bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string bisect_mode, std::string sampling_mode,
+			pmondriaan::options& opts, std::string metric, long max_weight_0, long max_weight_1, int start, int end, int label_0, int label_1) {
+	
+	auto weight_parts = std::vector<long>(2);
+	int p = world.active_processors();
+	if (bisect_mode == "random") {
+		weight_parts = bisect_random(world, H, max_weight_0/p, max_weight_1/p, start, end, label_0, label_1);
+	}
+	
+	if (bisect_mode == "multilevel") {
+		weight_parts = bisect_multilevel(world, H, opts, sampling_mode, metric, max_weight_0, max_weight_1, start, end, label_0, label_1);
+	}			
+	
+	return weight_parts;
+}
+ 
+
+
+/**
  * Randomly bisects a hypergraph under the balance constraint and returns the weights of the two parts.
  */
 std::vector<long> bisect_random(bulk::world& world, pmondriaan::hypergraph& H, long max_weight_0, long max_weight_1, 
@@ -43,7 +64,6 @@ std::vector<long> bisect_random(bulk::world& world, pmondriaan::hypergraph& H, l
 
 /**
  * Bisects a hypergraph using the multilevel framework.
- * TODO: make sure the correct world is used (so not always all procs).
  */
 std::vector<long> bisect_multilevel(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::options& opts, std::string sampling_mode,
 			std::string metric, long max_weight_0, long max_weight_1, int start, int end, int label_0, int label_1) {
@@ -60,7 +80,7 @@ std::vector<long> bisect_multilevel(bulk::world& world, pmondriaan::hypergraph& 
 		C_list.push_back(pmondriaan::contraction());
 		HC_list.push_back(coarsen_hypergraph(world, HC_list[nc], C_list[nc], opts, sampling_mode));
 		nc++;
-		world.log("After iteration %d, size is %d and global weight %d", nc, HC_list[nc].global_size(), HC_list[nc].global_weight(world));
+		world.log("After iteration %d, size is %d", nc, HC_list[nc].global_size());
 	}
 	
 	pmondriaan::initial_partitioning(world, HC_list[nc], max_weight_0, max_weight_1, label_0, label_1);

@@ -39,8 +39,8 @@ int main () {
 		
 		recursive_bisect(world, H, "multilevel", "label propagation", "cutnet", 2, 0.03, 0.03, opts);
 		
-		auto lb = pmondriaan::compute_load_balance(world, H, 2);
-		auto cutsize = pmondriaan::compute_cutsize(world, H, 2, "cutnet");
+		auto lb = pmondriaan::load_balance(world, H, 2);
+		auto cutsize = pmondriaan::cutsize(world, H, 2, "cutnet");
 		
 		for (auto& net : H.nets()) {
 			if (s == 0) {
