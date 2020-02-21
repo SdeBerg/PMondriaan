@@ -1,5 +1,7 @@
 #include <vector>
 #include <iostream>
+#include <set>
+#include <algorithm>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
@@ -133,32 +135,44 @@ double load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k) {
 long cutsize(bulk::world& world, pmondriaan::hypergraph& H, int k, std::string metric) {
 	
 	long result = 0;
-	if (metric == "cutnet") {
-		//this coarray contains the label of a net if it is not cut, -1 if there are no vertices in this net and -2 if it is already cut
-		auto label = bulk::coarray<int>(world, H.nets().size());
-		for (auto& net : H.nets()) {
-			label[net.id()] = -1;
-			if (net.size() > 0u) {
-				auto& vertices = net.vertices();
-				auto part = H(H.local_id(vertices[0])).part();
-				label[net.id()] = part;
-				for (auto& v : vertices) {
-					if (H(H.local_id(v)).part() != part) {
-						label[net.id()] = -2;
-						break;
-					}
-				}
+	//this queue contains all labels present for each net
+	auto labels = bulk::queue<int, int[]>(world);
+	for (auto& net : H.nets()) {
+		if (net.size() > 0) {
+			auto labels_net = std::set<int>();
+			for (auto& v : net.vertices()) {
+				labels_net.insert(H(H.local_id(v)).part());
+			}
+			for (int t = 0; t < world.active_processors(); t++) {
+				labels(t).send(net.id(), std::vector<int>(labels_net.begin(), labels_net.end()));
 			}
 		}
-		
-		auto total_cut = pmondriaan::foldl_each(label, [](auto& lhs, auto rhs) { if (lhs == -1) {lhs = rhs;}
-																			else { if ((lhs != rhs) && (rhs != -1)) {lhs = -2; } }
-																			return lhs; }, -1);
-		
-		for (auto i = 0u; i < H.nets().size(); i++) {
-			if (total_cut[i] == -2) {
+	}
+	
+	world.sync();
+	
+	auto total_cut = std::vector<std::set<int>>(H.nets().size(), std::set<int>());
+	for (const auto& [net, labels_net] : labels) {
+		for (auto l : labels_net) {
+			total_cut[net].insert(l);
+		}
+	}
+	
+	for (auto i = 0u; i < H.nets().size(); i++) {
+		if (metric == "cutnet") {
+			if (total_cut[i].size() > 1) {
 				result += H.net(i).cost();
 			}
+		}
+		else { if (metric == "lambda1") {
+			if (total_cut[i].size() > 1) {
+				result += (total_cut[i].size() - 1) * H.net(i).cost();
+			}
+		}
+		else {
+			std::cerr << "Error: unknown metric";
+			break;
+		}
 		}
 	}
 	
