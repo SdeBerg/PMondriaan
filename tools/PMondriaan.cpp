@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
 	
 	int p, k;
 	double eps, eta;
-	std::string matrix_file, hypergraph_weigths, bisection_mode, sampling_mode, metric;
+	std::string matrix_file, hypergraph_weights, bisection_mode, sampling_mode, metric;
 	auto options = pmondriaan::options();
 	
 	CLI::Option *fopt = app.add_option("-f, --file", matrix_file, "File including the hypergraph to be partitioned in matrixmarket format");
@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
 	app.add_option("--eps, --epsilon", eps, "Maximum imbalance of the final partitioning");
 	app.add_option("--eta", eta, "Maximum imbalance during the parallel computation");
 	
-	CLI::Option *wopt = app.add_option("--weights", hypergraph_weigths, "How the weights of the vertices should be computed");
+	CLI::Option *wopt = app.add_option("--weights", hypergraph_weights, "How the weights of the vertices should be computed");
 	CLI::Option *bopt = app.add_option("--bisect", bisection_mode, "The bisection mode used");
 	CLI::Option *copt = app.add_option("--sampling", sampling_mode, "Sampling mode to be used");
 	CLI::Option *mopt = app.add_option("--metric", metric, "Metric to optimized");
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 
 		int k;
 		double eps, eta;
-		std::string matrix_file, hypergraph_weigths, bisection_mode, sampling_mode, metric;
+		std::string matrix_file, hypergraph_weights, bisection_mode, sampling_mode, metric;
 
 		auto options = pmondriaan::options();
 		
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
 			app.add_option("-k, --k", k, "Number of parts to partition H into");
 			app.add_option("--eps, --epsilon", eps, "Maximum imbalance of the final partitioning");
 			app.add_option("--eta", eta, "Maximum imbalance during the parallel computation");
-			app.add_option("--weights", hypergraph_weigths, "How the weights of the vertices should be computed");
+			app.add_option("--weights", hypergraph_weights, "How the weights of the vertices should be computed");
 			app.add_option("--bisect", bisection_mode, "The bisection mode used");
 			app.add_option("--sampling", sampling_mode, "Sampling mode to be used");
 			app.add_option("--metric", metric, "Metric to optimized");
@@ -104,26 +104,26 @@ int main(int argc, char **argv) {
 			app.parse(argc, &argv[0]);
 			
 			for (int t = 0; t < p; t++) {
-				q_settings(t).send(k, eps, eta, matrix_file, hypergraph_weigths, bisection_mode, sampling_mode, metric, options);
+				q_settings(t).send(k, eps, eta, matrix_file, hypergraph_weights, bisection_mode, sampling_mode, metric, options);
 			}
 			
 		}
 		
 		world.sync();
 		
-		for (const auto& [k_, eps_, eta_, matrix_file_, hypergraph_weigths_, bisection_mode_, sampling_mode_, metric_, options_] : q_settings) {
+		for (const auto& [k_, eps_, eta_, matrix_file_, hypergraph_weights_, bisection_mode_, sampling_mode_, metric_, options_] : q_settings) {
             k = k_;
 			eps = eps_;
 			eta = eta_;
 			matrix_file = matrix_file_;
-			hypergraph_weigths = hypergraph_weigths_;
+			hypergraph_weights = hypergraph_weights_;
 			bisection_mode = bisection_mode_;
 			sampling_mode = sampling_mode_;
 			metric = metric_;
 			options = options_;
         }
 		
-		auto H = pmondriaan::read_hypergraph(matrix_file, world, hypergraph_weigths);
+		auto H = pmondriaan::read_hypergraph(matrix_file, world, hypergraph_weights);
 
 		recursive_bisect(world, H, bisection_mode, sampling_mode, metric, k, eps, eta, options);
 		
