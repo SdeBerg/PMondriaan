@@ -4,3 +4,6 @@
 [submodule "ext/CLI11"]
 	path = ext/CLI11
 	url = https://github.com/CLIUtils/CLI11.git
+[submodule "ext/bulk"]
+	path = ext/bulk
+	url = https://github.com/jwbuurlage/bulk.git

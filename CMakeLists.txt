@@ -3,7 +3,7 @@ include(FeatureSummary)
 
 project(PMondriaan)
 
-add_subdirectory("ext/bulk/Bulk-develop")
+add_subdirectory("ext/bulk")
 add_subdirectory("ext/CLI11")
 
 set(LIB_SOURCES
