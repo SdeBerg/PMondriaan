@@ -44,7 +44,6 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, std::string mode_we
 		
 	// Read the data
 	std::string line;
-	std::getline(fin, line);
 	while (std::getline(fin, line))
 	{
 		int e, v;
@@ -58,14 +57,17 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, std::string mode_we
 	
 	auto vertices = std::vector<pmondriaan::vertex>();
 	auto nets = std::vector<pmondriaan::net>();
-	for (int i = 0; i < V; i++) {
-		if (mode_weight == "one") {
-			vertices.push_back(pmondriaan::vertex(i, nets_list[i]));
+  if (mode_weight == "one") {
+    for (int i = 0; i < V; i++) {
+		    vertices.push_back(pmondriaan::vertex(i, nets_list[i]));
 		}
-		if (mode_weight == "degree") {
-			vertices.push_back(pmondriaan::vertex(i, nets_list[i], nets_list[i].size()));
+  }
+	else if (mode_weight == "degree") {
+    for (int i = 0; i < V; i++) {
+		    vertices.push_back(pmondriaan::vertex(i, nets_list[i], nets_list[i].size()));
 		}
 	}
+
 	for (int i = 0; i < E; i++) {
 		nets.push_back(pmondriaan::net(i, vertex_list[i]));
 	}
@@ -128,7 +130,6 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, bulk::world& world,
 		
 		// Read the data
 		std::string line;
-		std::getline(fin, line);
 		while (std::getline(fin, line))
 		{
 			int e, v;
@@ -152,20 +153,19 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, bulk::world& world,
 	
 	auto vertices = std::vector<pmondriaan::vertex>();
 	auto nets = std::vector<pmondriaan::net>();
-	for (int i = 0; i < partitioning.local_count(s); i++) {
-		if (mode_weight == "one") {
+  if (mode_weight == "one") {
+    for (int i = 0; i < partitioning.local_count(s); i++) {
 			vertices.push_back(pmondriaan::vertex(partitioning.global({i}, s)[0], nets_list[i]));
 		}
-		else {
-		if (mode_weight == "degree") {
+  }
+	else if (mode_weight == "degree") {
+    for (int i = 0; i < partitioning.local_count(s); i++) {
 			vertices.push_back(pmondriaan::vertex(partitioning.global({i}, s)[0], nets_list[i], nets_list[i].size()));
 		}
-		else {
-			std::cerr << "Error: unknown mode_weight";
-			break;
-		}
-		}
-	}
+  }
+  else {
+    std::cerr << "Error: unknown mode_weight";
+  }
 	for (int i = 0; i < E; i++) {
 		nets.push_back(pmondriaan::net(i, vertex_list[i]));
 	}

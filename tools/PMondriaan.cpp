@@ -83,8 +83,10 @@ int main(int argc, char **argv) {
 		
 		auto lb = pmondriaan::load_balance(world, H, settings.k);
 		auto cutsize = pmondriaan::cutsize(world, H, settings.k, settings.metric);
+
 		
 		if (s == 0) {
+      world.log("Partitioned hypergraph with %d vertices", H.global_size());
 			world.log("Load balance of partitioning found: %lf", lb);
 			world.log("Cutsize of partitioning found: %d", cutsize);
 		}
