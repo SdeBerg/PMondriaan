@@ -12,6 +12,11 @@ namespace pmondriaan {
 /**
  * Creates an initial partitioning for hypergraph H.
  */
-void initial_partitioning(bulk::world& world, pmondriaan::hypergraph& H, long max_weight_0, long max_weight_1, int label_0, int label_1);
+void initial_partitioning(bulk::world& world,
+                          pmondriaan::hypergraph& H,
+                          long max_weight_0,
+                          long max_weight_1,
+                          int label_0,
+                          int label_1);
 
 } // namespace pmondriaan
