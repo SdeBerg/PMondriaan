@@ -26,9 +26,7 @@ void recursive_bisect(bulk::world& world, pmondriaan::hypergraph& H, std::string
 	int s = world.rank();
 	int p = world.active_processors();
 	
-	// we need to make sure every processor uses a different seed to generate random numbers
-	srand(s + 1);
-	
+
 	auto global_weight = pmondriaan::global_weight(world, H);
 	long maxweight = ((1.0 + epsilon) * global_weight) / k;
 	
