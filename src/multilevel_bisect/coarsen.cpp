@@ -70,7 +70,7 @@ pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world, pmondriaan::hyperg
 /* Sends match request to the owners of the best matches found using the improduct computation.
  * Returns the local matches. 
  */
-void request_matches(pmondriaan::hypergraph& H, pmondriaan::contraction& C, auto& sample_queue, auto& accepted_matches, const std::vector<int>& indices_samples, pmondriaan::options& opts) {
+void request_matches(pmondriaan::hypergraph& H, pmondriaan::contraction& C, bulk::queue<int, long, int[]>& sample_queue, bulk::queue<int, int>& accepted_matches, const std::vector<int>& indices_samples, pmondriaan::options& opts) {
 	
 	auto& world = sample_queue.world();
 	int s = world.rank();
@@ -156,7 +156,7 @@ void request_matches(pmondriaan::hypergraph& H, pmondriaan::contraction& C, auto
 	world.sync();
 }
 
-pmondriaan::hypergraph contract_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, const std::vector<int> samples, auto& matches, std::vector<bool>& matched) {
+pmondriaan::hypergraph contract_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, const std::vector<int> samples, bulk::queue<int, long, int[]>& matches, std::vector<bool>& matched) {
 
 	/* We new nets to which we will later add the vertices */
 	auto new_nets = std::vector<pmondriaan::net>();
