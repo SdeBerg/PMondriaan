@@ -3,12 +3,11 @@ include(FeatureSummary)
 
 project(PMondriaan)
 
-add_subdirectory("ext/bulk/Bulk-develop")
-
+add_subdirectory("ext/bulk")
 add_subdirectory("ext/CLI11")
 
 set(LIB_SOURCES
-  "src/hypergraph/readhypergraph.cpp" 
+  "src/hypergraph/readhypergraph.cpp"
   "src/bisect.cpp"
   "src/hypergraph/hypergraph.cpp"
   "src/recursive_bisection.cpp"
@@ -20,19 +19,21 @@ set(LIB_SOURCES
 )
 add_library(PMondriaan ${LIB_SOURCES})
 
-target_link_libraries(PMondriaan PUBLIC bulk_thread)
-target_link_libraries(PMondriaan PUBLIC CLI11::CLI11)
+set(EXTERNAL_LIBS
+  "bulk_thread"
+  "CLI11::CLI11"
+)
 
+target_link_libraries(PMondriaan PUBLIC ${EXTERNAL_LIBS})
 target_include_directories(PMondriaan PUBLIC "include")
+
 target_compile_features(PMondriaan PUBLIC cxx_std_17)
-
-
- 
 target_compile_options(PMondriaan PUBLIC
     "-Wfatal-errors"
     "-Werror"
     "-Wall"
     "-O3")
+
 set(TEST_DIR "test")
 set(
 	TEST_SOURCES
