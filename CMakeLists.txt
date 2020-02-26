@@ -5,6 +5,7 @@ project(PMondriaan)
 
 add_subdirectory("ext/bulk")
 add_subdirectory("ext/CLI11")
+add_subdirectory("ext/googletest")
 
 set(LIB_SOURCES
   "src/hypergraph/readhypergraph.cpp"
@@ -62,3 +63,10 @@ endforeach(source_file)
 add_executable(Run_PMondriaan "tools/PMondriaan.cpp")
 target_link_libraries(Run_PMondriaan PMondriaan)
 
+set(
+	UNIT_TEST_SOURCES
+	"unittest/read_mtx_test.cpp"
+)
+
+add_executable(pmondriaan_test ${UNIT_TEST_SOURCES})
+target_link_libraries(pmondriaan_test PMondriaan gtest)
