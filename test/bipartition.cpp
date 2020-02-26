@@ -21,7 +21,12 @@ int main () {
 		int s = world.rank();
 		
 		srand(world.rank() + 1);
-		auto H = pmondriaan::read_hypergraph("../test/data/matrices/dolphins/dolphins.mtx", world, "one");
+		auto hypergraph = pmondriaan::read_hypergraph("../test/data/matrices/dolphins/dolphins.mtx", world, "one");
+		if(!hypergraph) {
+			std::cerr << "Error: failed to load hypergraph\n";
+			//return -1;
+		}
+		auto H = hypergraph.value();
 
 		int count = 0;
 		while (count < p) {

@@ -38,7 +38,7 @@ set(TEST_DIR "test")
 set(
 	TEST_SOURCES
 	#"test_bulk.cpp"
-	"test_hypergraph.cpp"
+	#"test_hypergraph.cpp"
 	#"parallel_hypergraph.cpp"
 	#"partition.cpp"
 	#"random_bisection.cpp"
@@ -49,7 +49,7 @@ set(
 	#"test_CLI11.cpp"
 	#"test_label_propagation.cpp"
 	#"lp_sampling.cpp"
-	"coarsening.cpp"
+	#"coarsening.cpp"
 	"bipartition.cpp"
 )
 
@@ -59,6 +59,6 @@ foreach(source_file ${TEST_SOURCES})
 	target_link_libraries(${source_name} PMondriaan)
 endforeach(source_file)
 
-add_executable(Run_PMondriaan "tools/PMondriaan.cpp")
-target_link_libraries(Run_PMondriaan PMondriaan)
+#add_executable(Run_PMondriaan "tools/PMondriaan.cpp")
+#target_link_libraries(Run_PMondriaan PMondriaan)
 

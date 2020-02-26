@@ -21,7 +21,7 @@ namespace pmondriaan {
 /**
  * Creates a hypergraph from a graph in mtx format.
  */
-pmondriaan::hypergraph read_hypergraph(std::string filename, std::string mode_weight) {
+std::optional<pmondriaan::hypergraph> read_hypergraph(std::string filename, std::string mode_weight) {
 
     int E, V;
     uint64_t L;
@@ -29,6 +29,7 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, std::string mode_we
     std::ifstream fin(filename);
     if (fin.fail()) {
         std::cerr << "Error: " << std::strerror(errno);
+		return std::nullopt;
     }
 
     // Ignore headers and comments:
@@ -49,7 +50,7 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, std::string mode_we
         int e, v;
         std::istringstream iss(line);
         if (!(iss >> e >> v)) {
-            break;
+            return std::nullopt;
         }
         nets_list[v - 1].push_back(e - 1);
         vertex_list[e - 1].push_back(v - 1);
@@ -80,7 +81,7 @@ pmondriaan::hypergraph read_hypergraph(std::string filename, std::string mode_we
 /**
  * Creates a distributed hypergraph from a graph in mtx format.
  */
-pmondriaan::hypergraph
+std::optional<pmondriaan::hypergraph>
 read_hypergraph(std::string filename, bulk::world& world, std::string mode_weight) {
 
     int s = world.rank();
@@ -92,6 +93,7 @@ read_hypergraph(std::string filename, bulk::world& world, std::string mode_weigh
     std::ifstream fin(filename);
     if (fin.fail()) {
         std::cerr << "Error: " << std::strerror(errno);
+		return std::nullopt;
     }
 
     // Ignore headers and comments:
@@ -111,11 +113,12 @@ read_hypergraph(std::string filename, bulk::world& world, std::string mode_weigh
     // Read the data
     std::string line;
 	std::getline(fin, line);
-    while (std::getline(fin, line)) {
+	for (auto i = 0u; i < L; i++) {
+		std::getline(fin, line);
         int e, v;
         std::istringstream iss(line);
         if (!(iss >> e >> v)) {
-            break;
+            return std::nullopt;
         } // error
 		if (partitioning.owner({v - 1}) == s) {
 			int v_loc = partitioning.local({v-1})[0];
