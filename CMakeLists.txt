@@ -59,6 +59,6 @@ foreach(source_file ${TEST_SOURCES})
 	target_link_libraries(${source_name} PMondriaan)
 endforeach(source_file)
 
-#add_executable(Run_PMondriaan "tools/PMondriaan.cpp")
-#target_link_libraries(Run_PMondriaan PMondriaan)
+add_executable(Run_PMondriaan "tools/PMondriaan.cpp")
+target_link_libraries(Run_PMondriaan PMondriaan)
 

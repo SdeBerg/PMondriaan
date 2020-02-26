@@ -24,7 +24,7 @@ int main () {
 		auto hypergraph = pmondriaan::read_hypergraph("../test/data/matrices/dolphins/dolphins.mtx", world, "one");
 		if(!hypergraph) {
 			std::cerr << "Error: failed to load hypergraph\n";
-			//return -1;
+			return;
 		}
 		auto H = hypergraph.value();
 

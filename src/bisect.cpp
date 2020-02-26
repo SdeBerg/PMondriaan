@@ -95,26 +95,34 @@ std::vector<long> bisect_multilevel(bulk::world& world,
 
     auto H_reduced = pmondriaan::create_new_hypergraph(world, H, start, end);
 
-    long nc = 0;
+    long nc_par = 0;
 
     auto HC_list = std::vector<pmondriaan::hypergraph>();
     auto C_list = std::vector<pmondriaan::contraction>();
     HC_list.push_back(H_reduced);
 
-    while ((HC_list[nc].global_size() > opts.coarsening_nrvertices) &&
-           (nc < opts.coarsening_maxrounds)) {
+    while ((HC_list[nc_par].global_size() > opts.coarsening_nrvertices) &&
+           (nc_par < opts.coarsening_maxrounds)) {
         C_list.push_back(pmondriaan::contraction());
-        HC_list.push_back(coarsen_hypergraph(world, HC_list[nc], C_list[nc], opts, sampling_mode));
-        nc++;
-        world.log("After iteration %d, size is %d", nc, HC_list[nc].global_size());
-    }
+        HC_list.push_back(coarsen_hypergraph(world, HC_list[nc_par], C_list[nc_par], opts, sampling_mode));
+        nc_par++;
+        world.log("After iteration %d, size is %d", nc_par, HC_list[nc_par].global_size());
+	}
+  
+	
+	//TODO: communicate hypergraph to all processors and coarsen further sequentially
+	/*long nc_tot = nc_par + 1;
+	while ((HC_list[nc_tot].global_size() > opts.coarsening_nrvertices) &&
+           (nc_tot < opts.coarsening_maxrounds)) {}*/
 
-    pmondriaan::initial_partitioning(world, HC_list[nc], max_weight_0,
+    pmondriaan::initial_partitioning(world, HC_list[nc_par], max_weight_0,
                                      max_weight_1, labels);
 
-    while (nc > 0) {
-        nc--;
-        pmondriaan::uncoarsen_hypergraph(world, HC_list[nc + 1], HC_list[nc], C_list[nc]);
+	//TODO: uncoarsen locally best solution sequentially up to the parallel point, communicate best solution, pick best solution and receive info on this
+    
+	while (nc_par > 0) {
+        nc_par--;
+        pmondriaan::uncoarsen_hypergraph(world, HC_list[nc_par + 1], HC_list[nc_par], C_list[nc_par]);
     }
 
     for (auto& v : HC_list[0].vertices()) {

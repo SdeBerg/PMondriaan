@@ -92,8 +92,14 @@ int main(int argc, char** argv) {
             out.close();
         }
 
-        auto H = pmondriaan::read_hypergraph(settings.matrix_file, world,
+        auto hypergraph = pmondriaan::read_hypergraph(settings.matrix_file, world,
                                              settings.hypergraph_weights);
+		
+		if(!hypergraph) {
+			std::cerr << "Error: failed to load hypergraph\n";
+			return;
+		}
+		auto H = hypergraph.value();
 
         recursive_bisect(world, H, settings.bisection_mode, settings.sampling_mode,
                          settings.metric, settings.k, settings.eps, settings.eta, options);
