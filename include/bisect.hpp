@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "hypergraph/hypergraph.hpp"
+#include "recursive_bisection.hpp"
 #include "options.hpp"
 
 namespace pmondriaan {
@@ -21,8 +22,7 @@ std::vector<long> bisect(bulk::world& world,
                          long max_weight_1,
                          int start,
                          int end,
-                         int label_0 = 0,
-                         int label_1 = 1);
+                         interval labels);
 
 /**
  * Randomly bisects a hypergraph under the balance constraint and returns the weights of the two parts.
@@ -33,8 +33,7 @@ std::vector<long> bisect_random(bulk::world& world,
                                 long max_weight_1,
                                 int start,
                                 int end,
-                                int label_0 = 0,
-                                int label_1 = 1);
+                                interval labels);
 
 /**
  * Bisects a hypergraph using the multilevel framework.
@@ -48,7 +47,6 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                                     long max_weight_1,
                                     int start,
                                     int end,
-                                    int label_0 = 0,
-                                    int label_1 = 1);
+                                    interval labels);
 
 } // namespace pmondriaan

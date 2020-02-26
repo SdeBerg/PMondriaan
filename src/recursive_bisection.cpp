@@ -46,19 +46,18 @@ void recursive_bisect(bulk::world& world,
     int end = H.size();
     auto jobs = std::stack<pmondriaan::work_item>();
 
-    int label_low = 0;
-    int label_high = k - 1;
+    interval labels = {0, k-1};
 
     long weight_mypart = global_weight;
 
     if (p == 1) {
-        jobs.push(pmondriaan::work_item(start, end, label_low, label_high, weight_mypart));
+        jobs.push(pmondriaan::work_item(start, end, labels.low, labels.high, weight_mypart));
     }
 
     // while we need to give more than one label and need to use more than one processor, we bisect the hypergraph in parallel
-    while ((label_high - label_low > 0) && (p > 1)) {
+    while ((labels.length() > 0) && (p > 1)) {
 
-        int k_ = label_high - label_low + 1;
+        int k_ = labels.length() + 1;
 
         int k_low = k_ / 2;
         int k_high = k_ - k_low;
@@ -72,7 +71,7 @@ void recursive_bisect(bulk::world& world,
 
         auto weight_parts = bisect(world, H, bisect_mode, sampling_mode, opts, metric,
                                    max_global_weights[0], max_global_weights[1],
-                                   start, end, label_low, label_high);
+                                   start, end, labels);
         weight_part_0 = weight_parts[0];
         weight_part_1 = weight_parts[1];
 
@@ -95,10 +94,9 @@ void recursive_bisect(bulk::world& world,
         }
 
         // personal low and high label for the next round
-        int new_label_low = label_low + my_part * k_low;
-        int new_label_high = label_high - (1 - my_part) * k_high;
+		interval new_labels = {labels.low + my_part * k_low, labels.high - (1 - my_part) * k_high};
 
-        if (new_label_high - new_label_low > 0) {
+        if (new_labels.length() > 0) {
 
             long new_max_local_weight;
             if (my_part == 0) {
@@ -114,8 +112,8 @@ void recursive_bisect(bulk::world& world,
              * processors procs_mypart[0] ... procs_mypart[0] + p_high -1 and with label_high on
              * procs_mypart[0] + p_high ... procs_mypart[1] - 1.
              */
-            end = redistribute_hypergraph(world, H, procs_mypart, my_part, label_low,
-                                          label_high, new_max_local_weight,
+            end = redistribute_hypergraph(world, H, procs_mypart, my_part, labels.low,
+                                          labels.high, new_max_local_weight,
                                           weight_part_0.value(),
                                           weight_part_1.value(), p_low);
 
@@ -132,17 +130,15 @@ void recursive_bisect(bulk::world& world,
 
             // if we are the only processor left, we add a sequential job
             if (p == 1) {
-                jobs.push(pmondriaan::work_item(start, end, new_label_low,
-                                                new_label_high, weight_mypart));
+                jobs.push(pmondriaan::work_item(start, end, new_labels.low,
+                                                new_labels.high, weight_mypart));
             }
         }
 
-        world.log("weight part %d: %d, weight part %d: %d", label_low,
-                  total_weight_0, label_high, total_weight_1);
+        world.log("weight part %d: %d, weight part %d: %d", labels.low,
+                  total_weight_0, labels.high, total_weight_1);
 
-        // personal low and high label for the next round
-        label_low = new_label_low;
-        label_high = new_label_high;
+        labels = new_labels;
     }
 
     // we do the rest of the work sequentially
@@ -152,12 +148,11 @@ void recursive_bisect(bulk::world& world,
 
         start = job.start();
         end = job.end();
-        label_low = job.label_low();
-        label_high = job.label_high();
+		labels = {job.label_low(), job.label_high()};
         weight_mypart = job.weight();
 
-        while (label_high - label_low > 0) {
-            int k_ = label_high - label_low + 1;
+        while (labels.length() > 0) {
+            int k_ = labels.length() + 1;
 
             int k_low = k_ / 2;
             int k_high = k_ - k_low;
@@ -167,25 +162,22 @@ void recursive_bisect(bulk::world& world,
 
             auto weight_parts = bisect(world, H, bisect_mode, sampling_mode, opts, metric,
                                        max_global_weights[0], max_global_weights[1],
-                                       start, end, label_low, label_high);
+                                       start, end, labels);
 
-            int label_low_0 = label_low;
-            int label_high_0 = label_high - k_high;
-            int label_low_1 = label_low + k_low;
-            int label_high_1 = label_high;
+            interval labels_0 = {labels.low, labels.high - k_high};
+			interval labels_1 = {labels.low + k_low, labels.high};
 
             int end_1 = end;
 
-            if (label_high_1 - label_low_1 > 0) {
-                reorder_hypergraph(H, start, end, label_low, label_high);
-                jobs.push(pmondriaan::work_item(end, end_1, label_low_1,
-                                                label_high_1, weight_parts[1]));
+            if (labels_1.length() > 0) {
+                reorder_hypergraph(H, start, end, labels.low, labels.high);
+                jobs.push(pmondriaan::work_item(end, end_1, labels_1.low,
+                                                labels_1.high, weight_parts[1]));
             }
-            world.log("weight part %d: %d, weight part %d: %d", label_low,
-                      weight_parts[0], label_high, weight_parts[1]);
+            world.log("weight part %d: %d, weight part %d: %d", labels.low,
+                      weight_parts[0], labels.high, weight_parts[1]);
             weight_mypart = weight_parts[0];
-            label_low = label_low_0;
-            label_high = label_high_0;
+			labels = labels_0;
         }
     }
 
@@ -336,6 +328,9 @@ int reduce_surplus(bulk::world& world,
     return 0;
 }
 
+/**
+ * Reorders the hypergraph such that all vertices with label_high are at the end of the vertex list.
+ */
 void reorder_hypergraph(pmondriaan::hypergraph& H, int start, int& end, int label_low, int label_high) {
     int pivot = start;
     while (pivot != end - 1) {

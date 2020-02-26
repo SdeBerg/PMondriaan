@@ -6,6 +6,7 @@
 #endif
 
 #include "hypergraph/hypergraph.hpp"
+#include "recursive_bisection.hpp"
 
 namespace pmondriaan {
 
@@ -16,7 +17,6 @@ void initial_partitioning(bulk::world& world,
                           pmondriaan::hypergraph& H,
                           long max_weight_0,
                           long max_weight_1,
-                          int label_0,
-                          int label_1);
+                          interval labels);
 
 } // namespace pmondriaan

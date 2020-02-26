@@ -53,6 +53,14 @@ int reduce_surplus(bulk::world& world,
                    bulk::coarray<long>& surplus,
                    bulk::queue<int, long, int, int[]>& q);
 
+/**
+ * Reorders the hypergraph such that all vertices with label_high are at the end of the vertex list.
+ */
 void reorder_hypergraph(pmondriaan::hypergraph& H, int start, int& end, int label_low, int label_high);
 
+struct interval {
+	int low;
+	int high;
+	int length() { return high - low; }
+};
 } // namespace pmondriaan

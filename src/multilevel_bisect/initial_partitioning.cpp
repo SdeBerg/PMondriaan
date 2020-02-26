@@ -18,10 +18,9 @@ void initial_partitioning(bulk::world& world,
                           pmondriaan::hypergraph& H,
                           long max_weight_0,
                           long max_weight_1,
-                          int label_0,
-                          int label_1) {
+                          interval labels) {
 
-    bisect_random(world, H, max_weight_0, max_weight_1, 0, H.size(), label_0, label_1);
+    bisect_random(world, H, max_weight_0, max_weight_1, 0, H.size(), labels);
 }
 
 

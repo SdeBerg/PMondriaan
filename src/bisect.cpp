@@ -25,19 +25,18 @@ std::vector<long> bisect(bulk::world& world,
                          long max_weight_1,
                          int start,
                          int end,
-                         int label_0,
-                         int label_1) {
+                         interval labels) {
 
     auto weight_parts = std::vector<long>(2);
     int p = world.active_processors();
     if (bisect_mode == "random") {
         weight_parts = bisect_random(world, H, max_weight_0 / p, max_weight_1 / p,
-                                     start, end, label_0, label_1);
+                                     start, end, labels);
     }
 
     if (bisect_mode == "multilevel") {
         weight_parts = bisect_multilevel(world, H, opts, sampling_mode, metric, max_weight_0,
-                                         max_weight_1, start, end, label_0, label_1);
+                                         max_weight_1, start, end, labels);
     }
 
     return weight_parts;
@@ -53,11 +52,9 @@ std::vector<long> bisect_random(bulk::world& world,
                                 long max_weight_1,
                                 int start,
                                 int end,
-                                int label_0,
-                                int label_1) {
+                                interval labels) {
 
-    std::random_device rd;
-    std::mt19937 rng(rd());
+    std::mt19937 rng(world.rank() + 1);
 
     auto max_weight_parts = std::vector<long>{max_weight_0, max_weight_1};
 
@@ -71,9 +68,9 @@ std::vector<long> bisect_random(bulk::world& world,
         }
 
         if (part == 0) {
-            H(i).set_part(label_0);
+            H(i).set_part(labels.low);
         } else {
-            H(i).set_part(label_1);
+            H(i).set_part(labels.high);
         }
         weight_parts[part] += H(i).weight();
     }
@@ -93,8 +90,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                                     long max_weight_1,
                                     int start,
                                     int end,
-                                    int label_0,
-                                    int label_1) {
+                                    interval labels) {
 
     auto H_reduced = pmondriaan::create_new_hypergraph(world, H, start, end);
 
@@ -113,7 +109,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
     }
 
     pmondriaan::initial_partitioning(world, HC_list[nc], max_weight_0,
-                                     max_weight_1, label_0, label_1);
+                                     max_weight_1, labels);
 
     while (nc > 0) {
         nc--;
@@ -125,8 +121,8 @@ std::vector<long> bisect_multilevel(bulk::world& world,
     }
 
     auto weight_parts = std::vector<long>(2);
-    weight_parts[0] = HC_list[0].weight_part(label_0);
-    weight_parts[1] = HC_list[0].weight_part(label_1);
+    weight_parts[0] = HC_list[0].weight_part(labels.low);
+    weight_parts[1] = HC_list[0].weight_part(labels.high);
 
     return weight_parts;
 }
