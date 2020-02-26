@@ -6,7 +6,7 @@
 #endif
 
 #include "hypergraph/hypergraph.hpp"
-#include "recursive_bisection.hpp"
+#include "util/interval.hpp"
 
 namespace pmondriaan {
 

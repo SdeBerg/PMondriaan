@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "hypergraph/hypergraph.hpp"
-#include "recursive_bisection.hpp"
+#include "util/interval.hpp"
 #include "options.hpp"
 
 namespace pmondriaan {

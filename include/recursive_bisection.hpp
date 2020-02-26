@@ -6,6 +6,7 @@
 
 #include "hypergraph/hypergraph.hpp"
 #include "options.hpp"
+#include "util/interval.hpp"
 
 namespace pmondriaan {
 
@@ -58,9 +59,4 @@ int reduce_surplus(bulk::world& world,
  */
 void reorder_hypergraph(pmondriaan::hypergraph& H, int start, int& end, int label_low, int label_high);
 
-struct interval {
-	int low;
-	int high;
-	int length() { return high - low; }
-};
 } // namespace pmondriaan

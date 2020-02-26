@@ -9,6 +9,7 @@
 #include "multilevel_bisect/initial_partitioning.hpp"
 #include "multilevel_bisect/uncoarsen.hpp"
 #include "options.hpp"
+#include "util/interval.hpp"
 
 namespace pmondriaan {
 

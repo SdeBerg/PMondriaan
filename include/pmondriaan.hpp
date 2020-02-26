@@ -13,3 +13,4 @@
 #include <options.hpp>
 #include <recursive_bisection.hpp>
 #include <work_item.hpp>
+#include <util/interval.hpp>
