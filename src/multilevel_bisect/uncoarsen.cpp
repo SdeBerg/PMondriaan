@@ -1,4 +1,5 @@
 #include <vector>
+#include <unordered_map>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
@@ -25,7 +26,10 @@ void uncoarsen_hypergraph(bulk::world& world,
     auto part_queue = bulk::queue<int, int>(world);
 
     for (auto& v : HC.vertices()) {
-        H(H.local_id(v.id())).set_part(v.part());
+		auto id_map = H.map().find(v.id());
+		if (id_map != H.map().end()) {
+			H(id_map->second).set_part(v.part());
+		}
     }
 
     for (auto i = 0u; i < C.size(); i++) {

@@ -109,11 +109,31 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         world.log("After iteration %d, size is %d", nc_par, HC_list[nc_par].global_size());
 	}
   
+	// we now communicate the entire hypergraph to all processors using a queue containing id, weight and nets
+    auto vertex_queue = bulk::queue<int, long, int[]>(world);
+	for (auto& v : HC_list[nc_par].vertices()) {
+		for (int t = 0; t < world.rank(); t++) {
+			vertex_queue(t).send(v.id(), v.weight(), v.nets());
+		}
+		for (int t = world.rank() + 1; t < world.active_processors(); t++) {
+			vertex_queue(t).send(v.id(), v.weight(), v.nets());
+		}
+	}
 	
-	//TODO: communicate hypergraph to all processors and coarsen further sequentially
-	/*long nc_tot = nc_par + 1;
+	world.sync();
+	
+	for (const auto& [id, weight, nets] : vertex_queue) {
+		HC_list[nc_par].vertices().push_back({id, nets, weight});
+        HC_list[nc_par].add_to_nets(HC_list[nc_par].vertices().back());
+	}
+	HC_list[nc_par].update_map();
+	
+	//TODO: coarsen further sequentially
+	/*long nc_tot = nc_par;
 	while ((HC_list[nc_tot].global_size() > opts.coarsening_nrvertices) &&
-           (nc_tot < opts.coarsening_maxrounds)) {}*/
+           (nc_tot < opts.coarsening_maxrounds)) {
+			   
+	}*/
 
     pmondriaan::initial_partitioning(world, HC_list[nc_par], max_weight_0,
                                      max_weight_1, labels);
