@@ -15,9 +15,9 @@
 namespace pmondriaan {
 
 /**
- * Creates a hypergraph from a graph in mtx format.
+ * Creates a hypergraph from a matrix in mtx format.
  */
-std::optional<pmondriaan::hypergraph> read_hypergraph(std::string filename, std::string mode_weight = "one");
+std::optional<pmondriaan::hypergraph> read_hypergraph_istream(std::istream& fin, std::string mode_weight = "one");
 
 /**
  * Creates a distributed hypergraph from a graph in mtx format. The mode states
@@ -25,5 +25,10 @@ std::optional<pmondriaan::hypergraph> read_hypergraph(std::string filename, std:
  */
 std::optional<pmondriaan::hypergraph>
 read_hypergraph(std::string filename, bulk::world& world, std::string mode_weight = "one");
+
+/**
+ * Creates a hypergraph from a file that contains a matrix in mtx format.
+ */
+std::optional<pmondriaan::hypergraph> read_hypergraph(std::string file, std::string mode_weight = "one");
 
 } // namespace pmondriaan

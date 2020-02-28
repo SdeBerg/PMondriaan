@@ -21,16 +21,10 @@ namespace pmondriaan {
 /**
  * Creates a hypergraph from a graph in mtx format.
  */
-std::optional<pmondriaan::hypergraph> read_hypergraph(std::string filename, std::string mode_weight) {
+std::optional<pmondriaan::hypergraph> read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
 
     int E, V;
     uint64_t L;
-
-    std::ifstream fin(filename);
-    if (fin.fail()) {
-        std::cerr << "Error: " << std::strerror(errno);
-		return std::nullopt;
-    }
 
     // Ignore headers and comments:
     while (fin.peek() == '%') {
@@ -56,7 +50,7 @@ std::optional<pmondriaan::hypergraph> read_hypergraph(std::string filename, std:
         vertex_list[e - 1].push_back(v - 1);
     }
 
-    fin.close();
+    //fin.close();
 
     auto vertices = std::vector<pmondriaan::vertex>();
     auto nets = std::vector<pmondriaan::net>();
@@ -153,6 +147,15 @@ read_hypergraph(std::string filename, bulk::world& world, std::string mode_weigh
     pmondriaan::remove_free_nets(world, H);
 
     return H;
+}
+
+std::optional<pmondriaan::hypergraph> read_hypergraph(std::string file, std::string mode_weight) {
+    std::ifstream fs(file);
+	if (fs.fail()) {
+        std::cerr << "Error: " << std::strerror(errno);
+		return std::nullopt;
+    }
+    return read_hypergraph_istream(fs, mode_weight);
 }
 
 } // namespace pmondriaan
