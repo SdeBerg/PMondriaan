@@ -15,9 +15,9 @@
 namespace pmondriaan {
 
 /**
- * Coarses the hypergraph H and returns a hypergraph HC.
+ * Coarsens the hypergraph H and returns a hypergraph HC in parallel.
  */
-pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world,
+pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
                                           pmondriaan::hypergraph& H,
                                           pmondriaan::contraction& C,
                                           pmondriaan::options& opts,
@@ -41,5 +41,22 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
                                            bulk::queue<int, long, int[]>& matches,
                                            std::vector<bool>& matched);
 
+/**
+ * Coarsens the hypergraph H and returns a hypergraph HC sequentially.
+ */
+pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world, pmondriaan::hypergraph& H,
+                                          pmondriaan::contraction& C,
+                                          pmondriaan::options& opts);
 
+/**
+ * Add a copy of a vertex v to a list of vertices.
+ */
+void add_v_to_list(std::vector<pmondriaan::vertex>& v_list, pmondriaan::vertex& v);
+
+pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
+										   pmondriaan::hypergraph& H, 
+										   pmondriaan::contraction& C,
+										   std::vector<std::vector<int>>& matches, 
+										   std::vector<pmondriaan::vertex>& new_vertices);
+										  
 } // namespace pmondriaan

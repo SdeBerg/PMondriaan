@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <vector>
+#include <iostream>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
@@ -18,9 +19,9 @@
 namespace pmondriaan {
 
 /**
- * Coarses the hypergraph H and returns a new hypergraph HC.
+ * Coarsens the hypergraph H and returns a new hypergraph HC.
  */
-pmondriaan::hypergraph coarsen_hypergraph(bulk::world& world,
+pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
                                           pmondriaan::hypergraph& H,
                                           pmondriaan::contraction& C,
                                           pmondriaan::options& opts,
@@ -97,9 +98,9 @@ void request_matches(pmondriaan::hypergraph& H,
     for (const auto& [t, number_sample, sample_nets] : sample_queue) {
         degree_samples[t * opts.sample_size + number_sample] = sample_nets.size();
         for (auto n_id : sample_nets) {
+			double scaled_cost = (1.0 / ((double)H.net(n_id).global_size() - 1.0));
             for (auto u_id : H.net(n_id).vertices()) {
-                ip[H.local_id(u_id)][t * opts.sample_size + number_sample] +=
-                1.0 / ((double)H.net(n_id).global_size() - 1.0);
+                ip[H.local_id(u_id)][t * opts.sample_size + number_sample] += scaled_cost;
             }
         }
     }
@@ -120,7 +121,7 @@ void request_matches(pmondriaan::hypergraph& H,
         for (auto u = 0; u < total_samples; u++) {
             double ip_vu = ip[local_id][u];
             if (ip_vu > 0) {
-                ip_vu *= 1.0 / (double)std::min((int)v.degree(), degree_samples[u]);
+                ip_vu *= (1.0 / (double)std::min((int)v.degree(), degree_samples[u]));
                 if (ip_vu > max_ip) {
                     max_ip = ip_vu;
                     best_match = u;
@@ -249,5 +250,120 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
     return HC;
 }
 
+
+/**
+ * Coarsens the hypergraph H and returns a hypergraph HC sequentially.
+ */
+pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world, pmondriaan::hypergraph& H,
+                                          pmondriaan::contraction& C,
+                                          pmondriaan::options& opts) {
+											  
+	auto matches = std::vector<std::vector<int>>(H.size(), std::vector<int>());
+	auto matched = std::vector<bool>(H.size(), false);
+	//contains the vertices of the contracted hypergraph
+	auto new_v = std::vector<pmondriaan::vertex>();
+	
+	auto ip = std::vector<double>(H.size(), 0.0);
+	//TODO: gebruik willekeurige order van vertices bekijken
+	for (auto i = 0u; i < H.size(); i++) {
+		auto& v = H(i);
+		if (matches[i].empty()) {
+			auto visited = std::vector<int>();
+			for (auto n_id : v.nets()) {
+				double scaled_cost = (1.0 / ((double)H.net(n_id).size() - 1.0));
+				for (auto u_id : H.net(n_id).vertices()) {
+					auto u_local = H.local_id(u_id);
+					if ((!matched[u_local]) && (u_local != (int)i)) {
+						if (ip[u_local] == 0.0) {
+							visited.push_back(u_local);
+						}
+						ip[u_local] += scaled_cost;
+					}
+				}
+			}
+			
+			double max_ip = 0.0;
+			int best_match = -1;
+			for (auto u : visited) {
+				ip[u] *= (1.0 / (double)std::min(v.degree(), H(u).degree()));
+				if ((ip[u] > max_ip) && ((int)matches[u].size() < opts.coarsening_max_clustersize)) {
+					max_ip = ip[u];
+					best_match = u;
+				}
+			}
+			if (best_match != -1) {
+				matches[best_match].push_back(v.id());
+				matched[i] = true;
+			}
+			else {
+				add_v_to_list(new_v, v);
+			}
+			
+			for (auto u : visited) {
+				ip[u] = 0.0;
+			}
+		}
+		else {
+			add_v_to_list(new_v, v);
+		}
+	}
+	return pmondriaan::contract_hypergraph(world, H, C, matches, new_v);
+}
+
+void add_v_to_list(std::vector<pmondriaan::vertex>& v_list, pmondriaan::vertex& v) {
+	auto new_v_nets = std::vector<int>();
+    new_v_nets.insert(new_v_nets.begin(), v.nets().begin(), v.nets().end());
+    v_list.push_back(pmondriaan::vertex(v.id(), new_v_nets, v.weight()));
+}
+
+pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
+										   pmondriaan::hypergraph& H, 
+										   pmondriaan::contraction& C,
+										   std::vector<std::vector<int>>& matches, 
+										   std::vector<pmondriaan::vertex>& new_vertices) {
+
+	// we new nets to which we will later add the vertices
+    auto new_nets = std::vector<pmondriaan::net>();
+    for (auto& net : H.nets()) {
+        new_nets.push_back(pmondriaan::net(net.id(), std::vector<int>(), net.cost()));
+    }
+	
+	auto HC = pmondriaan::hypergraph(new_vertices.size(), new_vertices, new_nets);
+	
+	// This vector keeps track of the nets already include for the current vertex
+    // if included_in_net[n] is equal to the sample number, the net is already included 
+    auto included_in_net = std::vector<int>(H.nets().size(), -1);
+	int sample_count = 0;
+	for (auto index = 0u; index < H.size(); index++) {
+		int i = (int)index;
+		if (matches[i].size() > 0) {
+			C.add_sample(H(i).id());
+			sample_count++;
+			
+			auto& nets = HC(HC.local_id(H(i).id())).nets();
+			for (auto n : nets) {
+				included_in_net[n] = i;
+			}
+			
+			for (auto match : matches[i]) {
+				C.add_match(sample_count - 1, match, world.rank());
+				HC(HC.local_id(H(i).id())).add_weight(H(H.local_id(match)).weight());
+				for (auto net : H(H.local_id(match)).nets()) {
+					if (included_in_net[net] != i) {
+						nets.push_back(net);
+						HC.net(net).add_vertex(H(i).id());
+						included_in_net[net] = i;
+					}
+				}
+			}
+		}
+	}
+	
+	for (auto& net : HC.nets()) {
+		net.set_global_size(net.size());
+	}
+	
+	return HC;
+}
 
 } // namespace pmondriaan

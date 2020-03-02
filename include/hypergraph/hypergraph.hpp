@@ -136,9 +136,14 @@ long global_weight(bulk::world& world, pmondriaan::hypergraph& H);
 double load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k);
 
 /**
- * Compute the cutsize with the correct metric
+ * Compute the cutsize with the correct metric of a local hypergraph
  */
-long cutsize(bulk::world& world, pmondriaan::hypergraph& H, int k, std::string metric);
+long cutsize(pmondriaan::hypergraph& H, std::string metric);
+
+/**
+ * Compute the cutsize with the correct metric of a distributed hypergraph
+ */
+long cutsize(bulk::world& world, pmondriaan::hypergraph& H, std::string metric);
 
 /**
  * Compute the global net sizes of a hypergraph.

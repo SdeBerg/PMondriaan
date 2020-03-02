@@ -131,9 +131,40 @@ double load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k) {
 }
 
 /**
+ * Compute the cutsize with the correct metric of a local hypergraph
+ */
+long cutsize(pmondriaan::hypergraph& H, std::string metric){
+	long result = 0;
+	if (metric == "cutnet") {
+		for (auto& net : H.nets()) {
+			auto labels_net = std::set<int>();
+			for (auto& v : net.vertices()) {
+                labels_net.insert(H(H.local_id(v)).part());
+			}
+			if (labels_net.size() > 1) {
+				result += net.cost();
+			}
+		}
+    } else if (metric == "lambda1") {
+		for (auto& net : H.nets()) {
+			auto labels_net = std::set<int>();
+			for (auto& v : net.vertices()) {
+                labels_net.insert(H(H.local_id(v)).part());
+			}
+			if (labels_net.size() > 1) {
+				result += (labels_net.size() - 1) * net.cost();
+			}
+		}
+    } else {
+        std::cerr << "Error: unknown metric";
+    }
+	return result;
+}
+
+/**
  * Compute the cutsize with the correct metric
  */
-long cutsize(bulk::world& world, pmondriaan::hypergraph& H, int k, std::string metric) {
+long cutsize(bulk::world& world, pmondriaan::hypergraph& H, std::string metric) {
 
     long result = 0;
     // this queue contains all labels present for each net
@@ -160,21 +191,21 @@ long cutsize(bulk::world& world, pmondriaan::hypergraph& H, int k, std::string m
         }
     }
 
-    for (auto i = 0u; i < H.nets().size(); i++) {
-        if (metric == "cutnet") {
+    
+    if (metric == "cutnet") {
+		for (auto i = 0u; i < H.nets().size(); i++) {
             if (total_cut[i].size() > 1) {
                 result += H.net(i).cost();
             }
-        } else {
-            if (metric == "lambda1") {
-                if (total_cut[i].size() > 1) {
-                    result += (total_cut[i].size() - 1) * H.net(i).cost();
-                }
-            } else {
-                std::cerr << "Error: unknown metric";
-                break;
+		}
+    } else if (metric == "lambda1") {
+		for (auto i = 0u; i < H.nets().size(); i++) {
+            if (total_cut[i].size() > 1) {
+                result += (total_cut[i].size() - 1) * H.net(i).cost();
             }
-        }
+		}
+    } else {
+        std::cerr << "Error: unknown metric";
     }
 
     return result;

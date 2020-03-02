@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
                          settings.metric, settings.k, settings.eps, settings.eta, options);
 
         auto lb = pmondriaan::load_balance(world, H, settings.k);
-        auto cutsize = pmondriaan::cutsize(world, H, settings.k, settings.metric);
+        auto cutsize = pmondriaan::cutsize(world, H, settings.metric);
 
 
         if (s == 0) {

@@ -129,4 +129,24 @@ S foldl(bulk::coarray<T>& x, Func f, S start_value = {}) {
     return result;
 }
 
+/**
+ * Find owner of smallest value of x
+ */
+template <typename T>
+int smallest(bulk::var<T>& x) {
+    auto& world = x.world();
+
+    auto images = bulk::gather_all(world, x.value());
+
+	T smallest = images[0];
+	int best_proc = 0;
+    for (int t = 1; t < world.active_processors(); ++t) {
+        if (images[t] <= smallest) {
+			smallest = images[t];
+			best_proc = t;
+		}
+    }
+    return best_proc;
+}
+
 } // namespace pmondriaan
