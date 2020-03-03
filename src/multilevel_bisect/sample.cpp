@@ -34,7 +34,7 @@ std::vector<int> sample_random(pmondriaan::hypergraph& H, int ns) {
  */
 std::vector<int> sample_lp(pmondriaan::hypergraph& H, pmondriaan::options& opts) {
 
-    auto labels = pmondriaan::label_propagation(H, opts.sample_size, opts.lp_max_iterations);
+    auto labels = pmondriaan::label_propagation(H, opts.sample_size, opts.lp_max_iterations, 1);
     auto count_label = std::vector<double>(opts.sample_size, 0.0);
     for (auto l : labels) {
         count_label[l]++;

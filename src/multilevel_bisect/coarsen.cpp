@@ -55,7 +55,7 @@ pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
     // after his funtion, accepted matches contains the matches that have been accepted
     request_matches(H, C, sample_queue, accepted_matches, indices_samples, opts);
 
-    // we use the sample_queue again to send the information about the accepted samples 
+    // we use the sample_queue again to send the information about the accepted samples
     auto matched = std::vector<bool>(H.size(), false);
     for (auto& [sample, proposer] : accepted_matches) {
         matched[H.local_id(proposer)] = true;
@@ -254,18 +254,23 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
 /**
  * Coarsens the hypergraph H and returns a hypergraph HC sequentially.
  */
-pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world, pmondriaan::hypergraph& H,
+pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
+                                          pmondriaan::hypergraph& H,
                                           pmondriaan::contraction& C,
                                           pmondriaan::options& opts) {
-											  
+
 	auto matches = std::vector<std::vector<int>>(H.size(), std::vector<int>());
 	auto matched = std::vector<bool>(H.size(), false);
 	//contains the vertices of the contracted hypergraph
 	auto new_v = std::vector<pmondriaan::vertex>();
-	
+
 	auto ip = std::vector<double>(H.size(), 0.0);
-	//TODO: gebruik willekeurige order van vertices bekijken
-	for (auto i = 0u; i < H.size(); i++) {
+	// we visit the vertices in a random order
+    std::vector<int> indices(H.size());
+    std::iota(indices.begin(), indices.end(), 0);
+    std::random_shuffle(indices.begin(), indices.end());
+
+	for (auto i : indices) {
 		auto& v = H(i);
 		if (matches[i].empty()) {
 			auto visited = std::vector<int>();
@@ -281,7 +286,7 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world, pmondriaan::hy
 					}
 				}
 			}
-			
+
 			double max_ip = 0.0;
 			int best_match = -1;
 			for (auto u : visited) {
@@ -298,7 +303,7 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world, pmondriaan::hy
 			else {
 				add_v_to_list(new_v, v);
 			}
-			
+
 			for (auto u : visited) {
 				ip[u] = 0.0;
 			}
@@ -317,9 +322,9 @@ void add_v_to_list(std::vector<pmondriaan::vertex>& v_list, pmondriaan::vertex& 
 }
 
 pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
-										   pmondriaan::hypergraph& H, 
+										   pmondriaan::hypergraph& H,
 										   pmondriaan::contraction& C,
-										   std::vector<std::vector<int>>& matches, 
+										   std::vector<std::vector<int>>& matches,
 										   std::vector<pmondriaan::vertex>& new_vertices) {
 
 	// we new nets to which we will later add the vertices
@@ -327,11 +332,11 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
     for (auto& net : H.nets()) {
         new_nets.push_back(pmondriaan::net(net.id(), std::vector<int>(), net.cost()));
     }
-	
+
 	auto HC = pmondriaan::hypergraph(new_vertices.size(), new_vertices, new_nets);
-	
+
 	// This vector keeps track of the nets already include for the current vertex
-    // if included_in_net[n] is equal to the sample number, the net is already included 
+    // if included_in_net[n] is equal to the sample number, the net is already included
     auto included_in_net = std::vector<int>(H.nets().size(), -1);
 	int sample_count = 0;
 	for (auto index = 0u; index < H.size(); index++) {
@@ -339,12 +344,12 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
 		if (matches[i].size() > 0) {
 			C.add_sample(H(i).id());
 			sample_count++;
-			
+
 			auto& nets = HC(HC.local_id(H(i).id())).nets();
 			for (auto n : nets) {
 				included_in_net[n] = i;
 			}
-			
+
 			for (auto match : matches[i]) {
 				C.add_match(sample_count - 1, match, world.rank());
 				HC(HC.local_id(H(i).id())).add_weight(H(H.local_id(match)).weight());
@@ -358,11 +363,11 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
 			}
 		}
 	}
-	
+
 	for (auto& net : HC.nets()) {
 		net.set_global_size(net.size());
 	}
-	
+
 	return HC;
 }
 

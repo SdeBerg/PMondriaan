@@ -17,10 +17,7 @@ namespace pmondriaan {
 /**
  * Bisect a hypergraph using the given bisection method and returns the weights of the two parts.
  */
-std::vector<long> bisect(bulk::world& world,
-                         pmondriaan::hypergraph& H,
-                         std::string bisect_mode,
-                         std::string sampling_mode,
+std::vector<long> bisect(bulk::world& world,pmondriaan::hypergraph& H,std::string bisect_mode,std::string sampling_mode,
                          pmondriaan::options& opts,
                          std::string metric,
                          long max_weight_0,
@@ -111,7 +108,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         nc_par++;
         world.log("After iteration %d, size is %d (par)", nc_par, HC_list[nc_par].global_size());
 	}
-  
+
 	// we now communicate the entire hypergraph to all processors using a queue containing id, weight and nets
     auto vertex_queue = bulk::queue<int, long, int[]>(world);
 	for (auto& v : HC_list[nc_par].vertices()) {
@@ -122,15 +119,15 @@ std::vector<long> bisect_multilevel(bulk::world& world,
 			vertex_queue(t).send(v.id(), v.weight(), v.nets());
 		}
 	}
-	
+
 	world.sync();
-	
+
 	for (const auto& [id, weight, nets] : vertex_queue) {
 		HC_list[nc_par].vertices().push_back({id, nets, weight});
         HC_list[nc_par].add_to_nets(HC_list[nc_par].vertices().back());
 	}
 	HC_list[nc_par].update_map();
-	
+
 	long nc_tot = nc_par;
 	while ((HC_list[nc_tot].global_size() > opts.coarsening_nrvertices) &&
            (nc_tot < opts.coarsening_maxrounds)) {
@@ -142,17 +139,17 @@ std::vector<long> bisect_multilevel(bulk::world& world,
 
     pmondriaan::initial_partitioning(world, HC_list[nc_tot], max_weight_0,
                                      max_weight_1, labels);
-									 
+
 	while (nc_tot > nc_par) {
         nc_tot--;
         pmondriaan::uncoarsen_hypergraph(world, HC_list[nc_tot + 1], HC_list[nc_tot], C_list[nc_tot]);
     }
-	
+
 	//we find the best solution of all partitioners
 	bulk::var<long> cut(world);
 	cut = pmondriaan::cutsize(HC_list[nc_par], metric);
 	auto best_proc = pmondriaan::smallest(cut);
-	
+
 	// the processor that has found the best solution now sends the labels to all others
     auto label_queue = bulk::queue<int, int>(world);
 	if (world.rank() == best_proc) {
@@ -163,13 +160,13 @@ std::vector<long> bisect_multilevel(bulk::world& world,
 		}
 	}
 	world.sync();
-	
+
 	if (world.rank() != best_proc) {
 		for (const auto& [id, part] : label_queue) {
 			HC_list[nc_par](HC_list[nc_par].local_id(id)).set_part(part);
 		}
 	}
-	
+
 	while (nc_par > 0) {
         nc_par--;
         pmondriaan::uncoarsen_hypergraph(world, HC_list[nc_par + 1], HC_list[nc_par], C_list[nc_par]);
