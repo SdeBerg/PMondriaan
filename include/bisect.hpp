@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <random>
 
 #include "hypergraph/hypergraph.hpp"
 #include "util/interval.hpp"
@@ -22,7 +23,8 @@ std::vector<long> bisect(bulk::world& world,
                          long max_weight_1,
                          int start,
                          int end,
-                         interval labels);
+                         interval labels,
+                         std::mt19937& rng);
 
 /**
  * Randomly bisects a hypergraph under the balance constraint and returns the weights of the two parts.
@@ -33,7 +35,8 @@ std::vector<long> bisect_random(bulk::world& world,
                                 long max_weight_1,
                                 int start,
                                 int end,
-                                interval labels);
+                                interval labels,
+                                std::mt19937& rng);
 
 /**
  * Bisects a hypergraph using the multilevel framework.
@@ -47,6 +50,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                                     long max_weight_1,
                                     int start,
                                     int end,
-                                    interval labels);
+                                    interval labels,
+                                    std::mt19937& rng);
 
 } // namespace pmondriaan

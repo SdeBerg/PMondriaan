@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string>
 #include <vector>
+#include <random>
 
 #include <iostream>
 
@@ -33,6 +34,8 @@ void recursive_bisect(bulk::world& world,
 
     int s = world.rank();
     int p = world.active_processors();
+
+    std::mt19937 rng(s + 1);
 
     auto global_weight = pmondriaan::global_weight(world, H);
     long maxweight = ((1.0 + epsilon) * global_weight) / k;
@@ -72,7 +75,7 @@ void recursive_bisect(bulk::world& world,
 
         auto weight_parts = bisect(world, H, bisect_mode, sampling_mode, opts, metric,
                                    max_global_weights[0], max_global_weights[1],
-                                   start, end, labels);
+                                   start, end, labels, rng);
         weight_part_0 = weight_parts[0];
         weight_part_1 = weight_parts[1];
 
@@ -163,7 +166,7 @@ void recursive_bisect(bulk::world& world,
 
             auto weight_parts = bisect(world, H, bisect_mode, sampling_mode, opts, metric,
                                        max_global_weights[0], max_global_weights[1],
-                                       start, end, labels);
+                                       start, end, labels, rng);
 
             interval labels_0 = {labels.low, labels.high - k_high};
 			interval labels_1 = {labels.low + k_low, labels.high};

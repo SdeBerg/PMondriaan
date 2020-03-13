@@ -39,7 +39,7 @@ set(TEST_DIR "test")
 set(
 	TEST_SOURCES
 	#"test_bulk.cpp"
-	"test_hypergraph.cpp"
+	#"test_hypergraph.cpp"
 	#"parallel_hypergraph.cpp"
 	#"partition.cpp"
 	#"random_bisection.cpp"
@@ -52,6 +52,7 @@ set(
 	#"lp_sampling.cpp"
 	#"coarsening.cpp"
 	"bipartition.cpp"
+	"lp_bisect.cpp"
 )
 
 foreach(source_file ${TEST_SOURCES})

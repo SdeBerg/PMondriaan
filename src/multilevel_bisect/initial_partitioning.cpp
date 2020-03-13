@@ -19,12 +19,17 @@ void initial_partitioning(bulk::world& world,
                           pmondriaan::hypergraph& H,
                           long max_weight_0,
                           long max_weight_1,
-                          interval labels) {
+                          interval labels,
+                          std::mt19937& rng) {
 
-    //bisect_random(world, H, max_weight_0, max_weight_1, 0, H.size(), labels);
-    auto L = label_propagation_bisect(H, 100, max_weight_0, max_weight_1);
+    // bisect_random(world, H, max_weight_0, max_weight_1, 0, H.size(), labels, rng);
+    auto L = label_propagation_bisect(H, 100, max_weight_0, max_weight_1, rng);
     for (auto i = 0u; i < H.size(); i++) {
-    	H(i).set_part(L[i]);
+        if (L[i] == 0) {
+            H(i).set_part(labels.low);
+        } else {
+            H(i).set_part(labels.high);
+        }
     }
 }
 

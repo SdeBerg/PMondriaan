@@ -24,18 +24,19 @@ std::vector<long> bisect(bulk::world& world,pmondriaan::hypergraph& H,std::strin
                          long max_weight_1,
                          int start,
                          int end,
-                         interval labels) {
+                         interval labels,
+                         std::mt19937& rng) {
 
     auto weight_parts = std::vector<long>(2);
     int p = world.active_processors();
     if (bisect_mode == "random") {
         weight_parts = bisect_random(world, H, max_weight_0 / p, max_weight_1 / p,
-                                     start, end, labels);
+                                     start, end, labels, rng);
     }
 
     if (bisect_mode == "multilevel") {
         weight_parts = bisect_multilevel(world, H, opts, sampling_mode, metric, max_weight_0,
-                                         max_weight_1, start, end, labels);
+                                         max_weight_1, start, end, labels, rng);
     }
 
     return weight_parts;
@@ -51,9 +52,8 @@ std::vector<long> bisect_random(bulk::world& world,
                                 long max_weight_1,
                                 int start,
                                 int end,
-                                interval labels) {
-
-    std::mt19937 rng(world.rank() + 1);
+                                interval labels,
+                                std::mt19937& rng) {
 
     auto max_weight_parts = std::vector<long>{max_weight_0, max_weight_1};
 
@@ -89,7 +89,8 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                                     long max_weight_1,
                                     int start,
                                     int end,
-                                    interval labels) {
+                                    interval labels,
+                                    std::mt19937& rng) {
 
     auto H_reduced = pmondriaan::create_new_hypergraph(world, H, start, end);
 
@@ -104,7 +105,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
 	while ((HC_list[nc_par].global_size() > coarsening_nrvertices_par) &&
            (nc_par < opts.coarsening_maxrounds)) {
         C_list.push_back(pmondriaan::contraction());
-        HC_list.push_back(coarsen_hypergraph_par(world, HC_list[nc_par], C_list[nc_par], opts, sampling_mode));
+        HC_list.push_back(coarsen_hypergraph_par(world, HC_list[nc_par], C_list[nc_par], opts, sampling_mode, rng));
         nc_par++;
         world.log("After iteration %d, size is %d (par)", nc_par, HC_list[nc_par].global_size());
 	}
@@ -132,13 +133,13 @@ std::vector<long> bisect_multilevel(bulk::world& world,
 	while ((HC_list[nc_tot].global_size() > opts.coarsening_nrvertices) &&
            (nc_tot < opts.coarsening_maxrounds)) {
         C_list.push_back(pmondriaan::contraction());
-        HC_list.push_back(coarsen_hypergraph_seq(world, HC_list[nc_tot], C_list[nc_tot], opts));
+        HC_list.push_back(coarsen_hypergraph_seq(world, HC_list[nc_tot], C_list[nc_tot], opts, rng));
         nc_tot++;
         world.log("After iteration %d, size is %d (seq)", nc_tot, HC_list[nc_tot].global_size());
 	}
 
     pmondriaan::initial_partitioning(world, HC_list[nc_tot], max_weight_0,
-                                     max_weight_1, labels);
+                                     max_weight_1, labels, rng);
 
 	while (nc_tot > nc_par) {
         nc_tot--;

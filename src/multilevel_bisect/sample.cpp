@@ -10,14 +10,14 @@ namespace pmondriaan {
 /**
  * Returns a vector of s randomly selected sample vertices. This is given as a list of indices.
  */
-std::vector<int> sample_random(pmondriaan::hypergraph& H, int ns) {
+std::vector<int> sample_random(pmondriaan::hypergraph& H, int ns, std::mt19937& rng) {
     auto samples = std::vector<int>();
     double size = (double)H.size();
     double s_left = (double)ns;
     int current = 0;
 
     while (s_left > 0) {
-        if (((double)rand() / (RAND_MAX)) < (s_left) / size) {
+        if (((double)rng() / rng.max()) < s_left / size) {
             s_left = s_left - 1.0;
             samples.push_back(current);
         }
@@ -32,9 +32,9 @@ std::vector<int> sample_random(pmondriaan::hypergraph& H, int ns) {
 /**
  * Returns a vector of ns samples seleccted using the label propagation algorithm.
  */
-std::vector<int> sample_lp(pmondriaan::hypergraph& H, pmondriaan::options& opts) {
+std::vector<int> sample_lp(pmondriaan::hypergraph& H, pmondriaan::options& opts, std::mt19937& rng) {
 
-    auto labels = pmondriaan::label_propagation(H, opts.sample_size, opts.lp_max_iterations, 1);
+    auto labels = pmondriaan::label_propagation(H, opts.sample_size, opts.lp_max_iterations, 1, rng);
     auto count_label = std::vector<double>(opts.sample_size, 0.0);
     for (auto l : labels) {
         count_label[l]++;
@@ -54,7 +54,7 @@ std::vector<int> sample_lp(pmondriaan::hypergraph& H, pmondriaan::options& opts)
     while (number_samples_found < opts.sample_size - empty_count && current < H.size()) {
         int l = labels[current];
         if (!found_sample[l] &&
-            ((double)rand() / (RAND_MAX)) < 1.0 / (double)count_label[l]) {
+            ((double)rng() / (rng.max())) < 1.0 / (double)count_label[l]) {
             found_sample[l] = true;
             number_samples_found++;
             samples.push_back(current);

@@ -10,7 +10,8 @@ namespace pmondriaan {
 /**
  * Performs label propagation to create l groups of labels on the hypergraph H.
  */
-std::vector<int> label_propagation(pmondriaan::hypergraph& H, int l, int max_iter, int min_size) {
+std::vector<int>
+label_propagation(pmondriaan::hypergraph& H, int l, int max_iter, int min_size, std::mt19937& rng) {
     // counts of all labels for each net
     auto C = std::vector<std::vector<long>>(H.nets().size(), std::vector<long>(l, 0));
     auto size_L = std::vector<long>(l, 0);
@@ -18,7 +19,7 @@ std::vector<int> label_propagation(pmondriaan::hypergraph& H, int l, int max_ite
     auto L = std::vector<int>(H.size());
 
     for (auto& label : L) {
-        int random = rand();
+        auto random = rng();
         label = random % l;
         size_L[label]++;
     }
@@ -31,13 +32,13 @@ std::vector<int> label_propagation(pmondriaan::hypergraph& H, int l, int max_ite
     int iterations = 0;
 
     while (change && (iterations < max_iter)) {
-        std::random_shuffle(indices.begin(), indices.end());
+        std::shuffle(indices.begin(), indices.end(), rng);
         change = false;
         for (auto i : indices) {
             std::fill(T.begin(), T.end(), 0);
 
             if (size_L[L[i]] > min_size) {
-                /* First compute the sum of the counts */
+                // First compute the sum of the counts
                 for (auto n : H(i).nets()) {
                     C[n][L[i]]--;
                     for (int j = 0; j < l; j++) {
@@ -45,22 +46,21 @@ std::vector<int> label_propagation(pmondriaan::hypergraph& H, int l, int max_ite
                     }
                 }
 
-                /* Now compute argmax(T), where we break ties randomly */
+                // Now compute argmax(T), where we break ties randomly
                 long max = -1;
                 auto label_max = std::vector<int>();
                 for (int j = 0; j < l; j++) {
                     if (T[j] == max) {
                         label_max.push_back(j);
-                    }
-                    else if (T[j] > max) {
+                    } else if (T[j] > max) {
                         max = T[j];
                         label_max.clear();
                         label_max.push_back(j);
                     }
                 }
 
-                /* Set new label and change if it is changed */
-                int random = rand();
+                // Set new label and change if it is changed
+                auto random = rng();
                 int new_label = label_max[random % label_max.size()];
                 if (new_label != L[i]) {
                     change = true;
@@ -69,7 +69,7 @@ std::vector<int> label_propagation(pmondriaan::hypergraph& H, int l, int max_ite
                     size_L[L[i]]++;
                 }
 
-                /* Update the counts */
+                // Update the counts
                 for (auto n : H(i).nets()) {
                     C[n][L[i]]++;
                 }
@@ -81,18 +81,23 @@ std::vector<int> label_propagation(pmondriaan::hypergraph& H, int l, int max_ite
     return L;
 }
 
-std::vector<int> label_propagation_bisect(pmondriaan::hypergraph& H, int max_iter, long max_weight_0, long max_weight_1) {
+std::vector<int> label_propagation_bisect(pmondriaan::hypergraph& H,
+                                          int max_iter,
+                                          long max_weight_0,
+                                          long max_weight_1,
+                                          std::mt19937& rng) {
+
+    auto L = std::vector<int>(H.size());
     // counts of all labels for each net
     auto C = std::vector<std::vector<long>>(H.nets().size(), std::vector<long>(2, 0));
-    //stores that weight that can still be assigned to the labels
+    // stores that weight that can still be assigned to the labels
     auto weight_L = std::vector<long>(2, 0);
     weight_L[0] = max_weight_0;
     weight_L[1] = max_weight_1;
     // the labels of the vertices
-    auto L = std::vector<int>(H.size());
 
     for (auto i = 0u; i < H.size(); i++) {
-        int random = rand();
+        auto random = rng();
         L[i] = random % 2;
         if ((weight_L[L[i]] - H(i).weight()) < 0) {
             L[i] = (L[i] + 1) % 2;
@@ -106,14 +111,13 @@ std::vector<int> label_propagation_bisect(pmondriaan::hypergraph& H, int max_ite
     auto T = std::vector<long>(2);
     bool change = true;
     int iterations = 0;
-
     while (change && (iterations < max_iter)) {
-        std::random_shuffle(indices.begin(), indices.end());
+        std::shuffle(indices.begin(), indices.end(), rng);
         change = false;
         for (auto i : indices) {
             std::fill(T.begin(), T.end(), 0);
 
-            /* First compute the sum of the counts */
+            // First compute the sum of the counts
             for (auto n : H(i).nets()) {
                 C[n][L[i]]--;
                 for (int j = 0; j < 2; j++) {
@@ -121,23 +125,22 @@ std::vector<int> label_propagation_bisect(pmondriaan::hypergraph& H, int max_ite
                 }
             }
 
-            /* Now compute argmax(T), where we break ties randomly */
+            // Now compute argmax(T), where we break ties randomly
             long max = -1;
             auto label_max = std::vector<int>();
             for (int j = 0; j < 2; j++) {
                 if (T[j] == max) {
-                        label_max.push_back(j);
-                    }
-                else if (T[j] > max) {
+                    label_max.push_back(j);
+                } else if (T[j] > max) {
                     max = T[j];
                     label_max.clear();
                     label_max.push_back(j);
                 }
             }
 
-            /* Set new label and change if it is changed */
+            // Set new label and change if it is changed
             if (max != -1) {
-                int random = rand();
+                auto random = rng();
                 int new_label = label_max[random % label_max.size()];
                 if ((new_label != L[i]) && ((weight_L[new_label] - H(i).weight()) >= 0)) {
                     change = true;
@@ -147,7 +150,7 @@ std::vector<int> label_propagation_bisect(pmondriaan::hypergraph& H, int max_ite
                 }
             }
 
-            /* Update the counts */
+            // Update the counts
             for (auto n : H(i).nets()) {
                 C[n][L[i]]++;
             }
@@ -156,8 +159,6 @@ std::vector<int> label_propagation_bisect(pmondriaan::hypergraph& H, int max_ite
     }
 
     return L;
-
-
 }
 
 } // namespace pmondriaan
