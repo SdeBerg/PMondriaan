@@ -260,6 +260,7 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
                                               pmondriaan::contraction& C,
                                               pmondriaan::options& opts,
                                               std::mt19937& rng) {
+
     auto matches = std::vector<std::vector<int>>(H.size(), std::vector<int>());
     auto matched = std::vector<bool>(H.size(), false);
     // contains the vertices of the contracted hypergraph
@@ -279,7 +280,7 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
                 double scaled_cost = (1.0 / ((double)H.net(n_id).size() - 1.0));
                 for (auto u_id : H.net(n_id).vertices()) {
                     auto u_local = H.local_id(u_id);
-                    if ((!matched[u_local]) && (u_local != (int)i)) {
+                    if ((!matched[u_local]) && (u_local != i)) {
                         if (ip[u_local] == 0.0) {
                             visited.push_back(u_local);
                         }

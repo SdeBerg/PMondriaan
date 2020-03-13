@@ -133,32 +133,32 @@ double load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k) {
 /**
  * Compute the cutsize with the correct metric of a local hypergraph
  */
-long cutsize(pmondriaan::hypergraph& H, std::string metric){
-	long result = 0;
-	if (metric == "cutnet") {
-		for (auto& net : H.nets()) {
-			auto labels_net = std::set<int>();
-			for (auto& v : net.vertices()) {
+long cutsize(pmondriaan::hypergraph& H, std::string metric) {
+    long result = 0;
+    if (metric == "cutnet") {
+        for (auto& net : H.nets()) {
+            auto labels_net = std::set<int>();
+            for (auto& v : net.vertices()) {
                 labels_net.insert(H(H.local_id(v)).part());
-			}
-			if (labels_net.size() > 1) {
-				result += net.cost();
-			}
-		}
+            }
+            if (labels_net.size() > 1) {
+                result += net.cost();
+            }
+        }
     } else if (metric == "lambda1") {
-		for (auto& net : H.nets()) {
-			auto labels_net = std::set<int>();
-			for (auto& v : net.vertices()) {
+        for (auto& net : H.nets()) {
+            auto labels_net = std::set<int>();
+            for (auto& v : net.vertices()) {
                 labels_net.insert(H(H.local_id(v)).part());
-			}
-			if (labels_net.size() > 1) {
-				result += (labels_net.size() - 1) * net.cost();
-			}
-		}
+            }
+            if (labels_net.size() > 1) {
+                result += (labels_net.size() - 1) * net.cost();
+            }
+        }
     } else {
         std::cerr << "Error: unknown metric";
     }
-	return result;
+    return result;
 }
 
 /**
@@ -191,19 +191,19 @@ long cutsize(bulk::world& world, pmondriaan::hypergraph& H, std::string metric) 
         }
     }
 
-    
+
     if (metric == "cutnet") {
-		for (auto i = 0u; i < H.nets().size(); i++) {
+        for (auto i = 0u; i < H.nets().size(); i++) {
             if (total_cut[i].size() > 1) {
                 result += H.net(i).cost();
             }
-		}
+        }
     } else if (metric == "lambda1") {
-		for (auto i = 0u; i < H.nets().size(); i++) {
+        for (auto i = 0u; i < H.nets().size(); i++) {
             if (total_cut[i].size() > 1) {
                 result += (total_cut[i].size() - 1) * H.net(i).cost();
             }
-		}
+        }
     } else {
         std::cerr << "Error: unknown metric";
     }
@@ -280,6 +280,27 @@ create_new_hypergraph(bulk::world& new_world, pmondriaan::hypergraph& H, int sta
     remove_free_nets(new_world, new_H);
 
     return new_H;
+}
+
+/**
+ * Creates a copy of a hypergraph and returns that copy.
+ */
+pmondriaan::hypergraph copy_hypergraph(pmondriaan::hypergraph& H) {
+
+    std::vector<pmondriaan::vertex> new_vertices(H.vertices().begin(),
+                                                 H.vertices().end());
+    auto new_nets = std::vector<pmondriaan::net>();
+    for (auto& n : H.nets()) {
+        new_nets.push_back(pmondriaan::net(n.id(), std::vector<int>()));
+    }
+
+    for (auto& v : new_vertices) {
+        for (auto n : v.nets()) {
+            new_nets[n].add_vertex(v.id());
+        }
+    }
+
+    return pmondriaan::hypergraph(H.global_size(), new_vertices, new_nets);
 }
 
 

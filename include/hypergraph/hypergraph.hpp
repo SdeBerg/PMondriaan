@@ -161,5 +161,10 @@ void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H);
 pmondriaan::hypergraph
 create_new_hypergraph(bulk::world& new_world, pmondriaan::hypergraph& H, int start, int end);
 
+/**
+ * Creates a copy of a hypergraph and returns that copy.
+ */
+pmondriaan::hypergraph copy_hypergraph(pmondriaan::hypergraph& H);
+
 
 } // namespace pmondriaan
