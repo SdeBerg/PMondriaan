@@ -51,8 +51,8 @@ set(
 	#"test_label_propagation.cpp"
 	#"lp_sampling.cpp"
 	#"coarsening.cpp"
-	"bipartition.cpp"
-	"lp_bisect.cpp"
+	#"bipartition.cpp"
+	#"lp_bisect.cpp"
 )
 
 foreach(source_file ${TEST_SOURCES})

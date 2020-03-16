@@ -1,10 +1,10 @@
 #include <algorithm>
 #include <cmath>
+#include <random>
 #include <stack>
 #include <stdlib.h>
 #include <string>
 #include <vector>
-#include <random>
 
 #include <iostream>
 
@@ -13,8 +13,8 @@
 #include "hypergraph/hypergraph.hpp"
 #include "options.hpp"
 #include "recursive_bisection.hpp"
-#include "work_item.hpp"
 #include "util/interval.hpp"
+#include "work_item.hpp"
 
 namespace pmondriaan {
 
@@ -24,9 +24,6 @@ namespace pmondriaan {
  */
 void recursive_bisect(bulk::world& world,
                       pmondriaan::hypergraph& H,
-                      std::string bisect_mode,
-                      std::string sampling_mode,
-                      std::string metric,
                       int k,
                       double epsilon,
                       double eta,
@@ -50,7 +47,7 @@ void recursive_bisect(bulk::world& world,
     int end = H.size();
     auto jobs = std::stack<pmondriaan::work_item>();
 
-    interval labels = {0, k-1};
+    interval labels = {0, k - 1};
 
     long weight_mypart = global_weight;
 
@@ -73,9 +70,8 @@ void recursive_bisect(bulk::world& world,
         bulk::var<long> weight_part_0(world);
         bulk::var<long> weight_part_1(world);
 
-        auto weight_parts = bisect(world, H, bisect_mode, sampling_mode, opts, metric,
-                                   max_global_weights[0], max_global_weights[1],
-                                   start, end, labels, rng);
+        auto weight_parts = bisect(world, H, opts, max_global_weights[0],
+                                   max_global_weights[1], start, end, labels, rng);
         weight_part_0 = weight_parts[0];
         weight_part_1 = weight_parts[1];
 
@@ -98,7 +94,8 @@ void recursive_bisect(bulk::world& world,
         }
 
         // personal low and high label for the next round
-		interval new_labels = {labels.low + my_part * k_low, labels.high - (1 - my_part) * k_high};
+        interval new_labels = {labels.low + my_part * k_low,
+                               labels.high - (1 - my_part) * k_high};
 
         if (new_labels.length() > 0) {
 
@@ -116,8 +113,8 @@ void recursive_bisect(bulk::world& world,
              * processors procs_mypart[0] ... procs_mypart[0] + p_high -1 and with label_high on
              * procs_mypart[0] + p_high ... procs_mypart[1] - 1.
              */
-            end = redistribute_hypergraph(world, H, procs_mypart, my_part, labels.low,
-                                          labels.high, new_max_local_weight,
+            end = redistribute_hypergraph(world, H, procs_mypart, my_part,
+                                          labels.low, labels.high, new_max_local_weight,
                                           weight_part_0.value(),
                                           weight_part_1.value(), p_low);
 
@@ -152,7 +149,7 @@ void recursive_bisect(bulk::world& world,
 
         start = job.start();
         end = job.end();
-		labels = {job.label_low(), job.label_high()};
+        labels = {job.label_low(), job.label_high()};
         weight_mypart = job.weight();
 
         while (labels.length() > 0) {
@@ -164,12 +161,11 @@ void recursive_bisect(bulk::world& world,
             auto max_global_weights =
             compute_max_global_weight(k_, k_low, k_high, weight_mypart, maxweight);
 
-            auto weight_parts = bisect(world, H, bisect_mode, sampling_mode, opts, metric,
-                                       max_global_weights[0], max_global_weights[1],
-                                       start, end, labels, rng);
+            auto weight_parts = bisect(world, H, opts, max_global_weights[0],
+                                       max_global_weights[1], start, end, labels, rng);
 
             interval labels_0 = {labels.low, labels.high - k_high};
-			interval labels_1 = {labels.low + k_low, labels.high};
+            interval labels_1 = {labels.low + k_low, labels.high};
 
             int end_1 = end;
 
@@ -181,7 +177,7 @@ void recursive_bisect(bulk::world& world,
             world.log("weight part %d: %d, weight part %d: %d", labels.low,
                       weight_parts[0], labels.high, weight_parts[1]);
             weight_mypart = weight_parts[0];
-			labels = labels_0;
+            labels = labels_0;
         }
     }
 

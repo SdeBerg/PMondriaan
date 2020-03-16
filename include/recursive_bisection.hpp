@@ -15,9 +15,6 @@ namespace pmondriaan {
  */
 void recursive_bisect(bulk::world& world,
                       pmondriaan::hypergraph& H,
-                      std::string bisect_mode,
-                      std::string sampling_mode,
-                      std::string metric,
                       int k,
                       double epsilon,
                       double eta,

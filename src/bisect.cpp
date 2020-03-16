@@ -23,10 +23,7 @@ namespace pmondriaan {
  */
 std::vector<long> bisect(bulk::world& world,
                          pmondriaan::hypergraph& H,
-                         std::string bisect_mode,
-                         std::string sampling_mode,
                          pmondriaan::options& opts,
-                         std::string metric,
                          long max_weight_0,
                          long max_weight_1,
                          int start,
@@ -36,13 +33,13 @@ std::vector<long> bisect(bulk::world& world,
 
     auto weight_parts = std::vector<long>(2);
     int p = world.active_processors();
-    if (bisect_mode == "random") {
+    if (opts.bisection_mode == pmondriaan::bisection::random) {
         weight_parts = bisect_random(world, H, max_weight_0 / p,
                                      max_weight_1 / p, start, end, labels, rng);
     }
 
-    if (bisect_mode == "multilevel") {
-        weight_parts = bisect_multilevel(world, H, opts, sampling_mode, metric, max_weight_0,
+    if (opts.bisection_mode == pmondriaan::bisection::multilevel) {
+        weight_parts = bisect_multilevel(world, H, opts, max_weight_0,
                                          max_weight_1, start, end, labels, rng);
     }
 
@@ -91,8 +88,6 @@ std::vector<long> bisect_random(bulk::world& world,
 std::vector<long> bisect_multilevel(bulk::world& world,
                                     pmondriaan::hypergraph& H,
                                     pmondriaan::options& opts,
-                                    std::string sampling_mode,
-                                    std::string metric,
                                     long max_weight_0,
                                     long max_weight_1,
                                     int start,
@@ -115,8 +110,8 @@ std::vector<long> bisect_multilevel(bulk::world& world,
     while ((HC_list[nc_par].global_size() > coarsening_nrvertices_par) &&
            (nc_par < opts.coarsening_maxrounds)) {
         C_list.push_back(pmondriaan::contraction());
-        HC_list.push_back(coarsen_hypergraph_par(world, HC_list[nc_par], C_list[nc_par],
-                                                 opts, sampling_mode, rng));
+        HC_list.push_back(coarsen_hypergraph_par(world, HC_list[nc_par],
+                                                 C_list[nc_par], opts, rng));
         nc_par++;
         world.log("After iteration %d, size is %d (par)", nc_par,
                   HC_list[nc_par].global_size());
@@ -143,7 +138,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         HC_list[nc_par].add_to_nets(HC_list[nc_par].vertices().back());
     }
 
-    // TODO: Take this out in the final version!
+    // TODO: Take this out in the final version! This is only included to get reproducibility
     sort(HC_list[nc_par].vertices().begin(), HC_list[nc_par].vertices().end(),
          [](pmondriaan::vertex a, pmondriaan::vertex b) {
              return a.id() < b.id();
@@ -173,7 +168,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
 
     // we find the best solution of all partitioners
     bulk::var<long> cut(world);
-    cut = pmondriaan::cutsize(HC_list[nc_par], metric);
+    cut = pmondriaan::cutsize(HC_list[nc_par], opts.metric);
     auto best_proc = pmondriaan::smallest(cut);
 
     // the processor that has found the best solution now sends the labels to all others

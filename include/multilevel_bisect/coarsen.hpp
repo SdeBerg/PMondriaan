@@ -1,6 +1,6 @@
+#include <random>
 #include <string>
 #include <vector>
-#include <random>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
@@ -19,11 +19,10 @@ namespace pmondriaan {
  * Coarsens the hypergraph H and returns a hypergraph HC in parallel.
  */
 pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
-                                          pmondriaan::hypergraph& H,
-                                          pmondriaan::contraction& C,
-                                          pmondriaan::options& opts,
-                                          std::string sampling_mode,
-                                          std::mt19937& rng);
+                                              pmondriaan::hypergraph& H,
+                                              pmondriaan::contraction& C,
+                                              pmondriaan::options& opts,
+                                              std::mt19937& rng);
 
 
 /**
@@ -47,10 +46,10 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
  * Coarsens the hypergraph H and returns a hypergraph HC sequentially.
  */
 pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
-                                          pmondriaan::hypergraph& H,
-                                          pmondriaan::contraction& C,
-                                          pmondriaan::options& opts,
-                                          std::mt19937& rng);
+                                              pmondriaan::hypergraph& H,
+                                              pmondriaan::contraction& C,
+                                              pmondriaan::options& opts,
+                                              std::mt19937& rng);
 
 /**
  * Add a copy of a vertex v to a list of vertices.
@@ -58,9 +57,9 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
 void add_v_to_list(std::vector<pmondriaan::vertex>& v_list, pmondriaan::vertex& v);
 
 pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
-										   pmondriaan::hypergraph& H,
-										   pmondriaan::contraction& C,
-										   std::vector<std::vector<int>>& matches,
-										   std::vector<pmondriaan::vertex>& new_vertices);
+                                           pmondriaan::hypergraph& H,
+                                           pmondriaan::contraction& C,
+                                           std::vector<std::vector<int>>& matches,
+                                           std::vector<pmondriaan::vertex>& new_vertices);
 
 } // namespace pmondriaan

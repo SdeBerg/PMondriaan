@@ -1,12 +1,12 @@
 #pragma once
 
+#include <random>
 #include <string>
 #include <vector>
-#include <random>
 
 #include "hypergraph/hypergraph.hpp"
-#include "util/interval.hpp"
 #include "options.hpp"
+#include "util/interval.hpp"
 
 namespace pmondriaan {
 
@@ -15,10 +15,7 @@ namespace pmondriaan {
  */
 std::vector<long> bisect(bulk::world& world,
                          pmondriaan::hypergraph& H,
-                         std::string bisect_mode,
-                         std::string sampling_mode,
                          pmondriaan::options& opts,
-                         std::string metric,
                          long max_weight_0,
                          long max_weight_1,
                          int start,
@@ -44,8 +41,6 @@ std::vector<long> bisect_random(bulk::world& world,
 std::vector<long> bisect_multilevel(bulk::world& world,
                                     pmondriaan::hypergraph& H,
                                     pmondriaan::options& opts,
-                                    std::string sampling_mode,
-                                    std::string metric,
                                     long max_weight_0,
                                     long max_weight_1,
                                     int start,

@@ -25,7 +25,6 @@ pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
                                               pmondriaan::hypergraph& H,
                                               pmondriaan::contraction& C,
                                               pmondriaan::options& opts,
-                                              std::string sampling_mode,
                                               std::mt19937& rng) {
 
     int s = world.rank();
@@ -33,9 +32,9 @@ pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
 
     /* We first select ns samples */
     auto indices_samples = std::vector<int>();
-    if (sampling_mode == "random") {
+    if (opts.sampling_mode == pmondriaan::sampling::random) {
         indices_samples = sample_random(H, opts.sample_size, rng);
-    } else if (sampling_mode == "label propagation") {
+    } else if (opts.sampling_mode == pmondriaan::sampling::label_propagation) {
         indices_samples = sample_lp(H, opts, rng);
     }
 

@@ -28,9 +28,6 @@ int main(int argc, char** argv) {
         double eta = 0.10;
         std::string matrix_file;
         std::string hypergraph_weights;
-        std::string bisection_mode;
-        std::string sampling_mode;
-        std::string metric;
     };
 
     cli_settings settings;
@@ -55,16 +52,30 @@ int main(int argc, char** argv) {
     CLI::Option* wopt =
     app.add_option("--weights", settings.hypergraph_weights,
                    "How the weights of the vertices should be computed");
-    CLI::Option* bopt =
-    app.add_option("--bisect", settings.bisection_mode, "The bisection mode used");
-    CLI::Option* copt =
-    app.add_option("--sampling", settings.sampling_mode, "Sampling mode to be used");
-    CLI::Option* mopt = app.add_option("--metric", settings.metric, "Metric to optimized");
+
+    std::map<std::string, pmondriaan::bisection> bisection_map{
+    {"random", pmondriaan::bisection::random},
+    {"multilevel", pmondriaan::bisection::multilevel}};
+
+    app
+    .add_option("--bisect", options.bisection_mode, "The bisection mode used")
+    ->transform(CLI::CheckedTransformer(bisection_map, CLI::ignore_case));
+
+    std::map<std::string, pmondriaan::sampling> sampling_map{
+    {"random", pmondriaan::sampling::random},
+    {"label_propagation", pmondriaan::sampling::label_propagation}};
+
+    app
+    .add_option("--sampling", options.sampling_mode, "Sampling mode to be used")
+    ->transform(CLI::CheckedTransformer(sampling_map, CLI::ignore_case));
+
+    std::map<std::string, pmondriaan::m> metric_map{{"cutnet", pmondriaan::m::cut_net},
+                                                    {"lambda_minus_one",
+                                                     pmondriaan::m::lambda_minus_one}};
+    app.add_option("--metric", options.metric, "Metric to optimized")
+    ->transform(CLI::CheckedTransformer(metric_map, CLI::ignore_case));
 
     wopt->check(CLI::IsMember({"one", "degree"}));
-    bopt->check(CLI::IsMember({"random", "multilevel"}));
-    copt->check(CLI::IsMember({"random", "label propagation"}));
-    mopt->check(CLI::IsMember({"cutnet", "lambda1"}));
 
     app.add_option("--sample_size", options.sample_size, "The sample size used in the coarsening");
     app.add_option("--max_cluster_size", options.coarsening_max_clustersize,
@@ -93,19 +104,18 @@ int main(int argc, char** argv) {
         }
 
         auto hypergraph = pmondriaan::read_hypergraph(settings.matrix_file, world,
-                                             settings.hypergraph_weights);
-		
-		if(!hypergraph) {
-			std::cerr << "Error: failed to load hypergraph\n";
-			return;
-		}
-		auto H = hypergraph.value();
+                                                      settings.hypergraph_weights);
 
-        recursive_bisect(world, H, settings.bisection_mode, settings.sampling_mode,
-                         settings.metric, settings.k, settings.eps, settings.eta, options);
+        if (!hypergraph) {
+            std::cerr << "Error: failed to load hypergraph\n";
+            return;
+        }
+        auto H = hypergraph.value();
+
+        recursive_bisect(world, H, settings.k, settings.eps, settings.eta, options);
 
         auto lb = pmondriaan::load_balance(world, H, settings.k);
-        auto cutsize = pmondriaan::cutsize(world, H, settings.metric);
+        auto cutsize = pmondriaan::cutsize(world, H, options.metric);
 
 
         if (s == 0) {

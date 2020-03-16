@@ -11,6 +11,8 @@
 #include <bulk/backends/thread/thread.hpp>
 #endif
 
+#include "options.hpp"
+
 namespace pmondriaan {
 
 /**
@@ -138,12 +140,12 @@ double load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k);
 /**
  * Compute the cutsize with the correct metric of a local hypergraph
  */
-long cutsize(pmondriaan::hypergraph& H, std::string metric);
+long cutsize(pmondriaan::hypergraph& H, pmondriaan::m metric);
 
 /**
  * Compute the cutsize with the correct metric of a distributed hypergraph
  */
-long cutsize(bulk::world& world, pmondriaan::hypergraph& H, std::string metric);
+long cutsize(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::m metric);
 
 /**
  * Compute the global net sizes of a hypergraph.
