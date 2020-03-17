@@ -31,7 +31,6 @@ compute_max_global_weight(int k_, int k_low, int k_high, long weight_mypart, lon
  */
 int redistribute_hypergraph(bulk::world& world,
                             pmondriaan::hypergraph& H,
-                            std::vector<int> procs_mypart,
                             int my_part,
                             int label_low,
                             int label_high,
@@ -46,7 +45,6 @@ int redistribute_hypergraph(bulk::world& world,
  */
 int reduce_surplus(bulk::world& world,
                    pmondriaan::hypergraph& H,
-                   std::vector<int> procs_mypart,
                    int label,
                    bulk::coarray<long>& surplus,
                    bulk::queue<int, long, int, int[]>& q);

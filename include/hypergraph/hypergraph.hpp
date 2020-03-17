@@ -21,7 +21,9 @@ namespace pmondriaan {
 class vertex {
   public:
     vertex(int id, std::vector<int> nets, long weight = 1)
-    : id_(id), nets_(nets), weight_(weight) {}
+    : id_(id), nets_(nets), weight_(weight) {
+        part_ = -1;
+    }
 
     int id() { return id_; }
     std::vector<int>& nets() { return nets_; }
@@ -161,7 +163,7 @@ void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H);
  * Creates a new hypergraph that only contains the vertices of H with local id between start and end.
  */
 pmondriaan::hypergraph
-create_new_hypergraph(bulk::world& new_world, pmondriaan::hypergraph& H, int start, int end);
+create_new_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, int start, int end);
 
 /**
  * Creates a copy of a hypergraph and returns that copy.

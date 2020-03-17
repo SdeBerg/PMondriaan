@@ -217,10 +217,8 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
                                         nets.begin(), nets.end());
     }
 
-    bulk::var<int> new_size(matches.world());
-    new_size = (int)new_vertices.size();
-    auto new_global_size =
-    bulk::foldl(new_size, [](int& lhs, int rhs) { lhs += rhs; });
+    int new_size = (int)new_vertices.size();
+    auto new_global_size = bulk::sum(matches.world(), new_size);
     auto HC = pmondriaan::hypergraph(new_global_size, new_vertices, new_nets);
 
     /* This vector keeps track of the nets already include for the current vertex

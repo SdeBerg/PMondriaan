@@ -103,48 +103,50 @@ std::vector<long> bisect_multilevel(bulk::world& world,
     auto C_list = std::vector<pmondriaan::contraction>();
     HC_list.push_back(H_reduced);
 
-    auto coarsening_nrvertices_par =
-    std::max(opts.coarsening_nrvertices, world.active_processors() * opts.sample_size *
-                                         parameters::stopping_time_par);
+    if (world.active_processors() > 1) {
+        auto coarsening_nrvertices_par =
+        std::max(opts.coarsening_nrvertices, world.active_processors() * opts.sample_size *
+                                             parameters::stopping_time_par);
 
-    while ((HC_list[nc_par].global_size() > coarsening_nrvertices_par) &&
-           (nc_par < opts.coarsening_maxrounds)) {
+        while ((HC_list[nc_par].global_size() > coarsening_nrvertices_par) &&
+               (nc_par < opts.coarsening_maxrounds)) {
+            C_list.push_back(pmondriaan::contraction());
+            HC_list.push_back(coarsen_hypergraph_par(world, HC_list[nc_par],
+                                                     C_list[nc_par], opts, rng));
+            nc_par++;
+            world.log("After iteration %d, size is %d (par)", nc_par,
+                      HC_list[nc_par].global_size());
+        }
+
+        // we now communicate the entire hypergraph to all processors using a queue containing id, weight and nets
+        auto vertex_queue = bulk::queue<int, long, int[]>(world);
+        for (auto& v : HC_list[nc_par].vertices()) {
+            for (int t = 0; t < world.rank(); t++) {
+                vertex_queue(t).send(v.id(), v.weight(), v.nets());
+            }
+            for (int t = world.rank() + 1; t < world.active_processors(); t++) {
+                vertex_queue(t).send(v.id(), v.weight(), v.nets());
+            }
+        }
+
+        HC_list.push_back(copy_hypergraph(HC_list[nc_par]));
         C_list.push_back(pmondriaan::contraction());
-        HC_list.push_back(coarsen_hypergraph_par(world, HC_list[nc_par],
-                                                 C_list[nc_par], opts, rng));
         nc_par++;
-        world.log("After iteration %d, size is %d (par)", nc_par,
-                  HC_list[nc_par].global_size());
-    }
+        world.sync();
 
-    // we now communicate the entire hypergraph to all processors using a queue containing id, weight and nets
-    auto vertex_queue = bulk::queue<int, long, int[]>(world);
-    for (auto& v : HC_list[nc_par].vertices()) {
-        for (int t = 0; t < world.rank(); t++) {
-            vertex_queue(t).send(v.id(), v.weight(), v.nets());
+        for (const auto& [id, weight, nets] : vertex_queue) {
+            HC_list[nc_par].vertices().push_back({id, nets, weight});
+            HC_list[nc_par].add_to_nets(HC_list[nc_par].vertices().back());
         }
-        for (int t = world.rank() + 1; t < world.active_processors(); t++) {
-            vertex_queue(t).send(v.id(), v.weight(), v.nets());
-        }
+
+        // TODO: Take this out in the final version! This is only included to get reproducibility
+        sort(HC_list[nc_par].vertices().begin(), HC_list[nc_par].vertices().end(),
+             [](pmondriaan::vertex a, pmondriaan::vertex b) {
+                 return a.id() < b.id();
+             });
+
+        HC_list[nc_par].update_map();
     }
-
-    HC_list.push_back(copy_hypergraph(HC_list[nc_par]));
-    C_list.push_back(pmondriaan::contraction());
-    nc_par++;
-    world.sync();
-
-    for (const auto& [id, weight, nets] : vertex_queue) {
-        HC_list[nc_par].vertices().push_back({id, nets, weight});
-        HC_list[nc_par].add_to_nets(HC_list[nc_par].vertices().back());
-    }
-
-    // TODO: Take this out in the final version! This is only included to get reproducibility
-    sort(HC_list[nc_par].vertices().begin(), HC_list[nc_par].vertices().end(),
-         [](pmondriaan::vertex a, pmondriaan::vertex b) {
-             return a.id() < b.id();
-         });
-
-    HC_list[nc_par].update_map();
 
     long nc_tot = nc_par;
     while ((HC_list[nc_tot].global_size() > opts.coarsening_nrvertices) &&
@@ -166,32 +168,34 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                                          HC_list[nc_tot], C_list[nc_tot]);
     }
 
-    // we find the best solution of all partitioners
-    bulk::var<long> cut(world);
-    cut = pmondriaan::cutsize(HC_list[nc_par], opts.metric);
-    auto best_proc = pmondriaan::smallest(cut);
+    if (world.active_processors() > 1) {
+        // we find the best solution of all partitioners
+        bulk::var<long> cut(world);
+        cut = pmondriaan::cutsize(HC_list[nc_par], opts.metric);
+        auto best_proc = pmondriaan::owner_min(cut);
 
-    // the processor that has found the best solution now sends the labels to all others
-    auto label_queue = bulk::queue<int, int>(world);
-    if (world.rank() == best_proc) {
-        for (auto& v : HC_list[nc_par].vertices()) {
-            for (int t = 0; t < world.active_processors(); t++) {
-                label_queue(t).send(v.id(), v.part());
+        // the processor that has found the best solution now sends the labels to all others
+        auto label_queue = bulk::queue<int, int>(world);
+        if (world.rank() == best_proc) {
+            for (auto& v : HC_list[nc_par].vertices()) {
+                for (int t = 0; t < world.active_processors(); t++) {
+                    label_queue(t).send(v.id(), v.part());
+                }
             }
         }
-    }
-    world.sync();
+        world.sync();
 
-    if (world.rank() != best_proc) {
-        for (const auto& [id, part] : label_queue) {
-            HC_list[nc_par](HC_list[nc_par].local_id(id)).set_part(part);
+        if (world.rank() != best_proc) {
+            for (const auto& [id, part] : label_queue) {
+                HC_list[nc_par](HC_list[nc_par].local_id(id)).set_part(part);
+            }
         }
-    }
 
-    while (nc_par > 0) {
-        nc_par--;
-        pmondriaan::uncoarsen_hypergraph(world, HC_list[nc_par + 1],
-                                         HC_list[nc_par], C_list[nc_par]);
+        while (nc_par > 0) {
+            nc_par--;
+            pmondriaan::uncoarsen_hypergraph(world, HC_list[nc_par + 1],
+                                             HC_list[nc_par], C_list[nc_par]);
+        }
     }
 
     for (auto& v : HC_list[0].vertices()) {

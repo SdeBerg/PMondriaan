@@ -95,12 +95,8 @@ void hypergraph::print() {
  * Compute the global weight of a hypergraph.
  */
 long global_weight(bulk::world& world, pmondriaan::hypergraph& H) {
-
-    bulk::var<long> local_weight(world);
-    local_weight = H.total_weight();
-
-    long global_weight =
-    bulk::foldl(local_weight, [](auto& lhs, auto rhs) { lhs += rhs; });
+    auto local_weight = H.total_weight();
+    long global_weight = bulk::sum(world, local_weight);
     return global_weight;
 }
 
@@ -119,8 +115,8 @@ double load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k) {
     long global_weight = pmondriaan::global_weight(world, H);
 
     // compute the global part weights
-    weight_parts = pmondriaan::foldl_each(weight_parts_coar,
-                                          [](auto& lhs, auto rhs) { lhs += rhs; });
+    weight_parts =
+    bulk::foldl_each(weight_parts_coar, [](auto& lhs, auto rhs) { lhs += rhs; });
 
     // we compute the global part with largest weight
     long max_weight_part = *std::max_element(weight_parts.begin(), weight_parts.end());
@@ -271,10 +267,8 @@ create_new_hypergraph(bulk::world& new_world, pmondriaan::hypergraph& H, int sta
         }
     }
 
-    bulk::var<int> new_size(new_world);
-    new_size = (int)new_vertices.size();
-    auto new_global_size =
-    bulk::foldl(new_size, [](int& lhs, int rhs) { lhs += rhs; });
+    auto new_size = (int)new_vertices.size();
+    auto new_global_size = bulk::sum(new_world, new_size);
 
     auto new_H = pmondriaan::hypergraph(new_global_size, new_vertices, new_nets);
     remove_free_nets(new_world, new_H);
