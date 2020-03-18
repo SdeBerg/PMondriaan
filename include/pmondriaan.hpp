@@ -12,5 +12,6 @@
 #include <multilevel_bisect/uncoarsen.hpp>
 #include <options.hpp>
 #include <recursive_bisection.hpp>
-#include <work_item.hpp>
 #include <util/interval.hpp>
+#include <util/write_partitioning.hpp>
+#include <work_item.hpp>

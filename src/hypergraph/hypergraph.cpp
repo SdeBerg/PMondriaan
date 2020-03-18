@@ -11,7 +11,10 @@
 #endif
 
 #include "hypergraph/hypergraph.hpp"
-#include <algorithm.hpp>
+
+#include "algorithm.hpp"
+#include "options.hpp"
+#include "util/interval.hpp"
 
 namespace pmondriaan {
 
@@ -65,6 +68,17 @@ void hypergraph::remove_from_nets(int id) {
             std::iter_swap(it, net.vertices().end() - 1);
             net.vertices().erase(net.vertices().end() - 1);
         }
+    }
+}
+
+// moves a vertex to the other part
+void hypergraph::move(int id, interval labels) {
+    int idl = this->local_id(id);
+    auto& vertex = vertices_[idl];
+    if (vertex.part() == labels.low) {
+        vertex.set_part(labels.high);
+    } else {
+        vertex.set_part(labels.low);
     }
 }
 

@@ -12,6 +12,7 @@
 #endif
 
 #include "options.hpp"
+#include "util/interval.hpp"
 
 namespace pmondriaan {
 
@@ -99,6 +100,9 @@ class hypergraph {
 
     // removes vertex id from all nets
     void remove_from_nets(int id);
+
+    // moves a vertex to the other part
+    void move(int id, interval labels);
 
     // updates the global_to_local map
     void update_map();

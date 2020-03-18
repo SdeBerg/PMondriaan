@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
         auto s = world.rank();
 
         if (s == 0) {
-            /* Write the settings to the defaults file */
+            // write the settings to the defaults file
             auto conf = app.config_to_str();
             std::ofstream out("../tools/settings_run.toml");
             out << conf;
@@ -116,7 +116,15 @@ int main(int argc, char** argv) {
 
         auto lb = pmondriaan::load_balance(world, H, settings.k);
         auto cutsize = pmondriaan::cutsize(world, H, options.metric);
-
+        if (!partitioning_to_file(world, H,
+                                  "../tools/results/" +
+                                  settings.matrix_file.substr(
+                                  settings.matrix_file.find_last_of('/') + 1) +
+                                  "-k" + std::to_string(settings.k) + "-p" +
+                                  std::to_string(settings.p))) {
+            std::cerr << "Error: failed to write partitioning to file\n";
+            return;
+        }
 
         if (s == 0) {
             world.log("Partitioned hypergraph with %d vertices", H.global_size());
