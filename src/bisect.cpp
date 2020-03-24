@@ -34,8 +34,8 @@ std::vector<long> bisect(bulk::world& world,
     auto weight_parts = std::vector<long>(2);
     int p = world.active_processors();
     if (opts.bisection_mode == pmondriaan::bisection::random) {
-        weight_parts = bisect_random(world, H, max_weight_0 / p,
-                                     max_weight_1 / p, start, end, labels, rng);
+        weight_parts =
+        bisect_random(H, max_weight_0 / p, max_weight_1 / p, start, end, labels, rng);
     }
 
     if (opts.bisection_mode == pmondriaan::bisection::multilevel) {
@@ -50,8 +50,7 @@ std::vector<long> bisect(bulk::world& world,
 /**
  * Randomly bisects a hypergraph under the balance constraint and returns the weights of the two parts.
  */
-std::vector<long> bisect_random(bulk::world& world,
-                                pmondriaan::hypergraph& H,
+std::vector<long> bisect_random(pmondriaan::hypergraph& H,
                                 long max_weight_0,
                                 long max_weight_1,
                                 int start,
@@ -64,18 +63,12 @@ std::vector<long> bisect_random(bulk::world& world,
     auto weight_parts = std::vector<long>(2);
     for (auto i = start; i < end; i++) {
         auto part = rng() % 2;
-        // world.log("weight %d, sum %d, max %d, part %d", H(i).weight(),
-        // weight_parts[part] + H(i).weight(), max_weight_parts[part], part);
         // if the max weight is exceeded, we add the vertex to the other part
         if (weight_parts[part] + H(i).weight() > max_weight_parts[part]) {
             part = (part + 1) % 2;
         }
 
-        if (part == 0) {
-            H(i).set_part(labels.low);
-        } else {
-            H(i).set_part(labels.high);
-        }
+        H(i).set_part(labels(part));
         weight_parts[part] += H(i).weight();
     }
 
@@ -159,8 +152,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                   HC_list[nc_tot].global_size());
     }
 
-    pmondriaan::initial_partitioning(world, HC_list[nc_tot], max_weight_0,
-                                     max_weight_1, labels, rng);
+    pmondriaan::initial_partitioning(HC_list[nc_tot], max_weight_0, max_weight_1, opts, rng);
 
     while (nc_tot > nc_par) {
         nc_tot--;
@@ -199,7 +191,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
     }
 
     for (auto& v : HC_list[0].vertices()) {
-        H(H.local_id(v.id())).set_part(v.part());
+        H(H.local_id(v.id())).set_part(labels(v.part()));
     }
 
     auto weight_parts = std::vector<long>(2);

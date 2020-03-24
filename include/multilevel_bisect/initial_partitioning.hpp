@@ -13,13 +13,12 @@
 namespace pmondriaan {
 
 /**
- * Creates an initial partitioning for hypergraph H.
+ * Creates an initial partitioning for hypergraph H. Returns the quality of the solution found.
  */
-void initial_partitioning(bulk::world& world,
-                          pmondriaan::hypergraph& H,
+long initial_partitioning(pmondriaan::hypergraph& H,
                           long max_weight_0,
                           long max_weight_1,
-                          interval labels,
+                          pmondriaan::options& opts,
                           std::mt19937& rng);
 
 } // namespace pmondriaan

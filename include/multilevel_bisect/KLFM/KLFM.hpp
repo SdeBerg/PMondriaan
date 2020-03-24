@@ -1,3 +1,5 @@
+#include <random>
+
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
 #include <bulk/backends/mpi/mpi.hpp>
@@ -10,23 +12,27 @@
 namespace pmondriaan {
 
 /**
- * Runs the KLFM algorithm to improve a given partitioning.
+ * Runs the KLFM algorithm to improve a given partitioning. Return the quality of the best solution.
  */
-void KLFM(bulk::world& world,
-          pmondriaan::hypergraph& H,
+long KLFM(pmondriaan::hypergraph& H,
+          std::vector<std::vector<long>>& C,
+          long weight_0,
+          long weight_1,
           long max_weight_0,
           long max_weight_1,
-          interval labels,
-          int max_passes);
+          pmondriaan::options& opts,
+          std::mt19937& rng);
 
 /**
  * Runs a single pass of the KLFM algorithm to improve a given partitioning.
  */
-long KLFM_pass(bulk::world& world,
-               pmondriaan::hypergraph& H,
+long KLFM_pass(pmondriaan::hypergraph& H,
+               std::vector<std::vector<long>>& C,
                long solution_quality,
+               long weight_0,
+               long weight_1,
                long max_weight_0,
                long max_weight_1,
-               interval labels);
+               std::mt19937& rng);
 
 } // namespace pmondriaan

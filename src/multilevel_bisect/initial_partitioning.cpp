@@ -7,30 +7,34 @@
 
 #include "bisect.hpp"
 #include "hypergraph/hypergraph.hpp"
+#include "multilevel_bisect/KLFM/KLFM.hpp"
 #include "multilevel_bisect/initial_partitioning.hpp"
 #include "multilevel_bisect/label_propagation.hpp"
 
 namespace pmondriaan {
 
 /**
- * Creates an initial partitioning for hypergraph H.
+ * Creates an initial partitioning for hypergraph H. Returns the quality of the solution found.
  */
-void initial_partitioning(bulk::world& world,
-                          pmondriaan::hypergraph& H,
+long initial_partitioning(pmondriaan::hypergraph& H,
                           long max_weight_0,
                           long max_weight_1,
-                          interval labels,
+                          pmondriaan::options& opts,
                           std::mt19937& rng) {
 
-    // bisect_random(world, H, max_weight_0, max_weight_1, 0, H.size(), labels, rng);
-    auto L = label_propagation_bisect(H, 100, max_weight_0, max_weight_1, rng);
+    // pmondriaan::interval labels = {0,1};
+    // bisect_random(H, max_weight_0, max_weight_1, 0, H.size(), labels, rng);
+
+    // counts of all labels for each net
+    auto C = std::vector<std::vector<long>>(H.nets().size(), std::vector<long>(2, 0));
+    auto L = label_propagation_bisect(H, C, 100, max_weight_0, max_weight_1, rng);
+
     for (auto i = 0u; i < H.size(); i++) {
-        if (L[i] == 0) {
-            H(i).set_part(labels.low);
-        } else {
-            H(i).set_part(labels.high);
-        }
+        H(i).set_part(L[i]);
     }
+
+    return pmondriaan::KLFM(H, C, H.weight_part(0), H.weight_part(1),
+                            max_weight_0, max_weight_1, opts, rng);
 }
 
 

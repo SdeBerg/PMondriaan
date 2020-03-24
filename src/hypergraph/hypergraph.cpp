@@ -71,14 +71,21 @@ void hypergraph::remove_from_nets(int id) {
     }
 }
 
-// moves a vertex to the other part
-void hypergraph::move(int id, interval labels) {
+// moves a vertex to the other part in 0,1
+void hypergraph::move(int id) {
     int idl = this->local_id(id);
     auto& vertex = vertices_[idl];
-    if (vertex.part() == labels.low) {
-        vertex.set_part(labels.high);
-    } else {
-        vertex.set_part(labels.low);
+    vertex.set_part((vertex.part() + 1) % 2);
+}
+
+void hypergraph::move(int id, std::vector<std::vector<long>>& C) {
+    auto& v = vertices_[this->local_id(id)];
+    int from = v.part();
+    move(id);
+    int to = v.part();
+    for (auto n : v.nets()) {
+        C[n][from]--;
+        C[n][to]++;
     }
 }
 

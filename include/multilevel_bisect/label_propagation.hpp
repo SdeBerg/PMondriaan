@@ -13,6 +13,7 @@ std::vector<int>
 label_propagation(pmondriaan::hypergraph& H, int l, int max_iter, int min_size, std::mt19937& rng);
 
 std::vector<int> label_propagation_bisect(pmondriaan::hypergraph& H,
+                                          std::vector<std::vector<long>>& C,
                                           int max_iter,
                                           long max_weight_0,
                                           long max_weight_1,

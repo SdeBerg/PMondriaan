@@ -101,8 +101,11 @@ class hypergraph {
     // removes vertex id from all nets
     void remove_from_nets(int id);
 
-    // moves a vertex to the other part
-    void move(int id, interval labels);
+    // moves a vertex to the other part in 0,1
+    void move(int id);
+
+    // moves a vertex to the other part in 0,1 and adjusts the vector with counts of the parts
+    void move(int id, std::vector<std::vector<long>>& C);
 
     // updates the global_to_local map
     void update_map();

@@ -18,10 +18,13 @@ label_propagation(pmondriaan::hypergraph& H, int l, int max_iter, int min_size, 
     // the labels of the vertices
     auto L = std::vector<int>(H.size());
 
-    for (auto& label : L) {
+    for (auto i = 0u; i < L.size(); i++) {
         auto random = rng();
-        label = random % l;
-        size_L[label]++;
+        L[i] = random % l;
+        size_L[L[i]]++;
+        for (auto n : H(i).nets()) {
+            C[n][L[i]]++;
+        }
     }
 
     std::vector<int> indices(H.size());
@@ -82,14 +85,13 @@ label_propagation(pmondriaan::hypergraph& H, int l, int max_iter, int min_size, 
 }
 
 std::vector<int> label_propagation_bisect(pmondriaan::hypergraph& H,
+                                          std::vector<std::vector<long>>& C,
                                           int max_iter,
                                           long max_weight_0,
                                           long max_weight_1,
                                           std::mt19937& rng) {
 
     auto L = std::vector<int>(H.size());
-    // counts of all labels for each net
-    auto C = std::vector<std::vector<long>>(H.nets().size(), std::vector<long>(2, 0));
     // stores that weight that can still be assigned to the labels
     auto weight_L = std::vector<long>(2, 0);
     weight_L[0] = max_weight_0;
@@ -103,6 +105,9 @@ std::vector<int> label_propagation_bisect(pmondriaan::hypergraph& H,
             L[i] = (L[i] + 1) % 2;
         }
         weight_L[L[i]] -= H(i).weight();
+        for (auto n : H(i).nets()) {
+            C[n][L[i]]++;
+        }
     }
 
     std::vector<int> indices(H.size());
