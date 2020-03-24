@@ -87,6 +87,8 @@ int main(int argc, char** argv) {
                    "stops");
     app.add_option("--coarsening_max_rounds", options.coarsening_maxrounds,
                    "The maximum number of coarsening rounds");
+    app.add_option("--KLFM_max_passes", options.KLFM_max_passes,
+                   "The maximum number of passes during the KLFM algorithm");
 
     CLI11_PARSE(app, argc, argv);
 

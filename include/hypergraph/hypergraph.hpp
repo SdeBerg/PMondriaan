@@ -137,6 +137,11 @@ class hypergraph {
 };
 
 /**
+ * Initialize the counts for parts 0,1.
+ */
+std::vector<std::vector<long>> init_counts(pmondriaan::hypergraph& H);
+
+/**
  * Compute the global weight of a hypergraph.
  */
 long global_weight(bulk::world& world, pmondriaan::hypergraph& H);

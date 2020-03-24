@@ -113,6 +113,20 @@ void hypergraph::print() {
 }
 
 /**
+ * Initialize the counts for parts 0,1.
+ */
+std::vector<std::vector<long>> init_counts(pmondriaan::hypergraph& H) {
+    auto counts =
+    std::vector<std::vector<long>>(H.nets().size(), std::vector<long>(2, 0));
+    for (auto& v : H.vertices()) {
+        for (auto n : v.nets()) {
+            counts[n][v.part()]++;
+        }
+    }
+    return counts;
+}
+
+/**
  * Compute the global weight of a hypergraph.
  */
 long global_weight(bulk::world& world, pmondriaan::hypergraph& H) {

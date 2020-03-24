@@ -152,19 +152,22 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                   HC_list[nc_tot].global_size());
     }
 
-    pmondriaan::initial_partitioning(HC_list[nc_tot], max_weight_0, max_weight_1, opts, rng);
+    auto cut = pmondriaan::initial_partitioning(HC_list[nc_tot], max_weight_0,
+                                                max_weight_1, opts, rng);
 
     while (nc_tot > nc_par) {
         nc_tot--;
-        pmondriaan::uncoarsen_hypergraph(world, HC_list[nc_tot + 1],
-                                         HC_list[nc_tot], C_list[nc_tot]);
+        cut = pmondriaan::uncoarsen_hypergraph_seq(world, HC_list[nc_tot + 1],
+                                                   HC_list[nc_tot], C_list[nc_tot],
+                                                   opts, max_weight_0,
+                                                   max_weight_1, cut, rng);
     }
 
     if (world.active_processors() > 1) {
         // we find the best solution of all partitioners
-        bulk::var<long> cut(world);
-        cut = pmondriaan::cutsize(HC_list[nc_par], opts.metric);
-        auto best_proc = pmondriaan::owner_min(cut);
+        bulk::var<long> cut_size(world);
+        cut_size = cut;
+        auto best_proc = pmondriaan::owner_min(cut_size);
 
         // the processor that has found the best solution now sends the labels to all others
         auto label_queue = bulk::queue<int, int>(world);

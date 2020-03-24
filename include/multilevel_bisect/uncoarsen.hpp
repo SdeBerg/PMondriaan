@@ -1,3 +1,5 @@
+#include <random>
+
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
 #include <bulk/backends/mpi/mpi.hpp>
@@ -18,5 +20,20 @@ void uncoarsen_hypergraph(bulk::world& world,
                           pmondriaan::hypergraph& HC,
                           pmondriaan::hypergraph& H,
                           pmondriaan::contraction& C);
+
+/**
+ * Uncoarsens the hypergraph HC sequentially into the hypergraph H.
+ * The cutsize is then optimized using the KLFM algorithm. Returns
+ * the cutsize of the partitioning found.
+ */
+long uncoarsen_hypergraph_seq(bulk::world& world,
+                              pmondriaan::hypergraph& HC,
+                              pmondriaan::hypergraph& H,
+                              pmondriaan::contraction& C,
+                              pmondriaan::options& opts,
+                              long max_weight_0,
+                              long max_weight_1,
+                              long cut_size,
+                              std::mt19937& rng);
 
 } // namespace pmondriaan
