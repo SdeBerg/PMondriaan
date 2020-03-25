@@ -76,6 +76,7 @@ class gain_structure {
     long gain_next(int part) { return buckets[part].gain_next(); }
 
     void move(int v);
+    void remove(int v);
 
     bool done();
 

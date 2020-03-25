@@ -93,6 +93,7 @@ void gain_structure::init() {
             max_gain[from] = gain;
         }
     }
+
     buckets[0].set_max_present(buckets[0].gain_to_index(max_gain[0]));
     buckets[1].set_max_present(buckets[1].gain_to_index(max_gain[1]));
 }
@@ -163,6 +164,14 @@ void gain_structure::move(int v) {
                 }
             }
         }
+    }
+}
+
+void gain_structure::remove(int v) {
+    auto& vertex = H_(H_.local_id(v));
+    int from = vertex.part();
+    if (!buckets[from].remove(v, gains[H_.local_id(v)])) {
+        std::cerr << "Error: Could not remove v from buckets";
     }
 }
 

@@ -38,7 +38,7 @@ TEST(Bisect, BisectLP) {
 
 TEST(GainBucket, GainBucketInit) {
     std::stringstream mtx_ss(mtx_three_nonzeros);
-    auto H = read_hypergraph_istream(mtx_ss, "degree").value();
+    auto H = read_hypergraph_istream(mtx_ss, "one").value();
     H(0).set_part(0);
     H(1).set_part(1);
     H(2).set_part(0);
@@ -74,7 +74,10 @@ TEST(GainBucket, KLFMpass) {
     opts.KLFM_max_passes = 1;
     opts.metric = pmondriaan::m::cut_net;
     auto sol = pmondriaan::initial_partitioning(H, 35, 35, opts, rng);
-    ASSERT_EQ(sol, 6);
+    ASSERT_LE(H.weight_part(0), 35);
+    ASSERT_LE(H.weight_part(1), 35);
+    std::cout << "sol: " << sol << "\n";
+    ASSERT_GE(sol, 6);
 }
 
 } // namespace pmondriaan
