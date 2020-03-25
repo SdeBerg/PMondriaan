@@ -21,7 +21,8 @@ namespace pmondriaan {
 /**
  * Creates a hypergraph from a graph in mtx format.
  */
-std::optional<pmondriaan::hypergraph> read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
+std::optional<pmondriaan::hypergraph>
+read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
 
     int E, V;
     uint64_t L;
@@ -39,7 +40,7 @@ std::optional<pmondriaan::hypergraph> read_hypergraph_istream(std::istream& fin,
 
     // Read the data
     std::string line;
-	std::getline(fin, line);
+    std::getline(fin, line);
     while (std::getline(fin, line)) {
         int e, v;
         std::istringstream iss(line);
@@ -50,7 +51,7 @@ std::optional<pmondriaan::hypergraph> read_hypergraph_istream(std::istream& fin,
         vertex_list[e - 1].push_back(v - 1);
     }
 
-    //fin.close();
+    // fin.close();
 
     auto vertices = std::vector<pmondriaan::vertex>();
     auto nets = std::vector<pmondriaan::net>();
@@ -64,9 +65,16 @@ std::optional<pmondriaan::hypergraph> read_hypergraph_istream(std::istream& fin,
         }
     }
 
-    for (int i = 0; i < E; i++) {
-        nets.push_back(pmondriaan::net(i, vertex_list[i]));
+    if (mode_weight == "one") {
+        for (int i = 0; i < E; i++) {
+            nets.push_back(pmondriaan::net(i, vertex_list[i]));
+        }
+    } else if (mode_weight == "degree") {
+        for (int i = 0; i < E; i++) {
+            nets.push_back(pmondriaan::net(i, vertex_list[i], vertex_list[i].size()));
+        }
     }
+
 
     return pmondriaan::hypergraph(V, vertices, nets);
     ;
@@ -87,7 +95,7 @@ read_hypergraph(std::string filename, bulk::world& world, std::string mode_weigh
     std::ifstream fin(filename);
     if (fin.fail()) {
         std::cerr << "Error: " << std::strerror(errno);
-		return std::nullopt;
+        return std::nullopt;
     }
 
     // Ignore headers and comments:
@@ -100,27 +108,27 @@ read_hypergraph(std::string filename, bulk::world& world, std::string mode_weigh
 
     auto partitioning = bulk::block_partitioning<1>({V}, {p});
 
-	// List of nets for each vertex
+    // List of nets for each vertex
     auto nets_list = std::vector<std::vector<int>>(partitioning.local_count(s));
     auto vertex_list = std::vector<std::vector<int>>(E);
-	
+
     // Read the data
     std::string line;
-	std::getline(fin, line);
-	for (auto i = 0u; i < L; i++) {
-		std::getline(fin, line);
+    std::getline(fin, line);
+    for (auto i = 0u; i < L; i++) {
+        std::getline(fin, line);
         int e, v;
         std::istringstream iss(line);
         if (!(iss >> e >> v)) {
             return std::nullopt;
         } // error
-		if (partitioning.owner({v - 1}) == s) {
-			int v_loc = partitioning.local({v-1})[0];
-			nets_list[v_loc].push_back(e-1);
-			vertex_list[e-1].push_back(v-1);
-		}
+        if (partitioning.owner({v - 1}) == s) {
+            int v_loc = partitioning.local({v - 1})[0];
+            nets_list[v_loc].push_back(e - 1);
+            vertex_list[e - 1].push_back(v - 1);
+        }
     }
-	world.sync();
+    world.sync();
     fin.close();
 
     auto vertices = std::vector<pmondriaan::vertex>();
@@ -151,9 +159,9 @@ read_hypergraph(std::string filename, bulk::world& world, std::string mode_weigh
 
 std::optional<pmondriaan::hypergraph> read_hypergraph(std::string file, std::string mode_weight) {
     std::ifstream fs(file);
-	if (fs.fail()) {
+    if (fs.fail()) {
         std::cerr << "Error: " << std::strerror(errno);
-		return std::nullopt;
+        return std::nullopt;
     }
     return read_hypergraph_istream(fs, mode_weight);
 }

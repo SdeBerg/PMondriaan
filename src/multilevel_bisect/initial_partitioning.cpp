@@ -1,3 +1,5 @@
+#include <limits.h>
+
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
 #include <bulk/backends/mpi/mpi.hpp>
@@ -14,7 +16,7 @@
 namespace pmondriaan {
 
 /**
- * Creates an initial partitioning for hypergraph H. Returns the quality of the solution found.
+ * Creates an initial partitioning for hypergraph H. Returns the cutsize of the solution found.
  */
 long initial_partitioning(pmondriaan::hypergraph& H,
                           long max_weight_0,
@@ -27,14 +29,29 @@ long initial_partitioning(pmondriaan::hypergraph& H,
 
     // counts of all labels for each net
     auto C = std::vector<std::vector<long>>(H.nets().size(), std::vector<long>(2, 0));
-    auto L = label_propagation_bisect(H, C, 100, max_weight_0, max_weight_1, rng);
+    auto L_best = std::vector<int>(H.size());
+    long best_cut = LONG_MAX;
 
-    for (auto i = 0u; i < H.size(); i++) {
-        H(i).set_part(L[i]);
+    for (int i = 0; i < 10; i++) {
+        auto L = label_propagation_bisect(H, C, 100, max_weight_0, max_weight_1, rng);
+        for (auto i = 0u; i < H.size(); i++) {
+            H(i).set_part(L[i]);
+        }
+        auto cut = pmondriaan::KLFM(H, C, H.weight_part(0), H.weight_part(1),
+                                    max_weight_0, max_weight_1, opts, rng);
+        if (cut < best_cut) {
+            for (auto i = 0u; i < H.size(); i++) {
+                L_best[i] = H(i).part();
+            }
+            best_cut = cut;
+        }
     }
 
-    return pmondriaan::KLFM(H, C, H.weight_part(0), H.weight_part(1),
-                            max_weight_0, max_weight_1, opts, rng);
+    for (auto i = 0u; i < H.size(); i++) {
+        H(i).set_part(L_best[i]);
+    }
+
+    return best_cut;
 }
 
 
