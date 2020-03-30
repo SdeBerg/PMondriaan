@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
 
     CLI11_PARSE(app, argc, argv);
 
-    bulk::thread::environment env;
+    environment env;
     /* Start parallel part */
     env.spawn(settings.p, [&settings, &options, &app](bulk::world& world) {
         auto s = world.rank();

@@ -69,21 +69,12 @@ long KLFM_pass(pmondriaan::hypergraph& H,
     auto no_improvement_moves = std::vector<int>();
 
     while (!gain_structure.done()) {
-        /*std::cout << " next 0: " << gain_structure.next(0)
-                  << " next 1: " << gain_structure.next(1) << "\n";*/
-
         max_extra_weight[0] = max_weight_0 - weights[0];
         max_extra_weight[1] = max_weight_1 - weights[1];
 
         int part_to_move =
         gain_structure.part_next(max_extra_weight[0], max_extra_weight[1], rng);
         auto v_to_move = gain_structure.next(part_to_move);
-
-        /*std::cout << "max extra 0: " << max_extra_weight[0]
-                  << " max extra 1: " << max_extra_weight[1]
-                  << " gain 0: " << gain_structure.gain_next(0)
-                  << " gain 1: " << gain_structure.gain_next(1)
-                  << " part chosen: " << part_to_move << "\n";*/
 
         if (max_extra_weight[(part_to_move + 1) % 2] - H(H.local_id(v_to_move)).weight() >= 0) {
 
