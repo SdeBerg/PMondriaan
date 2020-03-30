@@ -205,8 +205,8 @@ std::vector<long> bisect_multilevel(bulk::world& world,
     }
 
     auto weight_parts = std::vector<long>(2);
-    weight_parts[0] = HC_list[0].weight_part(labels.low);
-    weight_parts[1] = HC_list[0].weight_part(labels.high);
+    weight_parts[0] = HC_list[0].weight_part(0);
+    weight_parts[1] = HC_list[0].weight_part(1);
 
     return weight_parts;
 }
