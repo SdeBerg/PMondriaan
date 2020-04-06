@@ -77,7 +77,6 @@ read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
 
 
     return pmondriaan::hypergraph(V, vertices, nets);
-    ;
 }
 
 /**

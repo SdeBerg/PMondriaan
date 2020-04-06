@@ -98,7 +98,7 @@ void request_matches(pmondriaan::hypergraph& H,
     for (const auto& [t, number_sample, sample_nets] : sample_queue) {
         degree_samples[t * opts.sample_size + number_sample] = sample_nets.size();
         for (auto n_id : sample_nets) {
-            double scaled_cost = (1.0 / ((double)H.net(n_id).global_size() - 1.0));
+            double scaled_cost = H.net(n_id).scaled_cost();
             for (auto u_id : H.net(n_id).vertices()) {
                 ip[H.local_id(u_id)][t * opts.sample_size + number_sample] += scaled_cost;
             }
@@ -274,7 +274,7 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
         if (matches[i].empty()) {
             auto visited = std::vector<int>();
             for (auto n_id : v.nets()) {
-                double scaled_cost = (1.0 / ((double)H.net(n_id).size() - 1.0));
+                double scaled_cost = H.net(n_id).scaled_cost();
                 for (auto u_id : H.net(n_id).vertices()) {
                     auto u_local = H.local_id(u_id);
                     if ((!matched[u_local]) && (u_local != i)) {

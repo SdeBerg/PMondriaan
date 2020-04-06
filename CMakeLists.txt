@@ -18,6 +18,7 @@ set(LIB_SOURCES
   "src/multilevel_bisect/initial_partitioning.cpp"
   "src/multilevel_bisect/uncoarsen.cpp"
   "src/multilevel_bisect/KLFM/KLFM.cpp"
+  "src/multilevel_bisect/KLFM/KLFM_parallel.cpp"
   "src/multilevel_bisect/KLFM/gain_buckets.cpp"
   "src/util/write_partitioning.cpp"
 )
@@ -54,7 +55,7 @@ set(
 	#"test_label_propagation.cpp"
 	#"lp_sampling.cpp"
 	#"coarsening.cpp"
-	#"bipartition.cpp"
+	"bipartition.cpp"
 	#"lp_bisect.cpp"
 )
 

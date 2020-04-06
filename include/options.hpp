@@ -16,6 +16,7 @@ class options {
     int coarsening_nrvertices;
     int coarsening_maxrounds;
     int KLFM_max_passes;
+    int KLFM_par_number_send_moves;
 
     m metric;
     bisection bisection_mode;

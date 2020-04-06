@@ -64,11 +64,6 @@ class gain_structure {
 
     void init();
 
-    /*void clear() {
-        buckets[0].clear();
-        buckets[1].clear();
-    }*/
-
     int part_next(long max_extra_weight_0, long max_extra_weight_1, std::mt19937& rng);
 
     int next(int part) { return buckets[part].next(); }
@@ -76,6 +71,7 @@ class gain_structure {
     long gain_next(int part) { return buckets[part].gain_next(); }
 
     void move(int v);
+
     void remove(int v);
 
     bool done();

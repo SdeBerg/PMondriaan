@@ -87,6 +87,7 @@ void gain_structure::init() {
                 gain -= H_.net(n).cost();
             }
         }
+
         buckets[from].insert(v.id(), gain);
         gains[i] = gain;
         if (gain > max_gain[from]) {

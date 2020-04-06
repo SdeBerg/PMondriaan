@@ -64,6 +64,10 @@ class net {
     void set_global_size(size_t size) { global_size_ = size; }
     void add_vertex(int v) { vertices_.push_back(v); }
 
+    double scaled_cost() {
+        return (double)cost_ / ((double)global_size_ - 1.0);
+    }
+
   private:
     int id_;
     std::vector<int> vertices_;

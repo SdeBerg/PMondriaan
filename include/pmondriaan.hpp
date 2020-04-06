@@ -6,6 +6,7 @@
 #include <hypergraph/hypergraph.hpp>
 #include <hypergraph/readhypergraph.hpp>
 #include <multilevel_bisect/KLFM/KLFM.hpp>
+#include <multilevel_bisect/KLFM/KLFM_parallel.hpp>
 #include <multilevel_bisect/KLFM/gain_buckets.hpp>
 #include <multilevel_bisect/coarsen.hpp>
 #include <multilevel_bisect/initial_partitioning.hpp>
