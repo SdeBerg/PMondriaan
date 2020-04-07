@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 namespace pmondriaan {
 
 struct interval {
@@ -9,4 +11,5 @@ struct interval {
     int length() { return high - low; }
     int operator()(int part) { return values[part]; }
 };
+
 } // namespace pmondriaan

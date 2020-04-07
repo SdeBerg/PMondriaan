@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cstring>
+#include <string>
+#include <optional>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI

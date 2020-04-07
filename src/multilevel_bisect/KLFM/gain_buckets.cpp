@@ -1,5 +1,4 @@
 #include <iostream>
-#include <limits.h>
 #include <random>
 #include <unordered_set>
 #include <vector>
@@ -43,7 +42,7 @@ long gain_buckets::gain_next() {
     if (index != -1) {
         return index_to_gain(index);
     } else {
-        return LONG_MIN;
+        return std::numeric_limits<long>::min();
     }
 }
 
@@ -72,7 +71,7 @@ long gain_buckets::find_next_index() {
     }
 }
 
-void gain_structure::init() {
+void gain_structure::init_() {
     auto max_gain = std::vector<long>(2, 0);
     for (auto i = 0u; i < H_.size(); i++) {
         auto& v = H_(i);
@@ -108,8 +107,8 @@ int gain_structure::part_next(long max_extra_weight_0, long max_extra_weight_1, 
     if (v1 == -1) {
         return 0;
     }
-    auto gain_v0 = LONG_MIN;
-    auto gain_v1 = LONG_MIN;
+    auto gain_v0 = std::numeric_limits<long>::min();
+    auto gain_v1 = std::numeric_limits<long>::min();
     if (max_extra_weight_0 - H_(H_.local_id(v0)).weight() > 0) {
         gain_v0 = buckets[0].gain_next();
     }

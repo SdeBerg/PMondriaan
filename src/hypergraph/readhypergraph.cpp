@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <optional>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI

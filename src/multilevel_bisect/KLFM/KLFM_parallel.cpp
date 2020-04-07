@@ -1,5 +1,5 @@
 #include <array>
-#include <limits.h>
+#include <limits>
 #include <random>
 #include <stack>
 
@@ -34,7 +34,7 @@ long KLFM_par(bulk::world& world,
     long prev_cut_size;
 
     // TODO: use C to compute cutsize without communication
-    if (cut_size == LONG_MAX) {
+    if (cut_size == std::numeric_limits<decltype(cut_size)>::max()) {
         prev_cut_size = pmondriaan::cutsize(world, H, opts.metric);
     } else {
         prev_cut_size = cut_size;
@@ -102,7 +102,7 @@ long KLFM_pass_par(bulk::world& world,
 
     bool all_done = false;
     while (!all_done) {
-        // auto prev_total_weights = total_weights;
+        auto prev_total_weights = total_weights;
         // Find best KLFM_par_number_send_moves moves
         auto moves =
         std::vector<std::tuple<int, long, long>>(opts.KLFM_par_number_send_moves);
@@ -200,8 +200,8 @@ long KLFM_pass_par(bulk::world& world,
             }
         }
 
-        // We also send all processors the total cutsize of the nets this p is
-        responsible for cut_size = bulk::sum(world, cut_size_my_nets);
+        // We also send all processors the total cutsize of the nets this p is responsible for
+        cut_size = bulk::sum(world, cut_size_my_nets);
 
         if (cut_size > best_cut_size) {
             for (auto& move : moves) {

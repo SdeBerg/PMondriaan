@@ -22,9 +22,7 @@ namespace pmondriaan {
 class vertex {
   public:
     vertex(int id, std::vector<int> nets, long weight = 1)
-    : id_(id), nets_(nets), weight_(weight) {
-        part_ = -1;
-    }
+    : id_(id), nets_(nets), weight_(weight) {}
 
     int id() { return id_; }
     std::vector<int>& nets() { return nets_; }
@@ -42,7 +40,7 @@ class vertex {
     int id_;
     std::vector<int> nets_;
     long weight_;
-    int part_;
+    int part_ = -1;
 };
 
 /**
@@ -55,16 +53,19 @@ class net {
         global_size_ = 0;
     }
 
-    int id() { return id_; }
+    int id() const { return id_; }
+
     std::vector<int>& vertices() { return vertices_; }
-    long cost() { return cost_; }
-    auto size() { return vertices_.size(); }
-    auto global_size() { return global_size_; }
+    const std::vector<int>& vertices() const { return vertices_; }
+
+    long cost() const { return cost_; }
+    auto size() const { return vertices_.size(); }
+    auto global_size() const { return global_size_; }
 
     void set_global_size(size_t size) { global_size_ = size; }
     void add_vertex(int v) { vertices_.push_back(v); }
 
-    double scaled_cost() {
+    double scaled_cost() const {
         return (double)cost_ / ((double)global_size_ - 1.0);
     }
 
@@ -86,8 +87,21 @@ class hypergraph {
                std::vector<pmondriaan::net> nets)
     : global_size_(global_size), vertices_(std::move(vertices)),
       nets_(std::move(nets)) {
-        global_to_local = std::unordered_map<int, int>();
         update_map();
+    }
+
+    hypergraph(const hypergraph& other) : vertices_(other.vertices_) {
+      for (const auto& n : other.nets()) {
+          nets_.push_back(pmondriaan::net(n.id(), std::vector<int>()));
+      }
+
+      for (auto& v : vertices_) {
+          for (auto n : v.nets()) {
+              nets_[n].add_vertex(v.id());
+          }
+      }
+
+      update_map();
     }
 
     // computes the total weight of the vertices
@@ -125,6 +139,8 @@ class hypergraph {
     pmondriaan::vertex& operator()(int index) { return vertices_[index]; }
 
     std::vector<pmondriaan::net>& nets() { return nets_; }
+    const std::vector<pmondriaan::net>& nets() const { return nets_; }
+
     pmondriaan::net& net(int index) { return nets_[index]; }
 
     auto size() { return vertices_.size(); }
@@ -134,7 +150,7 @@ class hypergraph {
     void print();
 
   private:
-    int global_size_;
+    int global_size_ = -1;
     std::vector<pmondriaan::vertex> vertices_;
     std::vector<pmondriaan::net> nets_;
     std::unordered_map<int, int> global_to_local;
@@ -180,11 +196,5 @@ void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H);
  */
 pmondriaan::hypergraph
 create_new_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, int start, int end);
-
-/**
- * Creates a copy of a hypergraph and returns that copy.
- */
-pmondriaan::hypergraph copy_hypergraph(pmondriaan::hypergraph& H);
-
 
 } // namespace pmondriaan
