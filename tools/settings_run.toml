@@ -1,4 +1,4 @@
-file="../test/data/matrices/gemat11/gemat11.mtx"
+file="../test/data/matrices/cage3/cage3.mtx"
 processors=4
 parts=2
 eps=0.03

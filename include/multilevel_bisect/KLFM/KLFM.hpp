@@ -1,4 +1,4 @@
-#include <limits.h>
+#include <limits>
 #include <random>
 
 #include <bulk/bulk.hpp>
@@ -23,7 +23,7 @@ long KLFM(pmondriaan::hypergraph& H,
           long max_weight_1,
           pmondriaan::options& opts,
           std::mt19937& rng,
-          long cut_size = LONG_MAX);
+          long cut_size = std::numeric_limits<long>::max());
 
 /**
  * Runs a single pass of the KLFM algorithm to improve a given partitioning.

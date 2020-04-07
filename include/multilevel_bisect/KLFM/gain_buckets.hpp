@@ -1,6 +1,6 @@
 #pragma once
 
-#include <limits.h>
+#include <limits>
 #include <random>
 #include <unordered_set>
 #include <vector>
@@ -20,12 +20,11 @@ class gain_buckets {
     gain_buckets(int size) {
         buckets = std::vector<std::unordered_set<int>>(size);
         max_index_present = size;
-        min_value_present = LONG_MAX;
+        min_value_present = std::numeric_limits<long>::max();
     }
 
-    // void clear() {}
-
     void insert(int id, long gain);
+
     // removes the element id from its bucket, returns true if this element existed and false otherwise
     bool remove(int id, long gain);
 
@@ -59,10 +58,9 @@ class gain_structure {
         buckets =
         std::vector<pmondriaan::gain_buckets>(2, gain_buckets(compute_size_buckets()));
         gains = std::vector<long>(H.size());
-        init();
+        init_();
     }
 
-    void init();
 
     int part_next(long max_extra_weight_0, long max_extra_weight_1, std::mt19937& rng);
 
@@ -77,6 +75,8 @@ class gain_structure {
     bool done();
 
   private:
+    void init_();
+
     pmondriaan::hypergraph& H_;
     std::vector<std::vector<long>>& C_;
     std::vector<pmondriaan::gain_buckets> buckets;
