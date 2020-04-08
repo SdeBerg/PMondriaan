@@ -90,7 +90,10 @@ class hypergraph {
         update_map_nets();
     }
 
-    hypergraph(const hypergraph& other) : vertices_(other.vertices_) {
+    hypergraph(const hypergraph& other) : 
+      global_size_(other.global_size_),
+      global_number_nets_(other.global_number_nets_),
+      vertices_(other.vertices_) {
         for (const auto& n : other.nets()) {
             nets_.push_back(pmondriaan::net(n.id(), std::vector<int>()));
         }
@@ -104,6 +107,8 @@ class hypergraph {
         update_map();
         update_map_nets();
     }
+
+    hypergraph(hypergraph&& other) = default;
 
     // computes the total weight of the vertices
     long total_weight();
