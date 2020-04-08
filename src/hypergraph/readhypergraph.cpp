@@ -3,10 +3,10 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <optional>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
@@ -66,37 +66,28 @@ read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
         }
     }
 
-    if (mode_weight == "one") {
-        for (int i = 0; i < E; i++) {
+    for (int i = 0; i < E; i++) {
+        if (!vertex_list[i].empty()) {
             nets.push_back(pmondriaan::net(i, vertex_list[i]));
-        }
-    } else if (mode_weight == "degree") {
-        for (int i = 0; i < E; i++) {
-            nets.push_back(pmondriaan::net(i, vertex_list[i], vertex_list[i].size()));
         }
     }
 
-
-    return pmondriaan::hypergraph(V, vertices, nets);
+    auto H = pmondriaan::hypergraph(V, E, vertices, nets);
+    remove_free_nets(H);
+    return H;
 }
 
 /**
  * Creates a distributed hypergraph from a graph in mtx format.
  */
 std::optional<pmondriaan::hypergraph>
-read_hypergraph(std::string filename, bulk::world& world, std::string mode_weight) {
+read_hypergraph_istream(std::istream& fin, bulk::world& world, std::string mode_weight) {
 
     int s = world.rank();
     int p = world.active_processors();
 
     int E, V;
     uint64_t L;
-
-    std::ifstream fin(filename);
-    if (fin.fail()) {
-        std::cerr << "Error: " << std::strerror(errno);
-        return std::nullopt;
-    }
 
     // Ignore headers and comments:
     while (fin.peek() == '%') {
@@ -129,7 +120,6 @@ read_hypergraph(std::string filename, bulk::world& world, std::string mode_weigh
         }
     }
     world.sync();
-    fin.close();
 
     auto vertices = std::vector<pmondriaan::vertex>();
     auto nets = std::vector<pmondriaan::net>();
@@ -147,13 +137,15 @@ read_hypergraph(std::string filename, bulk::world& world, std::string mode_weigh
         std::cerr << "Error: unknown mode_weight";
     }
     for (int i = 0; i < E; i++) {
-        nets.push_back(pmondriaan::net(i, vertex_list[i]));
+        if (!vertex_list[i].empty()) {
+            nets.push_back(pmondriaan::net(i, vertex_list[i]));
+        }
     }
 
-    auto H = pmondriaan::hypergraph(V, vertices, nets);
-
+    auto H = pmondriaan::hypergraph(V, E, vertices, nets);
     pmondriaan::remove_free_nets(world, H);
-
+    world.log("global0 %d", H.global_number_nets());
+    world.sync();
     return H;
 }
 
@@ -164,6 +156,16 @@ std::optional<pmondriaan::hypergraph> read_hypergraph(std::string file, std::str
         return std::nullopt;
     }
     return read_hypergraph_istream(fs, mode_weight);
+}
+
+std::optional<pmondriaan::hypergraph>
+read_hypergraph(std::string file, bulk::world& world, std::string mode_weight) {
+    std::ifstream fs(file);
+    if (fs.fail()) {
+        std::cerr << "Error: " << std::strerror(errno);
+        return std::nullopt;
+    }
+    return read_hypergraph_istream(fs, world, mode_weight);
 }
 
 } // namespace pmondriaan

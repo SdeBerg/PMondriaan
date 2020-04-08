@@ -219,7 +219,8 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
 
     int new_size = (int)new_vertices.size();
     auto new_global_size = bulk::sum(matches.world(), new_size);
-    auto HC = pmondriaan::hypergraph(new_global_size, new_vertices, new_nets);
+    auto HC = pmondriaan::hypergraph(new_global_size, H.global_number_nets(),
+                                     new_vertices, new_nets);
 
     /* This vector keeps track of the nets already include for the current vertex
      if included_in_net[n] is equal to the sample number, the net is already included */
@@ -332,7 +333,8 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
         new_nets.push_back(pmondriaan::net(net.id(), std::vector<int>(), net.cost()));
     }
 
-    auto HC = pmondriaan::hypergraph(new_vertices.size(), new_vertices, new_nets);
+    auto HC = pmondriaan::hypergraph(new_vertices.size(), H.global_number_nets(),
+                                     new_vertices, new_nets);
 
     // This vector keeps track of the nets already include for the current vertex
     // if included_in_net[n] is equal to the sample number, the net is already included

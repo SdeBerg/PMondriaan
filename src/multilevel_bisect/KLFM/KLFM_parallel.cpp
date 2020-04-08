@@ -77,7 +77,7 @@ long KLFM_pass_par(bulk::world& world,
     auto no_improvement_moves = std::vector<int>();
 
     // Each processor is responsible for keeping track of some nets
-    auto net_partition = bulk::block_partitioning<1>({(int)H.nets().size()}, {p});
+    auto net_partition = bulk::block_partitioning<1>({H.global_number_nets()}, {p});
     auto previous_C = std::vector<std::vector<long>>(net_partition.local_count(s),
                                                      std::vector<long>(2));
     for (auto i = 0; i < net_partition.local_count(s); i++) {

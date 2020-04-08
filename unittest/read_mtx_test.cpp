@@ -1,6 +1,13 @@
 #include "pmondriaan.hpp"
 
 #include "gtest/gtest.h"
+#ifdef BACKEND_MPI
+#include <bulk/backends/mpi/mpi.hpp>
+using environment = bulk::mpi::environment;
+#else
+#include <bulk/backends/thread/thread.hpp>
+using environment = bulk::thread::environment;
+#endif
 
 namespace pmondriaan {
 
@@ -24,6 +31,31 @@ TEST(ReadMTX, ReadingFile) {
     auto H = read_hypergraph_istream(mtx_ss, "degree");
     ASSERT_TRUE(H);
     ASSERT_EQ(H->size(), 3);
+}
+
+TEST(Cutsize, CutsizeCutnet) {
+    environment env;
+    env.spawn(2, [](bulk::world& world) {
+        std::stringstream mtx_ss(mtx_three_nonzeros);
+        auto hypergraph = read_hypergraph_istream(mtx_ss, world, "degree");
+        auto H = hypergraph.value();
+        world.log("H(0) %d", H(0).id());
+        world.log("global1 %d", H.global_number_nets());
+        world.log("global size %d", H.global_size());
+        world.sync();
+        /*if (world.rank() == 0) {
+            H(0).set_part(0);
+            H(1).set_part(1);
+        }
+        if (world.rank() == 1) {
+            H(0).set_part(1);
+        }
+        auto cut = pmondriaan::cutsize(world, H, pmondriaan::m::cut_net);
+        if (world.rank() == 0) {
+            ASSERT_EQ(cut, 4);
+        }
+        */
+    });
 }
 
 TEST(Bisect, BisectLP) {
