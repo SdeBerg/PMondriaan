@@ -74,7 +74,7 @@ read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
 
     auto H = pmondriaan::hypergraph(V, E, vertices, nets);
     remove_free_nets(H);
-    return H;
+    return std::move(H);
 }
 
 /**
@@ -146,7 +146,7 @@ read_hypergraph_istream(std::istream& fin, bulk::world& world, std::string mode_
     pmondriaan::remove_free_nets(world, H);
     world.log("global0 %d", H.global_number_nets());
     world.sync();
-    return H;
+    return std::move(H);
 }
 
 std::optional<pmondriaan::hypergraph> read_hypergraph(std::string file, std::string mode_weight) {
