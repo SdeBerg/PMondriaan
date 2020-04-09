@@ -39,11 +39,10 @@ TEST(Cutsize, CutsizeCutnet) {
         std::stringstream mtx_ss(mtx_three_nonzeros);
         auto hypergraph = read_hypergraph_istream(mtx_ss, world, "degree");
         auto H = hypergraph.value();
-        world.log("H(0) %d", H(0).id());
-        world.log("global1 %d", H.global_number_nets());
-        world.log("global size %d", H.global_size());
-        world.sync();
-        /*if (world.rank() == 0) {
+        ASSERT_EQ(H.global_number_nets(), 3);
+        ASSERT_EQ(H.global_size(), 3);
+
+        if (world.rank() == 0) {
             H(0).set_part(0);
             H(1).set_part(1);
         }
@@ -51,10 +50,7 @@ TEST(Cutsize, CutsizeCutnet) {
             H(0).set_part(1);
         }
         auto cut = pmondriaan::cutsize(world, H, pmondriaan::m::cut_net);
-        if (world.rank() == 0) {
-            ASSERT_EQ(cut, 4);
-        }
-        */
+        ASSERT_EQ(cut, 2);
     });
 }
 
@@ -105,9 +101,9 @@ TEST(GainBucket, KLFMpass) {
     pmondriaan::options opts;
     opts.KLFM_max_passes = 1;
     opts.metric = pmondriaan::m::cut_net;
-    auto sol = pmondriaan::initial_partitioning(H, 35, 35, opts, rng);
-    ASSERT_LE(H.weight_part(0), 35);
-    ASSERT_LE(H.weight_part(1), 35);
+    auto sol = pmondriaan::initial_partitioning(H, 31, 31, opts, rng);
+    ASSERT_LE(H.weight_part(0), 31);
+    ASSERT_LE(H.weight_part(1), 31);
     ASSERT_GE(sol, 6);
 }
 

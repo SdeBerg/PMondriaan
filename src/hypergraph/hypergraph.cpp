@@ -56,7 +56,7 @@ std::vector<long> hypergraph::weight_all_parts(int k) {
 
 void hypergraph::add_to_nets(pmondriaan::vertex& v) {
     for (auto net_id : v.nets()) {
-        nets_[net_id].vertices().push_back(v.id());
+        nets_[local_id_net(net_id)].vertices().push_back(v.id());
     }
 }
 
@@ -96,8 +96,8 @@ void hypergraph::move(int id, std::vector<std::vector<long>>& C) {
     move(id);
     int to = v.part();
     for (auto n : v.nets()) {
-        C[n][from]--;
-        C[n][to]++;
+        C[local_id_net(n)][from]--;
+        C[local_id_net(n)][to]++;
     }
 }
 
@@ -137,7 +137,7 @@ std::vector<std::vector<long>> init_counts(pmondriaan::hypergraph& H) {
     std::vector<std::vector<long>>(H.nets().size(), std::vector<long>(2, 0));
     for (auto& v : H.vertices()) {
         for (auto n : v.nets()) {
-            counts[n][v.part()]++;
+            counts[H.local_id_net(n)][v.part()]++;
         }
     }
     return counts;
@@ -221,7 +221,6 @@ long cutsize(pmondriaan::hypergraph& H, pmondriaan::m metric) {
  */
 long cutsize(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::m metric) {
     long result = 0;
-    world.sync();
     auto net_partition = bulk::block_partitioning<1>({H.global_number_nets()},
                                                      {world.active_processors()});
 
@@ -236,10 +235,8 @@ long cutsize(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::m metric
         .send(net.id(), std::vector<int>(labels_net.begin(), labels_net.end()));
     }
     world.sync();
-    world.log("local size %d", net_partition.local_size(world.rank())[0]);
-    world.sync();
 
-    /*auto total_cut =
+    auto total_cut =
     std::vector<std::unordered_set<int>>(net_partition.local_size(world.rank())[0]);
 
     for (const auto& [net, labels_net] : labels) {
@@ -269,8 +266,6 @@ long cutsize(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::m metric
         std::cerr << "Error: unknown metric\n";
     }
     }
-    */
-
     return bulk::sum(world, result);
 }
 
@@ -331,7 +326,7 @@ void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H) {
  */
 void remove_free_nets(pmondriaan::hypergraph& H) {
     for (auto n = 0u; n < H.nets().size(); n++) {
-        if (H.net(n).size() == 1) {
+        if (H.net(n).size() <= 1) {
             H.remove_net_by_index(n);
         }
     }
@@ -351,7 +346,7 @@ create_new_hypergraph(bulk::world& new_world, pmondriaan::hypergraph& H, int sta
 
     for (auto& v : new_vertices) {
         for (auto n : v.nets()) {
-            new_nets[n].add_vertex(v.id());
+            new_nets[H.local_id_net(n)].add_vertex(v.id());
         }
     }
 

@@ -144,8 +144,6 @@ read_hypergraph_istream(std::istream& fin, bulk::world& world, std::string mode_
 
     auto H = pmondriaan::hypergraph(V, E, vertices, nets);
     pmondriaan::remove_free_nets(world, H);
-    world.log("global0 %d", H.global_number_nets());
-    world.sync();
     return std::move(H);
 }
 

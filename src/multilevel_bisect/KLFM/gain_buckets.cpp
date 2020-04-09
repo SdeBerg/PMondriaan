@@ -79,10 +79,10 @@ void gain_structure::init_() {
         int from = v.part();
         int to = (v.part() + 1) % 2;
         for (auto n : v.nets()) {
-            if (C_[n][from] == 1) {
+            if (C_[H_.local_id_net(n)][from] == 1) {
                 gain += H_.net(n).cost();
             }
-            if (C_[n][to] == 0) {
+            if (C_[H_.local_id_net(n)][to] == 0) {
                 gain -= H_.net(n).cost();
             }
         }
@@ -134,12 +134,12 @@ void gain_structure::move(int v) {
     buckets[from].remove(v, gains[H_.local_id(v)]);
 
     for (auto n : vertex.nets()) {
-        if (C_[n][to] == 0) {
+        if (C_[H_.local_id_net(n)][to] == 0) {
             for (auto u : H_.net(n).vertices()) {
                 add_gain(u, H_.net(n).cost());
             }
         }
-        if (C_[n][to] == 1) {
+        if (C_[H_.local_id_net(n)][to] == 1) {
             for (auto u : H_.net(n).vertices()) {
                 if (H_(H_.local_id(u)).part() == to) {
                     add_gain(u, -1 * H_.net(n).cost());
@@ -148,15 +148,15 @@ void gain_structure::move(int v) {
             }
         }
 
-        C_[n][to]++;
-        C_[n][from]--;
+        C_[H_.local_id_net(n)][to]++;
+        C_[H_.local_id_net(n)][from]--;
 
-        if (C_[n][from] == 0) {
+        if (C_[H_.local_id_net(n)][from] == 0) {
             for (auto u : H_.net(n).vertices()) {
                 add_gain(u, -1 * H_.net(n).cost());
             }
         }
-        if (C_[n][from] == 1) {
+        if (C_[H_.local_id_net(n)][from] == 1) {
             for (auto u : H_.net(n).vertices()) {
                 if (H_(H_.local_id(u)).part() == from) {
                     add_gain(u, H_.net(n).cost());

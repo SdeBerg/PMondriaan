@@ -23,7 +23,7 @@ label_propagation(pmondriaan::hypergraph& H, int l, int max_iter, int min_size, 
         L[i] = random % l;
         size_L[L[i]]++;
         for (auto n : H(i).nets()) {
-            C[n][L[i]]++;
+            C[H.local_id_net(n)][L[i]]++;
         }
     }
 
@@ -43,9 +43,9 @@ label_propagation(pmondriaan::hypergraph& H, int l, int max_iter, int min_size, 
             if (size_L[L[i]] > min_size) {
                 // First compute the sum of the counts
                 for (auto n : H(i).nets()) {
-                    C[n][L[i]]--;
+                    C[H.local_id_net(n)][L[i]]--;
                     for (int j = 0; j < l; j++) {
-                        T[j] += C[n][j];
+                        T[j] += C[H.local_id_net(n)][j];
                     }
                 }
 
@@ -74,7 +74,7 @@ label_propagation(pmondriaan::hypergraph& H, int l, int max_iter, int min_size, 
 
                 // Update the counts
                 for (auto n : H(i).nets()) {
-                    C[n][L[i]]++;
+                    C[H.local_id_net(n)][L[i]]++;
                 }
             }
         }
@@ -106,7 +106,7 @@ std::vector<int> label_propagation_bisect(pmondriaan::hypergraph& H,
         }
         weight_L[L[i]] -= H(i).weight();
         for (auto n : H(i).nets()) {
-            C[n][L[i]]++;
+            C[H.local_id_net(n)][L[i]]++;
         }
     }
 
@@ -124,9 +124,9 @@ std::vector<int> label_propagation_bisect(pmondriaan::hypergraph& H,
 
             // First compute the sum of the counts
             for (auto n : H(i).nets()) {
-                C[n][L[i]]--;
+                C[H.local_id_net(n)][L[i]]--;
                 for (int j = 0; j < 2; j++) {
-                    T[j] += C[n][j];
+                    T[j] += C[H.local_id_net(n)][j];
                 }
             }
 
@@ -157,7 +157,7 @@ std::vector<int> label_propagation_bisect(pmondriaan::hypergraph& H,
 
             // Update the counts
             for (auto n : H(i).nets()) {
-                C[n][L[i]]++;
+                C[H.local_id_net(n)][L[i]]++;
             }
         }
         iterations++;

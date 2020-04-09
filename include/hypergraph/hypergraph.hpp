@@ -90,17 +90,16 @@ class hypergraph {
         update_map_nets();
     }
 
-    hypergraph(const hypergraph& other) : 
-      global_size_(other.global_size_),
-      global_number_nets_(other.global_number_nets_),
-      vertices_(other.vertices_) {
+    hypergraph(const hypergraph& other)
+    : global_size_(other.global_size_),
+      global_number_nets_(other.global_number_nets_), vertices_(other.vertices_) {
         for (const auto& n : other.nets()) {
             nets_.push_back(pmondriaan::net(n.id(), std::vector<int>()));
         }
 
         for (auto& v : vertices_) {
             for (auto n : v.nets()) {
-                nets_[n].add_vertex(v.id());
+                nets_[other.local_id_net(n)].add_vertex(v.id());
             }
         }
 
@@ -141,6 +140,9 @@ class hypergraph {
     void update_map_nets();
 
     int local_id(int global_id) { return global_to_local[global_id]; }
+    int local_id_net(int global_id) const {
+        return net_global_to_local.at(global_id);
+    }
     bool is_local(int global_id) {
         return (global_to_local.count(global_id) > 0);
     }
