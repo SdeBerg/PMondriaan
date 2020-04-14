@@ -87,8 +87,8 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                                     int end,
                                     interval labels,
                                     std::mt19937& rng) {
-    auto H_reduced = pmondriaan::create_new_hypergraph(world, H, start, end);
 
+    auto H_reduced = pmondriaan::create_new_hypergraph(world, H, start, end);
     long nc_par = 0;
 
     auto HC_list = std::vector<pmondriaan::hypergraph>{H_reduced};
@@ -142,7 +142,9 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         world.log("s: %d, time in sorting: %lf", world.rank(), time.get_change());
         HC_list[nc_par].update_map();
     }
+
     time.get();
+
     long nc_tot = nc_par;
     while ((HC_list[nc_tot].global_size() > opts.coarsening_nrvertices) &&
            (nc_tot - 1 < opts.coarsening_maxrounds)) {
@@ -150,6 +152,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         time.get();
         HC_list.push_back(coarsen_hypergraph_seq(world, HC_list[nc_tot],
                                                  C_list[nc_tot], opts, rng));
+
         world.log("s: %d, time in iteration seq coarsening: %lf", world.rank(),
                   time.get_change());
         nc_tot++;

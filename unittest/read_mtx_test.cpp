@@ -95,16 +95,19 @@ TEST(GainBucket, GainBucketInit) {
 
 TEST(GainBucket, KLFMpass) {
     auto H =
-    pmondriaan::read_hypergraph("../test/data/matrices/dolphins/dolphins.mtx", "one")
+    pmondriaan::read_hypergraph("../test/data/matrices/dolphins/dolphins.mtx", "degree")
     .value();
     std::mt19937 rng(1);
     pmondriaan::options opts;
     opts.KLFM_max_passes = 1;
     opts.metric = pmondriaan::m::cut_net;
-    auto sol = pmondriaan::initial_partitioning(H, 31, 31, opts, rng);
-    ASSERT_LE(H.weight_part(0), 31);
-    ASSERT_LE(H.weight_part(1), 31);
-    ASSERT_GE(sol, 6);
+    auto sol = pmondriaan::initial_partitioning(H, 163, 163, opts, rng);
+    ASSERT_LE(H.weight_part(0), 163);
+    ASSERT_LE(H.weight_part(1), 163);
+    std::cout << "sol: " << sol << "\n";
+    std::cout << "actual: " << pmondriaan::cutsize(H, pmondriaan::m::cut_net) << "\n";
+    std::cout << "w0: " << H.weight_part(0) << " w1: " << H.weight_part(1) << "\n";
+    ASSERT_GE(sol, 18);
 }
 
 } // namespace pmondriaan

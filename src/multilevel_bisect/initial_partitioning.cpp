@@ -27,18 +27,31 @@ long initial_partitioning(pmondriaan::hypergraph& H,
     // pmondriaan::interval labels = {0,1};
     // bisect_random(H, max_weight_0, max_weight_1, 0, H.size(), labels, rng);
 
-    // counts of all labels for each net
-    auto C = std::vector<std::vector<long>>(H.nets().size(), std::vector<long>(2, 0));
     auto L_best = std::vector<int>(H.size());
     long best_cut = LONG_MAX;
 
     for (int i = 0; i < 10; i++) {
+        // counts of all labels for each net
+        auto C =
+        std::vector<std::vector<long>>(H.nets().size(), std::vector<long>(2, 0));
+
         auto L = label_propagation_bisect(H, C, 100, max_weight_0, max_weight_1, rng);
         for (auto i = 0u; i < H.size(); i++) {
             H(i).set_part(L[i]);
         }
+        /*std::cout << "cut after LP: " << pmondriaan::cutsize(H, opts.metric)
+                  << " weights: " << H.weight_part(0) << " " << H.weight_part(1) << "\n";
+        for (auto& n : H.nets()) {
+            std::cout << "net " << n.id() << ": ";
+            for (auto v : n.vertices()) {
+                std::cout << H(H.local_id(v)).part() << " ";
+            }
+            std::cout << "\n";
+        }*/
         auto cut = pmondriaan::KLFM(H, C, H.weight_part(0), H.weight_part(1),
                                     max_weight_0, max_weight_1, opts, rng);
+        std::cout << "cut: " << cut << "\n";
+        std::cout << "actual cut: " << pmondriaan::cutsize(H, opts.metric) << "\n";
         if (cut < best_cut) {
             for (auto i = 0u; i < H.size(); i++) {
                 L_best[i] = H(i).part();

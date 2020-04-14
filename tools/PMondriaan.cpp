@@ -113,7 +113,6 @@ int main(int argc, char** argv) {
             return;
         }
         auto H = hypergraph.value();
-
         recursive_bisect(world, H, settings.k, settings.eps, settings.eta, options);
 
         auto lb = pmondriaan::load_balance(world, H, settings.k);
