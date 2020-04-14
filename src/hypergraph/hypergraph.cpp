@@ -114,9 +114,7 @@ void hypergraph::update_map_nets() {
 }
 
 void hypergraph::set_global_net_sizes(std::vector<size_t>& sizes) {
-    std::cout << "nets size: " << nets_.size() << " sizes size: " << sizes.size() << "\n";
     for (auto i = 0u; i < nets_.size(); i++) {
-        std::cout << "i: " << i << " global size: " << sizes[i] << "\n";
         nets_[i].set_global_size(sizes[i]);
     }
 }
@@ -298,17 +296,19 @@ std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph&
         size_nets[net_partition.local({id})[0]] += size;
     }
 
-    auto result = std::vector<bulk::future<size_t>>(nets.size());
+    auto future_result = std::vector<bulk::future<size_t>>();
     for (auto i = 0u; i < nets.size(); i++) {
-        result[i] =
-        size_nets(net_partition.owner(nets[i].id()))[net_partition.local(nets[i].id())[0]]
-        .get();
+        future_result.push_back(size_nets(net_partition.owner(
+        nets[i].id()))[net_partition.local(nets[i].id())[0]]
+                                .get());
     }
     world.sync();
-    std::cout << "net0:" << result[0].value() << "\n ";
-    auto r = std::vector<size_t>();
-    H.set_global_net_sizes(r);
-    return r;
+    auto result = std::vector<size_t>(nets.size());
+    for (auto i = 0u; i < nets.size(); i++) {
+        result[i] = future_result[i].value();
+    }
+    H.set_global_net_sizes(result);
+    return result;
 }
 
 
@@ -329,7 +329,7 @@ void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H) {
  */
 void remove_free_nets(pmondriaan::hypergraph& H) {
     for (auto n = 0u; n < H.nets().size(); n++) {
-        if (H.net(n).size() <= 1) {
+        if (H.nets()[n].size() <= 1) {
             H.remove_net_by_index(n);
         }
     }
@@ -341,29 +341,25 @@ void remove_free_nets(pmondriaan::hypergraph& H) {
 pmondriaan::hypergraph
 create_new_hypergraph(bulk::world& new_world, pmondriaan::hypergraph& H, int start, int end) {
 
-    std::cout << "1";
     std::vector<pmondriaan::vertex> new_vertices(H.vertices().begin() + start,
                                                  H.vertices().begin() + end);
     auto new_nets = std::vector<pmondriaan::net>();
     for (auto& n : H.nets()) {
         new_nets.push_back(pmondriaan::net(n.id(), std::vector<int>()));
     }
-    std::cout << "2";
+
     for (auto& v : new_vertices) {
         for (auto n : v.nets()) {
             new_nets[H.local_id_net(n)].add_vertex(v.id());
         }
     }
-    std::cout << "3";
+
     auto new_size = (int)new_vertices.size();
     auto new_global_size = bulk::sum(new_world, new_size);
-    std::cout << "4";
     auto new_H = pmondriaan::hypergraph(new_global_size, H.global_number_nets(),
                                         new_vertices, new_nets);
-    std::cout << "5";
-    remove_free_nets(new_world, new_H);
-    std::cout << "6";
 
+    remove_free_nets(new_world, new_H);
     return new_H;
 }
 

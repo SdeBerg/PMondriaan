@@ -1,4 +1,4 @@
-file="../test/data/matrices/dolphins/dolphins.mtx"
+file="../test/data/matrices/gemat11/gemat11.mtx"
 processors=1
 parts=2
 eps=0.03

@@ -90,13 +90,12 @@ std::vector<int> label_propagation_bisect(pmondriaan::hypergraph& H,
                                           long max_weight_0,
                                           long max_weight_1,
                                           std::mt19937& rng) {
-
+    // The labels of the vertices
     auto L = std::vector<int>(H.size());
-    // stores that weight that can still be assigned to the labels
+    // Stores that weight that can still be assigned to the labels
     auto weight_L = std::vector<long>(2, 0);
     weight_L[0] = max_weight_0;
     weight_L[1] = max_weight_1;
-    // the labels of the vertices
 
     for (auto i = 0u; i < H.size(); i++) {
         auto random = rng();

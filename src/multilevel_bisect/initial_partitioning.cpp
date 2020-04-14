@@ -39,6 +39,7 @@ long initial_partitioning(pmondriaan::hypergraph& H,
         for (auto i = 0u; i < H.size(); i++) {
             H(i).set_part(L[i]);
         }
+
         /*std::cout << "cut after LP: " << pmondriaan::cutsize(H, opts.metric)
                   << " weights: " << H.weight_part(0) << " " << H.weight_part(1) << "\n";
         for (auto& n : H.nets()) {
@@ -50,8 +51,7 @@ long initial_partitioning(pmondriaan::hypergraph& H,
         }*/
         auto cut = pmondriaan::KLFM(H, C, H.weight_part(0), H.weight_part(1),
                                     max_weight_0, max_weight_1, opts, rng);
-        std::cout << "cut: " << cut << "\n";
-        std::cout << "actual cut: " << pmondriaan::cutsize(H, opts.metric) << "\n";
+
         if (cut < best_cut) {
             for (auto i = 0u; i < H.size(); i++) {
                 L_best[i] = H(i).part();

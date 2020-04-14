@@ -302,7 +302,6 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
                                               pmondriaan::contraction& C,
                                               pmondriaan::options& opts,
                                               std::mt19937& rng) {
-
     auto matches = std::vector<std::vector<int>>(H.size(), std::vector<int>());
     auto matched = std::vector<bool>(H.size(), false);
     // contains the vertices of the contracted hypergraph
@@ -355,6 +354,7 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
             add_v_to_list(new_v, v);
         }
     }
+    world.sync();
     auto result = pmondriaan::contract_hypergraph(world, H, C, matches, new_v);
     return result;
 }
@@ -375,8 +375,8 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
     auto new_nets = std::vector<pmondriaan::net>();
     for (auto& net : H.nets()) {
         new_nets.push_back(pmondriaan::net(net.id(), std::vector<int>(), net.cost()));
+        new_nets.back().set_global_size(net.global_size());
     }
-
     auto HC = pmondriaan::hypergraph(new_vertices.size(), H.global_number_nets(),
                                      new_vertices, new_nets);
 
@@ -388,6 +388,9 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
             sample_count++;
 
             auto& nets = HC(HC.local_id(H(i).id())).nets();
+            for (auto n : nets) {
+                HC.net(n).add_vertex(H(i).id());
+            }
             std::unordered_set<int> nets_set(nets.begin(), nets.end());
 
             for (auto match : matches[i]) {
@@ -405,6 +408,7 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
     }
 
     remove_free_nets(HC);
+
     for (auto& net : HC.nets()) {
         net.set_global_size(net.size());
     }

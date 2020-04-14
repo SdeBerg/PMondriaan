@@ -95,6 +95,7 @@ class hypergraph {
       global_number_nets_(other.global_number_nets_), vertices_(other.vertices_) {
         for (const auto& n : other.nets()) {
             nets_.push_back(pmondriaan::net(n.id(), std::vector<int>()));
+            nets_.back().set_global_size(n.global_size());
         }
 
         for (auto& v : vertices_) {
@@ -164,6 +165,7 @@ class hypergraph {
     auto global_size() const { return global_size_; }
     auto global_number_nets() const { return global_number_nets_; }
     auto& map() { return global_to_local; }
+    auto& map_nets() { return net_global_to_local; }
 
     void print();
 

@@ -104,9 +104,6 @@ TEST(GainBucket, KLFMpass) {
     auto sol = pmondriaan::initial_partitioning(H, 163, 163, opts, rng);
     ASSERT_LE(H.weight_part(0), 163);
     ASSERT_LE(H.weight_part(1), 163);
-    std::cout << "sol: " << sol << "\n";
-    std::cout << "actual: " << pmondriaan::cutsize(H, pmondriaan::m::cut_net) << "\n";
-    std::cout << "w0: " << H.weight_part(0) << " w1: " << H.weight_part(1) << "\n";
     ASSERT_GE(sol, 18);
 }
 
