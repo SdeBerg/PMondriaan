@@ -70,7 +70,13 @@ target_link_libraries(Run_PMondriaan PMondriaan)
 
 set(
 	UNIT_TEST_SOURCES
-	"unittest/read_mtx_test.cpp"
+	"unittest/test_main.cpp"
+	"unittest/hypergraph/readhypergraph_test.cpp"
+	"unittest/hypergraph/hypergraph_test.cpp"
+	"unittest/hypergraph/contraction_test.cpp"
+	"unittest/multilevel_bisect/KLFM/gain_buckets_test.cpp"
+	"unittest/multilevel_bisect/initial_partitioning_test.cpp"
+	"unittest/multilevel_bisect/label_propagation_bisect_test.cpp"
 )
 
 add_executable(pmondriaan_test ${UNIT_TEST_SOURCES})
