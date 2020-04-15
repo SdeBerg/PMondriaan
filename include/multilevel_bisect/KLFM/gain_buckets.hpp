@@ -74,6 +74,8 @@ class gain_structure {
 
     bool done();
 
+    void add_gain(int v, long value);
+
   private:
     void init_();
 
@@ -83,8 +85,6 @@ class gain_structure {
     std::vector<long> gains;
 
     long compute_size_buckets();
-
-    void add_gain(int v, long value);
 };
 
 } // namespace pmondriaan

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <limits.h>
+#include <limits>
 #include <random>
 
 #include <bulk/bulk.hpp>
@@ -27,7 +27,7 @@ long KLFM_par(bulk::world& world,
               long max_weight_1,
               pmondriaan::options& opts,
               std::mt19937& rng,
-              long cut_size = LONG_MAX);
+              long cut_size = std::numeric_limits<long>::max());
 
 /**
  * Runs a single pass of the KLFM algorithm to improve a given partitioning.
@@ -41,6 +41,26 @@ long KLFM_pass_par(bulk::world& world,
                    long max_weight_1,
                    pmondriaan::options& opts,
                    std::mt19937& rng);
+
+/**
+ * Initializes the previous_C counts using communication and return the cutsize
+ * of the nets the processor is responsible for.
+ */
+long init_previous_C(bulk::world& world,
+                     pmondriaan::hypergraph& H,
+                     std::vector<std::vector<long>>& C,
+                     bulk::coarray<long>& previous_C,
+                     bulk::coarray<long>& cost_my_nets,
+                     bulk::block_partitioning<1>& net_partition);
+
+/**
+ * Updates the gain values that were outdated.
+ */
+void update_gains(pmondriaan::hypergraph& H,
+                  pmondriaan::net& net,
+                  std::vector<long> C_loc,
+                  std::vector<long> C_new,
+                  pmondriaan::gain_structure& gain_structure);
 
 /**
  * Finds the best moves for a processor sequentially, by only updating local data.

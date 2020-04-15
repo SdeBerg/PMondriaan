@@ -144,6 +144,7 @@ class hypergraph {
     int local_id_net(int global_id) const {
         return net_global_to_local.at(global_id);
     }
+    int global_id_net(int local_id) { return nets_[local_id].id(); }
     bool is_local(int global_id) {
         return (global_to_local.count(global_id) > 0);
     }
@@ -182,6 +183,11 @@ class hypergraph {
  * Initialize the counts for parts 0,1.
  */
 std::vector<std::vector<long>> init_counts(pmondriaan::hypergraph& H);
+
+/**
+ * Initialize the counts for parts 0,1 for a parallel hypergraph.
+ */
+std::vector<std::vector<long>> init_counts(bulk::world& world, pmondriaan::hypergraph& H);
 
 /**
  * Compute the global weight of a hypergraph.

@@ -55,7 +55,7 @@ set(
 	#"test_label_propagation.cpp"
 	#"lp_sampling.cpp"
 	#"coarsening.cpp"
-	"bipartition.cpp"
+	#"bipartition.cpp"
 	#"lp_bisect.cpp"
 )
 
@@ -75,6 +75,7 @@ set(
 	"unittest/hypergraph/hypergraph_test.cpp"
 	"unittest/hypergraph/contraction_test.cpp"
 	"unittest/multilevel_bisect/KLFM/gain_buckets_test.cpp"
+	"unittest/multilevel_bisect/KLFM/KLFM_par_test.cpp"
 	"unittest/multilevel_bisect/initial_partitioning_test.cpp"
 	"unittest/multilevel_bisect/label_propagation_bisect_test.cpp"
 )

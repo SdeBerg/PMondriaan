@@ -5,28 +5,15 @@ int main() {
 
     env.spawn(env.available_processors(), [](bulk::world& world) {
         int s = world.rank();
-        int p = world.active_processors();
-		
-		auto vertices_queue = bulk::queue<int, int[]>(world);
+        // int p = world.active_processors();
 
-        auto hypergraph = pmondriaan::read_hypergraph("../test/data/matrices/west0381/west0381.mtx", world);
-		
-		if(s == 0) {
-			hypergraph(0).set_id(10);
-			for(int t = 0; t < p; t++) {
-				vertices_queue(t).send(hypergraph(0).id(), hypergraph(0).nets());
-			}
-			hypergraph(0).set_id(5);
-			hypergraph.vertices().erase(hypergraph.vertices().begin() + 1);
-		}
-		
-		world.sync();
-		
-		for (const auto& [index, nets] : vertices_queue) {
-			world.log("%d", index);
-			world.log("%d", nets[1]);
-		}
-		
+        auto coar = bulk::coarray<int>(world, 1);
+        coar[0] = s + 1;
+        auto f = coar(0)[0].get();
+        world.sync();
+        world.log("s %d: %d", s, f.value());
+        world.sync();
+        world.log("s %d: %d", s, f.value());
     });
 
     return 0;

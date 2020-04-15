@@ -144,6 +144,48 @@ std::vector<std::vector<long>> init_counts(pmondriaan::hypergraph& H) {
 }
 
 /**
+ * Initialize the counts for parts 0,1 for a parallel hypergraph.
+ */
+std::vector<std::vector<long>> init_counts(bulk::world& world, pmondriaan::hypergraph& H) {
+    auto s = world.rank();
+
+    auto local_counts = init_counts(H);
+    auto net_partition = bulk::block_partitioning<1>({H.global_number_nets()},
+                                                     {world.active_processors()});
+    auto count_queue = bulk::queue<int, long>(world);
+    // We send all counts of part 0 that are greater than 0 to the responsible processor
+    for (auto i = 0u; i < local_counts.size(); i++) {
+        if (local_counts[i][0] > 0) {
+            auto global_id = H.global_id_net(i);
+            count_queue(net_partition.owner(global_id)).send(global_id, local_counts[i][0]);
+        }
+    }
+    world.sync();
+
+    auto C_my_nets = bulk::coarray<long>(world, net_partition.local_count(s));
+    for (auto i = 0; i < net_partition.local_count(s); i++) {
+        C_my_nets[i] = 0;
+    }
+    for (const auto& [net, count] : count_queue) {
+        C_my_nets[net_partition.local(net)[0]] += count;
+    }
+
+    // We get the correct values for the needed counts
+    auto future_counts = std::vector<bulk::future<long>>();
+    for (auto i = 0u; i < local_counts.size(); i++) {
+        auto net = H.nets()[i].id();
+        future_counts.push_back(
+        C_my_nets(net_partition.owner(net))[net_partition.local(net)[0]].get());
+    }
+    world.sync();
+    for (auto i = 0u; i < local_counts.size(); i++) {
+        local_counts[i][0] = future_counts[i].value();
+        local_counts[i][1] = (long)H.nets()[i].global_size() - future_counts[i].value();
+    }
+    return local_counts;
+}
+
+/**
  * Compute the global weight of a hypergraph.
  */
 long global_weight(bulk::world& world, pmondriaan::hypergraph& H) {

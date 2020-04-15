@@ -19,10 +19,9 @@ TEST(GainBucket, GainBucketInit) {
     H(0).set_part(0);
     H(1).set_part(1);
     H(2).set_part(0);
-    auto C = std::vector<std::vector<long>>(3);
+    auto C = std::vector<std::vector<long>>(2);
     C[0] = {2, 0};
     C[1] = {1, 1};
-    C[2] = {0, 0};
     std::mt19937 rng(1);
     auto g = pmondriaan::gain_structure(H, C);
     ASSERT_EQ(g.part_next(3, 3, rng), 1);
@@ -42,7 +41,19 @@ TEST(GainBucket, GainBucketInit) {
     ASSERT_EQ(sol, 0);
 }
 
+TEST(GainBucket, KLFMpass) {
+    auto H =
+    pmondriaan::read_hypergraph("../test/data/matrices/dolphins/dolphins.mtx", "degree")
+    .value();
+    std::mt19937 rng(1);
+    pmondriaan::options opts;
+    opts.KLFM_max_passes = 1;
+    opts.metric = pmondriaan::m::cut_net;
+    auto sol = pmondriaan::initial_partitioning(H, 163, 163, opts, rng);
+    ASSERT_LE(H.weight_part(0), 163);
+    ASSERT_LE(H.weight_part(1), 163);
+    ASSERT_GE(sol, 18);
+}
+
 } // namespace
 } // namespace pmondriaan
-
-
