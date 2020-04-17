@@ -251,9 +251,11 @@ long init_previous_C(bulk::world& world,
                      bulk::coarray<long>& cost_my_nets,
                      bulk::block_partitioning<1>& net_partition) {
     auto s = world.rank();
+    for (auto i = 0; i < net_partition.local_count(s); i++) {
+        cost_my_nets[i] = 0;
+    }
     for (auto i = 0; i < net_partition.local_count(s) * 2; i++) {
         previous_C[i] = 0;
-        cost_my_nets[i] = 0;
     }
 
     for (auto i = 0u; i < C.size(); i++) {
