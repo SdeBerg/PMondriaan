@@ -32,9 +32,11 @@ std::vector<int> sample_random(pmondriaan::hypergraph& H, int ns, std::mt19937& 
 /**
  * Returns a vector of ns samples seleccted using the label propagation algorithm.
  */
-std::vector<int> sample_lp(pmondriaan::hypergraph& H, pmondriaan::options& opts, std::mt19937& rng) {
+std::vector<int>
+sample_lp(pmondriaan::hypergraph& H, pmondriaan::options& opts, std::mt19937& rng) {
 
-    auto labels = pmondriaan::label_propagation(H, opts.sample_size, opts.lp_max_iterations, 1, rng);
+    auto labels =
+    pmondriaan::label_propagation(H, opts.sample_size, opts.lp_max_iterations, 1, rng);
     auto count_label = std::vector<double>(opts.sample_size, 0.0);
     for (auto l : labels) {
         count_label[l]++;
@@ -51,10 +53,11 @@ std::vector<int> sample_lp(pmondriaan::hypergraph& H, pmondriaan::options& opts,
     auto found_sample = std::vector<bool>(opts.sample_size, false);
     int number_samples_found = 0;
     auto current = 0u;
-    while (number_samples_found < opts.sample_size - empty_count && current < H.size()) {
+    while ((number_samples_found < opts.sample_size - empty_count) &&
+           (current < H.size())) {
         int l = labels[current];
         if (!found_sample[l] &&
-            ((double)rng() / (rng.max())) < 1.0 / (double)count_label[l]) {
+            (((double)rng() / (rng.max())) < 1.0 / (double)count_label[l])) {
             found_sample[l] = true;
             number_samples_found++;
             samples.push_back(current);

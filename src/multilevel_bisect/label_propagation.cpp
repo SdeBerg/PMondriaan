@@ -90,6 +90,7 @@ std::vector<int> label_propagation_bisect(pmondriaan::hypergraph& H,
                                           long max_weight_0,
                                           long max_weight_1,
                                           std::mt19937& rng) {
+
     // The labels of the vertices
     auto L = std::vector<int>(H.size());
     // Stores that weight that can still be assigned to the labels

@@ -370,37 +370,37 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
                                            pmondriaan::contraction& C,
                                            std::vector<std::vector<int>>& matches,
                                            std::vector<pmondriaan::vertex>& new_vertices) {
-
     // we new nets to which we will later add the vertices
     auto new_nets = std::vector<pmondriaan::net>();
     for (auto& net : H.nets()) {
         new_nets.push_back(pmondriaan::net(net.id(), std::vector<int>(), net.cost()));
-        new_nets.back().set_global_size(net.global_size());
     }
     auto HC = pmondriaan::hypergraph(new_vertices.size(), H.global_number_nets(),
                                      new_vertices, new_nets);
 
     int sample_count = 0;
-    for (auto index = 0u; index < H.size(); index++) {
-        int i = (int)index;
-        if (matches[i].size() > 0) {
-            C.add_sample(H(i).id());
-            sample_count++;
+    for (auto& new_vertex : HC.vertices()) {
+        auto local_id = H.local_id(new_vertex.id());
 
-            auto& nets = HC(HC.local_id(H(i).id())).nets();
-            for (auto n : nets) {
-                HC.net(n).add_vertex(H(i).id());
-            }
+        C.add_sample(new_vertex.id());
+        sample_count++;
+
+        auto& nets = new_vertex.nets();
+        for (auto n : nets) {
+            HC.net(n).add_vertex(new_vertex.id());
+        }
+
+        if (matches[local_id].size() > 0) {
             std::unordered_set<int> nets_set(nets.begin(), nets.end());
 
-            for (auto match : matches[i]) {
+            for (auto match : matches[local_id]) {
                 C.add_match(sample_count - 1, match, world.rank());
-                HC(HC.local_id(H(i).id())).add_weight(H(H.local_id(match)).weight());
+                new_vertex.add_weight(H(H.local_id(match)).weight());
                 for (auto net : H(H.local_id(match)).nets()) {
                     auto insert_result = nets_set.insert(net);
                     if (insert_result.second) {
                         nets.push_back(net);
-                        HC.net(net).add_vertex(H(i).id());
+                        HC.net(net).add_vertex(new_vertex.id());
                     }
                 }
             }

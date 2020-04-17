@@ -54,6 +54,14 @@ std::vector<long> hypergraph::weight_all_parts(int k) {
     return total;
 }
 
+// add a net if it does not exist yet
+void hypergraph::add_net(int id, std::vector<int> vertices, long cost) {
+    if (net_global_to_local.count(id) == 0) {
+        nets_.push_back(pmondriaan::net(id, vertices, cost));
+        net_global_to_local[id] = (int)nets_.size() - 1;
+    }
+}
+
 void hypergraph::add_to_nets(pmondriaan::vertex& v) {
     for (auto net_id : v.nets()) {
         nets_[local_id_net(net_id)].vertices().push_back(v.id());
@@ -76,6 +84,7 @@ void hypergraph::remove_net_by_index(int index) {
     int id = nets_[index].id();
     for (auto& v : nets_[index].vertices()) {
         vertices_[local_id(v)].remove_net(id);
+        // std::cout << "removed from vertex " << v << "\n";
     }
     std::iter_swap(nets_.begin() + index, nets_.end() - 1);
     nets_.pop_back();

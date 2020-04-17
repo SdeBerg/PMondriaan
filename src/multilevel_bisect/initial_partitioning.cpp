@@ -1,4 +1,4 @@
-#include <limits.h>
+#include <limits>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
@@ -28,7 +28,7 @@ long initial_partitioning(pmondriaan::hypergraph& H,
     // bisect_random(H, max_weight_0, max_weight_1, 0, H.size(), labels, rng);
 
     auto L_best = std::vector<int>(H.size());
-    long best_cut = LONG_MAX;
+    long best_cut = std::numeric_limits<long>::max();
 
     for (int i = 0; i < 10; i++) {
         // counts of all labels for each net
@@ -39,7 +39,7 @@ long initial_partitioning(pmondriaan::hypergraph& H,
         for (auto i = 0u; i < H.size(); i++) {
             H(i).set_part(L[i]);
         }
-
+        std::cout << "1";
         /*std::cout << "cut after LP: " << pmondriaan::cutsize(H, opts.metric)
                   << " weights: " << H.weight_part(0) << " " << H.weight_part(1) << "\n";
         for (auto& n : H.nets()) {
@@ -51,6 +51,7 @@ long initial_partitioning(pmondriaan::hypergraph& H,
         }*/
         auto cut = pmondriaan::KLFM(H, C, H.weight_part(0), H.weight_part(1),
                                     max_weight_0, max_weight_1, opts, rng);
+        std::cout << "2";
 
         if (cut < best_cut) {
             for (auto i = 0u; i < H.size(); i++) {

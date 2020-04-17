@@ -119,6 +119,9 @@ class hypergraph {
     // computes the weights of all parts upto k
     std::vector<long> weight_all_parts(int k);
 
+    // add a net if it does not exist yet
+    void add_net(int id, std::vector<int> vertices, long cost = 1);
+
     // adds vertex to all nets
     void add_to_nets(pmondriaan::vertex& v);
 

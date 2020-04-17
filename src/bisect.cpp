@@ -123,18 +123,32 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                 vertex_queue(t).send(v.id(), v.weight(), v.nets());
             }
         }
-        world.log("s: %d, time in sending vertices: %lf", world.rank(), time.get_change());
+        auto net_cost_queue = bulk::queue<int, long>(world);
+        for (auto& n : HC_list[nc_par].nets()) {
+            for (int t = 0; t < world.rank(); t++) {
+                net_cost_queue(t).send(n.id(), n.cost());
+            }
+            for (int t = world.rank() + 1; t < world.active_processors(); t++) {
+                net_cost_queue(t).send(n.id(), n.cost());
+            }
+        }
+        world.log("s: %d, time in sending vertices and net costs: %lf",
+                  world.rank(), time.get_change());
         HC_list.push_back(HC_list[nc_par]);
         C_list.push_back({});
         nc_par++;
         world.sync();
 
+        for (const auto& [net_id, cost] : net_cost_queue) {
+            HC_list[nc_par].add_net(net_id, std::vector<int>(), cost);
+        }
         for (const auto& [id, weight, nets] : vertex_queue) {
             HC_list[nc_par].vertices().push_back({id, nets, weight});
             HC_list[nc_par].add_to_nets(HC_list[nc_par].vertices().back());
         }
         world.log("s: %d, time in creating new hypergraph: %lf", world.rank(),
                   time.get_change());
+
         // TODO: Take this out in the final version! This is only included to get reproducibility
         sort(HC_list[nc_par].vertices().begin(), HC_list[nc_par].vertices().end(),
              [](pmondriaan::vertex a, pmondriaan::vertex b) {
@@ -162,9 +176,12 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                   HC_list[nc_tot].global_size());
     }
 
-    // world.log("s: %d, time in sequential coarsening: %lf", world.rank(), time.get_change());
+    world.log("s: %d, time in sequential coarsening: %lf", world.rank(), time.get_change());
+
     auto cut = pmondriaan::initial_partitioning(HC_list[nc_tot], max_weight_0,
                                                 max_weight_1, opts, rng);
+
+    world.log("s: %d, time in initial partitioning: %lf", world.rank(), time.get_change());
 
     while (nc_tot > nc_par) {
         nc_tot--;
@@ -172,6 +189,8 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                                                    HC_list[nc_tot], C_list[nc_tot],
                                                    opts, max_weight_0,
                                                    max_weight_1, cut, rng);
+        world.log("s: %d, time in iteration seq uncoarsening: %lf",
+                  world.rank(), time.get_change());
     }
 
     if (world.active_processors() > 1) {
@@ -197,10 +216,13 @@ std::vector<long> bisect_multilevel(bulk::world& world,
             }
         }
 
+        time.get();
         while (nc_par > 0) {
             nc_par--;
             pmondriaan::uncoarsen_hypergraph(world, HC_list[nc_par + 1],
                                              HC_list[nc_par], C_list[nc_par]);
+            world.log("s: %d, time in iteration par uncoarsening: %lf",
+                      world.rank(), time.get_change());
         }
     }
 
