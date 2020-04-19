@@ -2,21 +2,21 @@
 
 namespace pmondriaan {
 
-enum class m : int { cut_net, lambda_minus_one };
-enum class bisection : int { random, multilevel };
-enum class sampling : int { random, label_propagation };
+enum class m : long { cut_net, lambda_minus_one };
+enum class bisection : long { random, multilevel };
+enum class sampling : long { random, label_propagation };
 /**
  *
  */
 class options {
   public:
-    int sample_size;
-    int coarsening_max_clustersize;
-    int lp_max_iterations;
-    int coarsening_nrvertices;
-    int coarsening_maxrounds;
-    int KLFM_max_passes;
-    int KLFM_par_number_send_moves;
+    long sample_size;
+    long coarsening_max_clustersize;
+    long lp_max_iterations;
+    long coarsening_nrvertices;
+    long coarsening_maxrounds;
+    long KLFM_max_passes;
+    long KLFM_par_number_send_moves;
 
     m metric;
     bisection bisection_mode;

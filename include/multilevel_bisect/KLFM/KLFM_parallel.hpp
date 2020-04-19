@@ -67,7 +67,7 @@ void update_gains(pmondriaan::hypergraph& H,
  */
 void find_top_moves(pmondriaan::hypergraph& H,
                     pmondriaan::gain_structure& gain_structure,
-                    std::vector<std::tuple<int, long, long>>& moves,
+                    std::vector<std::tuple<long, long, long>>& moves,
                     std::array<long, 2>& weights,
                     long max_weight_0,
                     long max_weight_1,
@@ -78,10 +78,10 @@ void find_top_moves(pmondriaan::hypergraph& H,
  * Return the number of rejected moves for each processor. This is positive when
  * we have to move back vertices from part 0 to part 1 and positive otherwise.
  */
-std::vector<int> reject_unbalanced_moves(int p,
-                                         bulk::queue<long, long, int>& moves_queue,
-                                         std::array<long, 2>& total_weights,
-                                         long max_weight_0,
-                                         long max_weight_1);
+std::vector<long> reject_unbalanced_moves(long p,
+                                          bulk::queue<long, long, long>& moves_queue,
+                                          std::array<long, 2>& total_weights,
+                                          long max_weight_0,
+                                          long max_weight_1);
 
 } // namespace pmondriaan

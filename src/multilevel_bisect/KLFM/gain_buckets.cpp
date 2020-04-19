@@ -9,7 +9,7 @@
 
 namespace pmondriaan {
 
-void gain_buckets::insert(int id, long gain) {
+void gain_buckets::insert(long id, long gain) {
     auto index = gain_to_index(gain);
     if (buckets[index].empty()) {
         if (gain < min_value_present) {
@@ -19,7 +19,7 @@ void gain_buckets::insert(int id, long gain) {
     buckets[index].insert(id);
 }
 
-bool gain_buckets::remove(int id, long gain) {
+bool gain_buckets::remove(long id, long gain) {
     auto index = gain_to_index(gain);
     if (buckets[index].erase(id) > 0) {
         return true;
@@ -28,7 +28,7 @@ bool gain_buckets::remove(int id, long gain) {
     }
 }
 
-int gain_buckets::next() {
+long gain_buckets::next() {
     auto index = find_next_index();
     if (index != -1) {
         return *buckets[index].begin();
@@ -72,12 +72,12 @@ long gain_buckets::find_next_index() {
 }
 
 void gain_structure::init_() {
-    auto max_gain = std::vector<long>(2, 0);
+    auto max_gain = std::vector<long>(2, buckets[0].index_to_gain(0));
     for (auto i = 0u; i < H_.size(); i++) {
         auto& v = H_(i);
-        int gain = 0;
-        int from = v.part();
-        int to = (v.part() + 1) % 2;
+        long gain = 0;
+        long from = v.part();
+        long to = (v.part() + 1) % 2;
         for (auto n : v.nets()) {
             if (C_[H_.local_id_net(n)][from] == 1) {
                 gain += H_.net(n).cost();
@@ -98,7 +98,7 @@ void gain_structure::init_() {
     buckets[1].set_max_present(buckets[1].gain_to_index(max_gain[1]));
 }
 
-int gain_structure::part_next(long max_extra_weight_0, long max_extra_weight_1, std::mt19937& rng) {
+long gain_structure::part_next(long max_extra_weight_0, long max_extra_weight_1, std::mt19937& rng) {
     auto v0 = buckets[0].next();
     auto v1 = buckets[1].next();
     if (v0 == -1) {
@@ -124,10 +124,10 @@ int gain_structure::part_next(long max_extra_weight_0, long max_extra_weight_1, 
     return rng() % 2;
 }
 
-void gain_structure::move(int v) {
+void gain_structure::move(long v) {
     auto& vertex = H_(H_.local_id(v));
-    int from = vertex.part();
-    int to = (vertex.part() + 1) % 2;
+    long from = vertex.part();
+    long to = (vertex.part() + 1) % 2;
 
     // We first move v and remove it from its bucket
     H_.move(v);
@@ -167,9 +167,9 @@ void gain_structure::move(int v) {
     }
 }
 
-void gain_structure::remove(int v) {
+void gain_structure::remove(long v) {
     auto& vertex = H_(H_.local_id(v));
-    int from = vertex.part();
+    long from = vertex.part();
     if (!buckets[from].remove(v, gains[H_.local_id(v)])) {
         std::cerr << "Error: Could not remove v from buckets";
     }
@@ -198,8 +198,8 @@ long gain_structure::compute_size_buckets() {
     return 2 * max_value + 1;
 }
 
-void gain_structure::add_gain(int v, long value) {
-    int local_id = H_.local_id(v);
+void gain_structure::add_gain(long v, long value) {
+    long local_id = H_.local_id(v);
     long old_gain = gains[local_id];
     if (!buckets[H_(local_id).part()].remove(v, old_gain)) {
         return;

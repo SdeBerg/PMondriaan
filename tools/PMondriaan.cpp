@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 
     struct cli_settings {
         int p = 2;
-        int k = 2;
+        long k = 2;
         double eps = 0.05;
         double eta = 0.10;
         std::string matrix_file;

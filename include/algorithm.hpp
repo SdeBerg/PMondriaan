@@ -14,14 +14,14 @@ namespace pmondriaan {
  * Find owner of minimal value of x
  */
 template <typename T>
-int owner_min(bulk::var<T>& x) {
+long owner_min(bulk::var<T>& x) {
     auto& world = x.world();
 
     auto images = bulk::gather_all(world, x.value());
 
     T smallest = images[0];
-    int best_proc = 0;
-    for (int t = 1; t < world.active_processors(); ++t) {
+    long best_proc = 0;
+    for (long t = 1; t < world.active_processors(); ++t) {
         if (images[t] <= smallest) {
             smallest = images[t];
             best_proc = t;

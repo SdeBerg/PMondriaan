@@ -18,8 +18,8 @@ std::vector<long> bisect(bulk::world& world,
                          pmondriaan::options& opts,
                          long max_weight_0,
                          long max_weight_1,
-                         int start,
-                         int end,
+                         long start,
+                         long end,
                          interval labels,
                          std::mt19937& rng);
 
@@ -29,8 +29,8 @@ std::vector<long> bisect(bulk::world& world,
 std::vector<long> bisect_random(pmondriaan::hypergraph& H,
                                 long max_weight_0,
                                 long max_weight_1,
-                                int start,
-                                int end,
+                                long start,
+                                long end,
                                 interval labels,
                                 std::mt19937& rng);
 
@@ -42,8 +42,8 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                                     pmondriaan::options& opts,
                                     long max_weight_0,
                                     long max_weight_1,
-                                    int start,
-                                    int end,
+                                    long start,
+                                    long end,
                                     interval labels,
                                     std::mt19937& rng);
 

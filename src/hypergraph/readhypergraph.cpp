@@ -25,7 +25,7 @@ namespace pmondriaan {
 std::optional<pmondriaan::hypergraph>
 read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
 
-    int E, V;
+    long E, V;
     uint64_t L;
 
     std::string line;
@@ -44,15 +44,15 @@ read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
     // Read defining parameters:
     fin >> E >> V >> L;
 
-    auto nets_list = std::vector<std::vector<int>>(V);
-    auto vertex_list = std::vector<std::vector<int>>(E);
+    auto nets_list = std::vector<std::vector<long>>(V);
+    auto vertex_list = std::vector<std::vector<long>>(E);
 
     // Read the data
     std::getline(fin, line);
 
     if (symmetry == "general") {
         while (std::getline(fin, line)) {
-            int e, v;
+            long e, v;
             std::istringstream iss(line);
             if (!(iss >> e >> v)) {
                 return std::nullopt;
@@ -63,7 +63,7 @@ read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
     } else {
         if (symmetry == "symmetric") {
             while (std::getline(fin, line)) {
-                int e, v;
+                long e, v;
                 std::istringstream iss(line);
                 if (!(iss >> e >> v)) {
                     return std::nullopt;
@@ -84,11 +84,11 @@ read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
     auto vertices = std::vector<pmondriaan::vertex>();
     auto nets = std::vector<pmondriaan::net>();
     if (mode_weight == "one") {
-        for (int i = 0; i < V; i++) {
+        for (long i = 0; i < V; i++) {
             vertices.push_back(pmondriaan::vertex(i, nets_list[i]));
         }
     } else if (mode_weight == "degree") {
-        for (int i = 0; i < V; i++) {
+        for (long i = 0; i < V; i++) {
             vertices.push_back(pmondriaan::vertex(i, nets_list[i], nets_list[i].size()));
         }
     } else {
@@ -96,7 +96,7 @@ read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
         return std::nullopt;
     }
 
-    for (int i = 0; i < E; i++) {
+    for (long i = 0; i < E; i++) {
         if (!vertex_list[i].empty()) {
             nets.push_back(pmondriaan::net(i, vertex_list[i]));
         }
@@ -113,10 +113,10 @@ read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
 std::optional<pmondriaan::hypergraph>
 read_hypergraph_istream(std::istream& fin, bulk::world& world, std::string mode_weight) {
 
-    int s = world.rank();
-    int p = world.active_processors();
+    auto s = world.rank();
+    auto p = world.active_processors();
 
-    int E, V;
+    long E, V;
     uint64_t L;
 
     std::string line;
@@ -138,21 +138,21 @@ read_hypergraph_istream(std::istream& fin, bulk::world& world, std::string mode_
     auto partitioning = bulk::block_partitioning<1>({V}, {p});
 
     // List of nets for each vertex
-    auto nets_list = std::vector<std::vector<int>>(partitioning.local_count(s));
-    auto vertex_list = std::vector<std::vector<int>>(E);
+    auto nets_list = std::vector<std::vector<long>>(partitioning.local_count(s));
+    auto vertex_list = std::vector<std::vector<long>>(E);
 
     // Read the data
     std::getline(fin, line);
     if (symmetry == "general") {
         for (auto i = 0u; i < L; i++) {
             std::getline(fin, line);
-            int e, v;
+            long e, v;
             std::istringstream iss(line);
             if (!(iss >> e >> v)) {
                 return std::nullopt;
             } // error
             if (partitioning.owner({v - 1}) == s) {
-                int v_loc = partitioning.local({v - 1})[0];
+                long v_loc = partitioning.local({v - 1})[0];
                 nets_list[v_loc].push_back(e - 1);
                 vertex_list[e - 1].push_back(v - 1);
             }
@@ -161,18 +161,18 @@ read_hypergraph_istream(std::istream& fin, bulk::world& world, std::string mode_
         if (symmetry == "symmetric") {
             for (auto i = 0u; i < L; i++) {
                 std::getline(fin, line);
-                int e, v;
+                long e, v;
                 std::istringstream iss(line);
                 if (!(iss >> e >> v)) {
                     return std::nullopt;
                 } // error
                 if (partitioning.owner({v - 1}) == s) {
-                    int v_loc = partitioning.local({v - 1})[0];
+                    long v_loc = partitioning.local({v - 1})[0];
                     nets_list[v_loc].push_back(e - 1);
                     vertex_list[e - 1].push_back(v - 1);
                 }
                 if ((partitioning.owner({e - 1}) == s) && (v != e)) {
-                    int v_loc = partitioning.local({e - 1})[0];
+                    long v_loc = partitioning.local({e - 1})[0];
                     nets_list[v_loc].push_back(v - 1);
                     vertex_list[v - 1].push_back(e - 1);
                 }
@@ -187,12 +187,12 @@ read_hypergraph_istream(std::istream& fin, bulk::world& world, std::string mode_
     auto vertices = std::vector<pmondriaan::vertex>();
     auto nets = std::vector<pmondriaan::net>();
     if (mode_weight == "one") {
-        for (int i = 0; i < partitioning.local_count(s); i++) {
+        for (long i = 0; i < partitioning.local_count(s); i++) {
             vertices.push_back(
             pmondriaan::vertex(partitioning.global({i}, s)[0], nets_list[i]));
         }
     } else if (mode_weight == "degree") {
-        for (int i = 0; i < partitioning.local_count(s); i++) {
+        for (long i = 0; i < partitioning.local_count(s); i++) {
             vertices.push_back(pmondriaan::vertex(partitioning.global({i}, s)[0],
                                                   nets_list[i], nets_list[i].size()));
         }
@@ -200,7 +200,7 @@ read_hypergraph_istream(std::istream& fin, bulk::world& world, std::string mode_
         std::cerr << "Error: unknown mode_weight";
         return std::nullopt;
     }
-    for (int i = 0; i < E; i++) {
+    for (long i = 0; i < E; i++) {
         if (!vertex_list[i].empty()) {
             nets.push_back(pmondriaan::net(i, vertex_list[i]));
         }

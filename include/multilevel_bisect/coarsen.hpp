@@ -31,9 +31,9 @@ pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
  */
 void request_matches(pmondriaan::hypergraph& H,
                      pmondriaan::contraction& C,
-                     bulk::queue<int, long, int[]>& sample_queue,
-                     bulk::queue<int, int>& accepted_matches,
-                     const std::vector<int>& indices_samples,
+                     bulk::queue<long, long, long[]>& sample_queue,
+                     bulk::queue<long, long>& accepted_matches,
+                     const std::vector<long>& indices_samples,
                      pmondriaan::options& opts);
 
 /**
@@ -41,15 +41,15 @@ void request_matches(pmondriaan::hypergraph& H,
  * then sends this information to the owner of the sample.
  */
 void send_information_matches(pmondriaan::hypergraph& H,
-                              bulk::queue<int, int>& accepted_matches,
-                              bulk::queue<int, long, int[], long[]>& info_queue,
+                              bulk::queue<long, long>& accepted_matches,
+                              bulk::queue<long, long, long[], long[]>& info_queue,
                               std::vector<bool>& matched,
-                              int sample_size);
+                              long sample_size);
 
 pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
                                            pmondriaan::hypergraph& H,
-                                           const std::vector<int> samples,
-                                           bulk::queue<int, long, int[], long[]>& matches,
+                                           const std::vector<long> samples,
+                                           bulk::queue<long, long, long[], long[]>& matches,
                                            std::vector<bool>& matched);
 
 /**
@@ -69,7 +69,7 @@ void add_v_to_list(std::vector<pmondriaan::vertex>& v_list, pmondriaan::vertex& 
 pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
                                            pmondriaan::hypergraph& H,
                                            pmondriaan::contraction& C,
-                                           std::vector<std::vector<int>>& matches,
+                                           std::vector<std::vector<long>>& matches,
                                            std::vector<pmondriaan::vertex>& new_vertices);
 
 } // namespace pmondriaan

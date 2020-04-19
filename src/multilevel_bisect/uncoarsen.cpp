@@ -25,7 +25,7 @@ void uncoarsen_hypergraph(bulk::world& world,
                           pmondriaan::contraction& C) {
 
     /* The part_queue will contain the vertex and the part is has been assigned to in the uncoarsened hypergraph */
-    auto part_queue = bulk::queue<int, int>(world);
+    auto part_queue = bulk::queue<long, long>(world);
 
     for (auto& v : HC.vertices()) {
         auto id_map = H.map().find(v.id());

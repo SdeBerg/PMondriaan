@@ -18,7 +18,7 @@
 
 namespace pmondriaan {
 
-void vertex::remove_net(int n) {
+void vertex::remove_net(long n) {
     auto it = std::find(nets_.begin(), nets_.end(), n);
     if (it != nets_.end()) {
         std::iter_swap(it, nets_.end() - 1);
@@ -35,7 +35,7 @@ long hypergraph::total_weight() {
 }
 
 // computes the sum of the weights of vertices in part
-long hypergraph::weight_part(int part) {
+long hypergraph::weight_part(long part) {
     long total = 0;
     for (auto v : vertices_) {
         if (v.part() == part) {
@@ -46,7 +46,7 @@ long hypergraph::weight_part(int part) {
 }
 
 // computes the weights of all parts upto k
-std::vector<long> hypergraph::weight_all_parts(int k) {
+std::vector<long> hypergraph::weight_all_parts(long k) {
     auto total = std::vector<long>(k);
     for (auto v : vertices_) {
         total[v.part()] += v.weight();
@@ -55,10 +55,10 @@ std::vector<long> hypergraph::weight_all_parts(int k) {
 }
 
 // add a net if it does not exist yet
-void hypergraph::add_net(int id, std::vector<int> vertices, long cost) {
+void hypergraph::add_net(long id, std::vector<long> vertices, long cost) {
     if (net_global_to_local.count(id) == 0) {
         nets_.push_back(pmondriaan::net(id, vertices, cost));
-        net_global_to_local[id] = (int)nets_.size() - 1;
+        net_global_to_local[id] = (long)nets_.size() - 1;
     }
 }
 
@@ -69,7 +69,7 @@ void hypergraph::add_to_nets(pmondriaan::vertex& v) {
 }
 
 // removes id from all nets
-void hypergraph::remove_from_nets(int id) {
+void hypergraph::remove_from_nets(long id) {
     for (auto& net : nets_) {
         auto it = std::find(net.vertices().begin(), net.vertices().end(), id);
         if (it != net.vertices().end()) {
@@ -80,8 +80,8 @@ void hypergraph::remove_from_nets(int id) {
 }
 
 // removes a net and the net from all net lists of vertices
-void hypergraph::remove_net_by_index(int index) {
-    int id = nets_[index].id();
+void hypergraph::remove_net_by_index(long index) {
+    long id = nets_[index].id();
     for (auto& v : nets_[index].vertices()) {
         vertices_[local_id(v)].remove_net(id);
         // std::cout << "removed from vertex " << v << "\n";
@@ -93,17 +93,17 @@ void hypergraph::remove_net_by_index(int index) {
 }
 
 // moves a vertex to the other part in 0,1
-void hypergraph::move(int id) {
-    int idl = this->local_id(id);
+void hypergraph::move(long id) {
+    long idl = this->local_id(id);
     auto& vertex = vertices_[idl];
     vertex.set_part((vertex.part() + 1) % 2);
 }
 
-void hypergraph::move(int id, std::vector<std::vector<long>>& C) {
+void hypergraph::move(long id, std::vector<std::vector<long>>& C) {
     auto& v = vertices_[this->local_id(id)];
-    int from = v.part();
+    long from = v.part();
     move(id);
-    int to = v.part();
+    long to = v.part();
     for (auto n : v.nets()) {
         C[local_id_net(n)][from]--;
         C[local_id_net(n)][to]++;
@@ -161,7 +161,7 @@ std::vector<std::vector<long>> init_counts(bulk::world& world, pmondriaan::hyper
     auto local_counts = init_counts(H);
     auto net_partition = bulk::block_partitioning<1>({H.global_number_nets()},
                                                      {world.active_processors()});
-    auto count_queue = bulk::queue<int, long>(world);
+    auto count_queue = bulk::queue<long, long>(world);
     // We send all counts of part 0 that are greater than 0 to the responsible processor
     for (auto i = 0u; i < local_counts.size(); i++) {
         if (local_counts[i][0] > 0) {
@@ -206,12 +206,12 @@ long global_weight(bulk::world& world, pmondriaan::hypergraph& H) {
 /**
  * Compute the global load imbalance of a hypergraph split into k parts.
  */
-double load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k) {
+double load_balance(bulk::world& world, pmondriaan::hypergraph& H, long k) {
 
     auto weight_parts_coar = bulk::coarray<long>(world, k);
     auto weight_parts = H.weight_all_parts(k);
 
-    for (int i = 0; i < k; i++) {
+    for (long i = 0; i < k; i++) {
         weight_parts_coar[i] = weight_parts[i];
     }
 
@@ -237,7 +237,7 @@ long cutsize(pmondriaan::hypergraph& H, pmondriaan::m metric) {
     switch (metric) {
     case pmondriaan::m::cut_net: {
         for (auto& net : H.nets()) {
-            auto labels_net = std::unordered_set<int>();
+            auto labels_net = std::unordered_set<long>();
             for (auto& v : net.vertices()) {
                 labels_net.insert(H(H.local_id(v)).part());
             }
@@ -249,7 +249,7 @@ long cutsize(pmondriaan::hypergraph& H, pmondriaan::m metric) {
     }
     case pmondriaan::m::lambda_minus_one: {
         for (auto& net : H.nets()) {
-            auto labels_net = std::unordered_set<int>();
+            auto labels_net = std::unordered_set<long>();
             for (auto& v : net.vertices()) {
                 labels_net.insert(H(H.local_id(v)).part());
             }
@@ -276,19 +276,19 @@ long cutsize(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::m metric
                                                      {world.active_processors()});
 
     // this queue contains all labels present for each net
-    auto labels = bulk::queue<int, int[]>(world);
+    auto labels = bulk::queue<long, long[]>(world);
     for (auto& net : H.nets()) {
-        auto labels_net = std::unordered_set<int>();
+        auto labels_net = std::unordered_set<long>();
         for (auto& v : net.vertices()) {
             labels_net.insert(H(H.local_id(v)).part());
         }
         labels(net_partition.owner(net.id()))
-        .send(net.id(), std::vector<int>(labels_net.begin(), labels_net.end()));
+        .send(net.id(), std::vector<long>(labels_net.begin(), labels_net.end()));
     }
     world.sync();
 
     auto total_cut =
-    std::vector<std::unordered_set<int>>(net_partition.local_size(world.rank())[0]);
+    std::vector<std::unordered_set<long>>(net_partition.local_size(world.rank())[0]);
 
     for (const auto& [net, labels_net] : labels) {
         for (auto l : labels_net) {
@@ -330,7 +330,7 @@ std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph&
                                                      {world.active_processors()});
 
     auto nets = H.nets();
-    bulk::queue<int, size_t> net_size_queue(world);
+    bulk::queue<long, size_t> net_size_queue(world);
 
     for (auto i = 0u; i < nets.size(); i++) {
         net_size_queue(net_partition.owner(nets[i].id()))
@@ -390,13 +390,13 @@ void remove_free_nets(pmondriaan::hypergraph& H) {
  * Creates a new hypergraph that only contains the vertices of H with local id between start and end.
  */
 pmondriaan::hypergraph
-create_new_hypergraph(bulk::world& new_world, pmondriaan::hypergraph& H, int start, int end) {
+create_new_hypergraph(bulk::world& new_world, pmondriaan::hypergraph& H, long start, long end) {
 
     std::vector<pmondriaan::vertex> new_vertices(H.vertices().begin() + start,
                                                  H.vertices().begin() + end);
     auto new_nets = std::vector<pmondriaan::net>();
     for (auto& n : H.nets()) {
-        new_nets.push_back(pmondriaan::net(n.id(), std::vector<int>()));
+        new_nets.push_back(pmondriaan::net(n.id(), std::vector<long>()));
     }
 
     for (auto& v : new_vertices) {
@@ -405,7 +405,7 @@ create_new_hypergraph(bulk::world& new_world, pmondriaan::hypergraph& H, int sta
         }
     }
 
-    auto new_size = (int)new_vertices.size();
+    auto new_size = (long)new_vertices.size();
     auto new_global_size = bulk::sum(new_world, new_size);
     auto new_H = pmondriaan::hypergraph(new_global_size, H.global_number_nets(),
                                         new_vertices, new_nets);

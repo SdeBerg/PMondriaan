@@ -13,7 +13,7 @@
 #include "util/interval.hpp"
 
 namespace parameters {
-constexpr int stopping_time_par = 5;
+constexpr long stopping_time_par = 5;
 }
 
 namespace pmondriaan {
@@ -26,13 +26,13 @@ std::vector<long> bisect(bulk::world& world,
                          pmondriaan::options& opts,
                          long max_weight_0,
                          long max_weight_1,
-                         int start,
-                         int end,
+                         long start,
+                         long end,
                          interval labels,
                          std::mt19937& rng) {
 
     auto weight_parts = std::vector<long>(2);
-    int p = world.active_processors();
+    auto p = world.active_processors();
     if (opts.bisection_mode == pmondriaan::bisection::random) {
         weight_parts =
         bisect_random(H, max_weight_0 / p, max_weight_1 / p, start, end, labels, rng);
@@ -53,8 +53,8 @@ std::vector<long> bisect(bulk::world& world,
 std::vector<long> bisect_random(pmondriaan::hypergraph& H,
                                 long max_weight_0,
                                 long max_weight_1,
-                                int start,
-                                int end,
+                                long start,
+                                long end,
                                 interval labels,
                                 std::mt19937& rng) {
 
@@ -83,8 +83,8 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                                     pmondriaan::options& opts,
                                     long max_weight_0,
                                     long max_weight_1,
-                                    int start,
-                                    int end,
+                                    long start,
+                                    long end,
                                     interval labels,
                                     std::mt19937& rng) {
 
@@ -114,21 +114,21 @@ std::vector<long> bisect_multilevel(bulk::world& world,
 
         world.log("s: %d, time in par coarsening: %lf", world.rank(), time.get_change());
         // we now communicate the entire hypergraph to all processors using a queue containing id, weight and nets
-        auto vertex_queue = bulk::queue<int, long, int[]>(world);
+        auto vertex_queue = bulk::queue<long, long, long[]>(world);
         for (auto& v : HC_list[nc_par].vertices()) {
-            for (int t = 0; t < world.rank(); t++) {
+            for (long t = 0; t < world.rank(); t++) {
                 vertex_queue(t).send(v.id(), v.weight(), v.nets());
             }
-            for (int t = world.rank() + 1; t < world.active_processors(); t++) {
+            for (long t = world.rank() + 1; t < world.active_processors(); t++) {
                 vertex_queue(t).send(v.id(), v.weight(), v.nets());
             }
         }
-        auto net_cost_queue = bulk::queue<int, long>(world);
+        auto net_cost_queue = bulk::queue<long, long>(world);
         for (auto& n : HC_list[nc_par].nets()) {
-            for (int t = 0; t < world.rank(); t++) {
+            for (long t = 0; t < world.rank(); t++) {
                 net_cost_queue(t).send(n.id(), n.cost());
             }
-            for (int t = world.rank() + 1; t < world.active_processors(); t++) {
+            for (long t = world.rank() + 1; t < world.active_processors(); t++) {
                 net_cost_queue(t).send(n.id(), n.cost());
             }
         }
@@ -140,7 +140,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         world.sync();
 
         for (const auto& [net_id, cost] : net_cost_queue) {
-            HC_list[nc_par].add_net(net_id, std::vector<int>(), cost);
+            HC_list[nc_par].add_net(net_id, std::vector<long>(), cost);
         }
         for (const auto& [id, weight, nets] : vertex_queue) {
             HC_list[nc_par].vertices().push_back({id, nets, weight});
@@ -200,10 +200,10 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         auto best_proc = pmondriaan::owner_min(cut_size);
 
         // the processor that has found the best solution now sends the labels to all others
-        auto label_queue = bulk::queue<int, int>(world);
+        auto label_queue = bulk::queue<long, long>(world);
         if (world.rank() == best_proc) {
             for (auto& v : HC_list[nc_par].vertices()) {
-                for (int t = 0; t < world.active_processors(); t++) {
+                for (long t = 0; t < world.active_processors(); t++) {
                     label_queue(t).send(v.id(), v.part());
                 }
             }

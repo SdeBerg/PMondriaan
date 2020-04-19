@@ -30,7 +30,7 @@ long KLFM_par(bulk::world& world,
               std::mt19937& rng,
               long cut_size) {
 
-    int pass = 0;
+    long pass = 0;
     long prev_cut_size;
 
     // TODO: use C to compute cutsize without communication
@@ -68,13 +68,13 @@ long KLFM_pass_par(bulk::world& world,
                    long max_weight_1,
                    pmondriaan::options& opts,
                    std::mt19937& rng) {
-    int s = world.rank();
-    int p = world.active_processors();
+    auto s = world.rank();
+    auto p = world.active_processors();
 
     auto gain_structure = pmondriaan::gain_structure(H, C);
 
     long best_cut_size = cut_size;
-    auto no_improvement_moves = std::vector<int>();
+    auto no_improvement_moves = std::vector<long>();
 
     // Each processor is responsible for keeping track of some nets
     auto net_partition = bulk::block_partitioning<1>({H.global_number_nets()}, {p});
@@ -85,9 +85,9 @@ long KLFM_pass_par(bulk::world& world,
     auto cut_size_my_nets =
     init_previous_C(world, H, C, previous_C, cost_my_nets, net_partition);
 
-    auto moves_queue = bulk::queue<long, long, int>(world);
-    auto update_nets = bulk::queue<int, long>(world);
-    bulk::var<int> rejected(world);
+    auto moves_queue = bulk::queue<long, long, long>(world);
+    auto update_nets = bulk::queue<long, long>(world);
+    bulk::var<long> rejected(world);
     bulk::var<long> new_weight_0(world);
     bulk::var<long> new_weight_1(world);
     bulk::var<bool> done(world);
@@ -98,7 +98,7 @@ long KLFM_pass_par(bulk::world& world,
 
         // Find best KLFM_par_number_send_moves moves
         auto moves =
-        std::vector<std::tuple<int, long, long>>(opts.KLFM_par_number_send_moves);
+        std::vector<std::tuple<long, long, long>>(opts.KLFM_par_number_send_moves);
         find_top_moves(H, gain_structure, moves, total_weights, max_weight_0,
                        max_weight_1, rng);
         world.sync();
@@ -330,7 +330,7 @@ void update_gains(pmondriaan::hypergraph& H,
  */
 void find_top_moves(pmondriaan::hypergraph& H,
                     pmondriaan::gain_structure& gain_structure,
-                    std::vector<std::tuple<int, long, long>>& moves,
+                    std::vector<std::tuple<long, long, long>>& moves,
                     std::array<long, 2>& weights,
                     long max_weight_0,
                     long max_weight_1,
@@ -342,7 +342,7 @@ void find_top_moves(pmondriaan::hypergraph& H,
         max_extra_weight[0] = max_weight_0 - weights[0];
         max_extra_weight[1] = max_weight_1 - weights[1];
 
-        int part_to_move =
+        long part_to_move =
         gain_structure.part_next(max_extra_weight[0], max_extra_weight[1], rng);
         auto v_to_move = gain_structure.next(part_to_move);
 
@@ -373,18 +373,18 @@ void find_top_moves(pmondriaan::hypergraph& H,
  * Return the number of rejected moves for each processor. This is positive when
  * we have to move back vertices from part 0 to part 1 and positive otherwise.
  */
-std::vector<int> reject_unbalanced_moves(int p,
-                                         bulk::queue<long, long, int>& moves_queue,
-                                         std::array<long, 2>& total_weights,
-                                         long max_weight_0,
-                                         long max_weight_1) {
+std::vector<long> reject_unbalanced_moves(long p,
+                                          bulk::queue<long, long, long>& moves_queue,
+                                          std::array<long, 2>& total_weights,
+                                          long max_weight_0,
+                                          long max_weight_1) {
     // The number of moves to be rejected for each processor
-    auto rejected = std::vector<int>(p, 0);
+    auto rejected = std::vector<long>(p, 0);
     auto done = std::vector<bool>(p, false);
 
     // Sort queue on gain
     std::sort(moves_queue.begin(), moves_queue.end());
-    std::stack<std::pair<long, int>> received_moves;
+    std::stack<std::pair<long, long>> received_moves;
     long total_balance = 0;
     for (const auto& [gain, weight_change, t] : moves_queue) {
         total_balance += weight_change;

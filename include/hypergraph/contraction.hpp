@@ -18,13 +18,13 @@ namespace pmondriaan {
  */
 class match {
   public:
-    match(int match, int proc) : id_(match), proc_(proc) {}
+    match(long match, int proc) : id_(match), proc_(proc) {}
 
-    int id() { return id_; }
+    long id() { return id_; }
     int proc() { return proc_; }
 
   private:
-    int id_;
+    long id_;
     int proc_;
 };
 
@@ -35,12 +35,12 @@ class contraction {
   public:
     contraction() {}
 
-    void add_sample(int id_sample) {
+    void add_sample(long id_sample) {
         ids_samples_.push_back(id_sample);
         matches_.push_back(std::vector<pmondriaan::match>());
     }
 
-    void add_samples(pmondriaan::hypergraph& H, std::vector<int> indices_samples) {
+    void add_samples(pmondriaan::hypergraph& H, std::vector<long> indices_samples) {
         for (auto index : indices_samples) {
             ids_samples_.push_back(H(index).id());
         }
@@ -49,19 +49,19 @@ class contraction {
                                                     std::vector<pmondriaan::match>());
     }
 
-    void add_match(int sample, int match, int proc) {
+    void add_match(long sample, long match, int proc) {
         matches_[sample].push_back(pmondriaan::match(match, proc));
     }
 
-    auto& matches(int sample) { return matches_[sample]; }
+    auto& matches(long sample) { return matches_[sample]; }
 
-    int id_sample(int i) { return ids_samples_[i]; }
+    long id_sample(long i) { return ids_samples_[i]; }
 
     size_t size() { return ids_samples_.size(); }
 
 
   private:
-    std::vector<int> ids_samples_;
+    std::vector<long> ids_samples_;
     std::vector<std::vector<pmondriaan::match>> matches_;
 };
 

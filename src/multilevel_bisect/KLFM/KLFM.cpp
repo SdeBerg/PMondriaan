@@ -28,7 +28,7 @@ long KLFM(pmondriaan::hypergraph& H,
           std::mt19937& rng,
           long cut_size) {
 
-    int pass = 0;
+    long pass = 0;
     long prev_cut_size;
     if (cut_size == LONG_MAX) {
         prev_cut_size = pmondriaan::cutsize(H, opts.metric);
@@ -66,13 +66,13 @@ long KLFM_pass(pmondriaan::hypergraph& H,
     auto gain_structure = pmondriaan::gain_structure(H, C);
 
     long best_cut_size = cut_size;
-    auto no_improvement_moves = std::vector<int>();
+    auto no_improvement_moves = std::vector<long>();
 
     while (!gain_structure.done()) {
         max_extra_weight[0] = max_weight_0 - weights[0];
         max_extra_weight[1] = max_weight_1 - weights[1];
 
-        int part_to_move =
+        long part_to_move =
         gain_structure.part_next(max_extra_weight[0], max_extra_weight[1], rng);
         auto v_to_move = gain_structure.next(part_to_move);
 

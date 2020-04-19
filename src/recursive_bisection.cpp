@@ -24,13 +24,13 @@ namespace pmondriaan {
  */
 void recursive_bisect(bulk::world& world,
                       pmondriaan::hypergraph& H,
-                      int k,
+                      long k,
                       double epsilon,
                       double eta,
                       pmondriaan::options& opts) {
 
-    int s = world.rank();
-    int p = world.active_processors();
+    auto s = world.rank();
+    auto p = world.active_processors();
 
     std::mt19937 rng(s + 1);
 
@@ -40,8 +40,8 @@ void recursive_bisect(bulk::world& world,
     auto sub_world = world.split(0);
 
     // start and end index of the current part to be split
-    int start = 0;
-    int end = H.size();
+    long start = 0;
+    long end = H.size();
     auto jobs = std::stack<pmondriaan::work_item>();
 
     interval labels = {0, k - 1};
@@ -55,10 +55,10 @@ void recursive_bisect(bulk::world& world,
     // while we need to give more than one label and need to use more than one processor, we bisect the hypergraph in parallel
     while ((labels.length() > 0) && (p > 1)) {
 
-        int k_ = labels.length() + 1;
+        long k_ = labels.length() + 1;
 
-        int k_low = k_ / 2;
-        int k_high = k_ - k_low;
+        long k_low = k_ / 2;
+        long k_high = k_ - k_low;
 
         auto max_global_weights =
         compute_max_global_weight(k_, k_low, k_high, weight_mypart, maxweight);
@@ -71,14 +71,14 @@ void recursive_bisect(bulk::world& world,
         auto total_weight_1 = bulk::sum(*sub_world, weight_parts[1]);
 
         // number of processors working on the low and high part respectively
-        int p_low =
+        long p_low =
         (double)total_weight_0 / (double)(total_weight_0 + total_weight_1) * (double)p + 0.5;
         if ((k_low == 1) & (k_high > 1)) {
             p_low = 0;
         }
-        int p_high = p - p_low;
+        long p_high = p - p_low;
 
-        int my_part = 1;
+        long my_part = 1;
         if (s < p_low) {
             my_part = 0;
         }
@@ -144,10 +144,10 @@ void recursive_bisect(bulk::world& world,
         weight_mypart = job.weight();
 
         while (labels.length() > 0) {
-            int k_ = labels.length() + 1;
+            long k_ = labels.length() + 1;
 
-            int k_low = k_ / 2;
-            int k_high = k_ - k_low;
+            long k_low = k_ / 2;
+            long k_high = k_ - k_low;
 
             auto max_global_weights =
             compute_max_global_weight(k_, k_low, k_high, weight_mypart, maxweight);
@@ -158,7 +158,7 @@ void recursive_bisect(bulk::world& world,
             interval labels_0 = {labels.low, labels.high - k_high};
             interval labels_1 = {labels.low + k_low, labels.high};
 
-            int end_1 = end;
+            long end_1 = end;
 
             if (labels_1.length() > 0) {
                 reorder_hypergraph(H, start, end, labels.low, labels.high);
@@ -178,12 +178,12 @@ void recursive_bisect(bulk::world& world,
 }
 
 std::vector<long>
-compute_max_global_weight(int k_, int k_low, int k_high, long weight_mypart, long maxweight) {
+compute_max_global_weight(long k_, long k_low, long k_high, long weight_mypart, long maxweight) {
 
     double eps = (double)(maxweight * k_) / (double)weight_mypart - 1.0;
 
-    int q_low = std::log2(k_low) + 1;
-    int q_high = std::log2(k_high) + 1;
+    long q_low = std::log2(k_low) + 1;
+    long q_high = std::log2(k_high) + 1;
 
     double delta_low = eps / q_low;
     double delta_high = eps / q_high;
@@ -202,15 +202,15 @@ compute_max_global_weight(int k_, int k_low, int k_high, long weight_mypart, lon
  * label_high. Returns the end of part 0 if part 1 is not assigned any
  * processors.
  */
-int redistribute_hypergraph(bulk::world& world,
-                            pmondriaan::hypergraph& H,
-                            int my_part,
-                            int label_low,
-                            int label_high,
-                            long max_local_weight,
-                            long weight_part_0,
-                            long weight_part_1,
-                            int p_low) {
+long redistribute_hypergraph(bulk::world& world,
+                             pmondriaan::hypergraph& H,
+                             long my_part,
+                             long label_low,
+                             long label_high,
+                             long max_local_weight,
+                             long weight_part_0,
+                             long weight_part_1,
+                             long p_low) {
 
     long surplus_0 = (1 - my_part) * max_local_weight - weight_part_0;
     long surplus_1 = my_part * max_local_weight - weight_part_1;
@@ -222,7 +222,7 @@ int redistribute_hypergraph(bulk::world& world,
     auto vertices_0 = std::vector<pmondriaan::vertex>();
 
     // queue for all received vertices
-    auto q = bulk::queue<int, long, int, int[]>(world);
+    auto q = bulk::queue<long, long, long, long[]>(world);
     reduce_surplus(world, H, label_high, all_surplus_1, q);
 
     if (p_low > 0) {
@@ -261,23 +261,23 @@ int redistribute_hypergraph(bulk::world& world,
  * Distributes the surplus vertices of a processor over the other processors.
  * Returns 0 if all surplus is gone, -1 if there is still surplus left.
  */
-int reduce_surplus(bulk::world& world,
-                   pmondriaan::hypergraph& H,
-                   int label,
-                   bulk::coarray<long>& surplus,
-                   bulk::queue<int, long, int, int[]>& q) {
+long reduce_surplus(bulk::world& world,
+                    pmondriaan::hypergraph& H,
+                    long label,
+                    bulk::coarray<long>& surplus,
+                    bulk::queue<long, long, long, long[]>& q) {
 
-    int s = world.rank();
-    int p = world.active_processors();
+    auto s = world.rank();
+    auto p = world.active_processors();
 
     if (surplus[s] >= 0) {
         return 0;
     }
 
     // index of next vertex to be sent
-    int index = 0;
+    long index = 0;
     long surplus_others = 0;
-    int t = s + 1;
+    long t = s + 1;
     while (surplus[s] < 0) {
         if (t >= p) {
             t = 0;
@@ -303,7 +303,7 @@ int reduce_surplus(bulk::world& world,
                 q(t).send(H(index).id(), H(index).weight(), H(index).part(),
                           H(index).nets());
 
-                int id = H(index).id();
+                long id = H(index).id();
                 H.remove_from_nets(id);
                 H.map().erase(id);
                 H.vertices().erase(H.vertices().begin() + index);
@@ -321,8 +321,8 @@ int reduce_surplus(bulk::world& world,
 /**
  * Reorders the hypergraph such that all vertices with label_high are at the end of the vertex list.
  */
-void reorder_hypergraph(pmondriaan::hypergraph& H, int start, int& end, int label_low, int label_high) {
-    int pivot = start;
+void reorder_hypergraph(pmondriaan::hypergraph& H, long start, long& end, long label_low, long label_high) {
+    long pivot = start;
     while (pivot < end) {
         if (H(pivot).part() == label_high) {
             while ((H(end - 1).part() != label_low) && (end - 1 != pivot)) {

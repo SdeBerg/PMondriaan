@@ -23,7 +23,7 @@ bool partitioning_to_file(bulk::world& world, pmondriaan::hypergraph& H, std::st
         out << H.global_size() << "\n";
         out.close();
     }
-    for (int turn = 0; turn < world.active_processors(); turn++) {
+    for (long turn = 0; turn < world.active_processors(); turn++) {
         if (turn == world.rank()) {
             std::ofstream out(file, std::ios::app);
             if (out.fail()) {

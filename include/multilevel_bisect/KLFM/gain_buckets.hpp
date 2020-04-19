@@ -17,18 +17,18 @@ namespace pmondriaan {
  */
 class gain_buckets {
   public:
-    gain_buckets(int size) {
-        buckets = std::vector<std::unordered_set<int>>(size);
+    gain_buckets(long size) {
+        buckets = std::vector<std::unordered_set<long>>(size);
         max_index_present = size;
-        min_value_present = std::numeric_limits<long>::max();
+        min_value_present = index_to_gain(0);
     }
 
-    void insert(int id, long gain);
+    void insert(long id, long gain);
 
     // removes the element id from its bucket, returns true if this element existed and false otherwise
-    bool remove(int id, long gain);
+    bool remove(long id, long gain);
 
-    int next();
+    long next();
 
     long gain_next();
 
@@ -40,7 +40,7 @@ class gain_buckets {
     void print();
 
   private:
-    std::vector<std::unordered_set<int>> buckets;
+    std::vector<std::unordered_set<long>> buckets;
     long max_index_present;
     long min_value_present;
 
@@ -62,19 +62,19 @@ class gain_structure {
     }
 
 
-    int part_next(long max_extra_weight_0, long max_extra_weight_1, std::mt19937& rng);
+    long part_next(long max_extra_weight_0, long max_extra_weight_1, std::mt19937& rng);
 
-    int next(int part) { return buckets[part].next(); }
+    long next(long part) { return buckets[part].next(); }
 
-    long gain_next(int part) { return buckets[part].gain_next(); }
+    long gain_next(long part) { return buckets[part].gain_next(); }
 
-    void move(int v);
+    void move(long v);
 
-    void remove(int v);
+    void remove(long v);
 
     bool done();
 
-    void add_gain(int v, long value);
+    void add_gain(long v, long value);
 
   private:
     void init_();

@@ -21,26 +21,26 @@ namespace pmondriaan {
  */
 class vertex {
   public:
-    vertex(int id, std::vector<int> nets, long weight = 1)
+    vertex(long id, std::vector<long> nets, long weight = 1)
     : id_(id), nets_(nets), weight_(weight) {}
 
-    int id() { return id_; }
-    std::vector<int>& nets() { return nets_; }
+    long id() { return id_; }
+    std::vector<long>& nets() { return nets_; }
     long weight() { return weight_; }
-    int part() { return part_; }
+    long part() { return part_; }
     auto degree() { return nets_.size(); }
 
-    void set_id(int value) { id_ = value; }
+    void set_id(long value) { id_ = value; }
     void add_weight(long value) { weight_ += value; }
-    void set_part(int value) { part_ = value; }
+    void set_part(long value) { part_ = value; }
 
-    void remove_net(int n);
+    void remove_net(long n);
 
   private:
-    int id_;
-    std::vector<int> nets_;
+    long id_;
+    std::vector<long> nets_;
     long weight_;
-    int part_ = -1;
+    long part_ = -1;
 };
 
 /**
@@ -48,28 +48,28 @@ class vertex {
  */
 class net {
   public:
-    net(int id, std::vector<int> vertices, long cost = 1)
+    net(long id, std::vector<long> vertices, long cost = 1)
     : id_(id), vertices_(vertices), cost_(cost) {}
 
-    int id() const { return id_; }
+    long id() const { return id_; }
 
-    std::vector<int>& vertices() { return vertices_; }
-    const std::vector<int>& vertices() const { return vertices_; }
+    std::vector<long>& vertices() { return vertices_; }
+    const std::vector<long>& vertices() const { return vertices_; }
 
     long cost() const { return cost_; }
     auto size() const { return vertices_.size(); }
     auto global_size() const { return global_size_; }
 
     void set_global_size(size_t size) { global_size_ = size; }
-    void add_vertex(int v) { vertices_.push_back(v); }
+    void add_vertex(long v) { vertices_.push_back(v); }
 
     double scaled_cost() const {
         return (double)cost_ / ((double)global_size_ - 1.0);
     }
 
   private:
-    int id_;
-    std::vector<int> vertices_;
+    long id_;
+    std::vector<long> vertices_;
     long cost_;
     size_t global_size_ = 0;
 };
@@ -80,8 +80,8 @@ class net {
 class hypergraph {
 
   public:
-    hypergraph(int global_size,
-               int global_number_nets,
+    hypergraph(long global_size,
+               long global_number_nets,
                std::vector<pmondriaan::vertex> vertices,
                std::vector<pmondriaan::net> nets)
     : global_size_(global_size), global_number_nets_(global_number_nets),
@@ -94,7 +94,7 @@ class hypergraph {
     : global_size_(other.global_size_),
       global_number_nets_(other.global_number_nets_), vertices_(other.vertices_) {
         for (const auto& n : other.nets()) {
-            nets_.push_back(pmondriaan::net(n.id(), std::vector<int>()));
+            nets_.push_back(pmondriaan::net(n.id(), std::vector<long>()));
             nets_.back().set_global_size(n.global_size());
         }
 
@@ -114,28 +114,28 @@ class hypergraph {
     long total_weight();
 
     // computes the sum of the weights of vertices in part
-    long weight_part(int part);
+    long weight_part(long part);
 
     // computes the weights of all parts upto k
-    std::vector<long> weight_all_parts(int k);
+    std::vector<long> weight_all_parts(long k);
 
     // add a net if it does not exist yet
-    void add_net(int id, std::vector<int> vertices, long cost = 1);
+    void add_net(long id, std::vector<long> vertices, long cost = 1);
 
     // adds vertex to all nets
     void add_to_nets(pmondriaan::vertex& v);
 
     // removes vertex id from all nets
-    void remove_from_nets(int id);
+    void remove_from_nets(long id);
 
     // removes a net and the net from all net lists of vertices
-    void remove_net_by_index(int index);
+    void remove_net_by_index(long index);
 
     // moves a vertex to the other part in 0,1
-    void move(int id);
+    void move(long id);
 
     // moves a vertex to the other part in 0,1 and adjusts the vector with counts of the parts
-    void move(int id, std::vector<std::vector<long>>& C);
+    void move(long id, std::vector<std::vector<long>>& C);
 
     // updates the global_to_local map
     void update_map();
@@ -143,12 +143,12 @@ class hypergraph {
     // updates the map for the nets
     void update_map_nets();
 
-    int local_id(int global_id) { return global_to_local[global_id]; }
-    int local_id_net(int global_id) const {
+    long local_id(long global_id) { return global_to_local[global_id]; }
+    long local_id_net(long global_id) const {
         return net_global_to_local.at(global_id);
     }
-    int global_id_net(int local_id) { return nets_[local_id].id(); }
-    bool is_local(int global_id) {
+    long global_id_net(long local_id) { return nets_[local_id].id(); }
+    bool is_local(long global_id) {
         return (global_to_local.count(global_id) > 0);
     }
 
@@ -158,12 +158,12 @@ class hypergraph {
     const std::vector<pmondriaan::vertex>& vertices() const {
         return vertices_;
     }
-    pmondriaan::vertex& operator()(int index) { return vertices_[index]; }
+    pmondriaan::vertex& operator()(long index) { return vertices_[index]; }
 
     std::vector<pmondriaan::net>& nets() { return nets_; }
     const std::vector<pmondriaan::net>& nets() const { return nets_; }
 
-    pmondriaan::net& net(int id) { return nets_[net_global_to_local[id]]; }
+    pmondriaan::net& net(long id) { return nets_[net_global_to_local[id]]; }
 
     auto size() { return vertices_.size(); }
     auto global_size() const { return global_size_; }
@@ -174,12 +174,12 @@ class hypergraph {
     void print();
 
   private:
-    int global_size_ = -1;
-    int global_number_nets_ = -1;
+    long global_size_ = -1;
+    long global_number_nets_ = -1;
     std::vector<pmondriaan::vertex> vertices_;
     std::vector<pmondriaan::net> nets_;
-    std::unordered_map<int, int> global_to_local;
-    std::unordered_map<int, int> net_global_to_local;
+    std::unordered_map<long, long> global_to_local;
+    std::unordered_map<long, long> net_global_to_local;
 };
 
 /**
@@ -200,7 +200,7 @@ long global_weight(bulk::world& world, pmondriaan::hypergraph& H);
 /**
  * Compute the global load imbalance of a hypergraph.
  */
-double load_balance(bulk::world& world, pmondriaan::hypergraph& H, int k);
+double load_balance(bulk::world& world, pmondriaan::hypergraph& H, long k);
 
 /**
  * Compute the cutsize with the correct metric of a local hypergraph
@@ -231,6 +231,6 @@ void remove_free_nets(pmondriaan::hypergraph& H);
  * Creates a new hypergraph that only contains the vertices of H with local id between start and end.
  */
 pmondriaan::hypergraph
-create_new_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, int start, int end);
+create_new_hypergraph(bulk::world& world, pmondriaan::hypergraph& H, long start, long end);
 
 } // namespace pmondriaan

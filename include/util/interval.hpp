@@ -5,11 +5,11 @@
 namespace pmondriaan {
 
 struct interval {
-    int low;
-    int high;
-    std::array<int, 2> values = {low, high};
-    int length() { return high - low; }
-    int operator()(int part) { return values[part]; }
+    long low;
+    long high;
+    std::array<long, 2> values = {low, high};
+    long length() { return high - low; }
+    long operator()(long part) { return values[part]; }
 };
 
 } // namespace pmondriaan
