@@ -159,8 +159,9 @@ std::vector<std::vector<long>> init_counts(bulk::world& world, pmondriaan::hyper
     auto s = world.rank();
 
     auto local_counts = init_counts(H);
-    auto net_partition = bulk::block_partitioning<1>({H.global_number_nets()},
-                                                     {world.active_processors()});
+    auto net_partition =
+    bulk::block_partitioning<1>({H.global_number_nets()},
+                                {(size_t)world.active_processors()});
     auto count_queue = bulk::queue<long, long>(world);
     // We send all counts of part 0 that are greater than 0 to the responsible processor
     for (auto i = 0u; i < local_counts.size(); i++) {
@@ -172,7 +173,7 @@ std::vector<std::vector<long>> init_counts(bulk::world& world, pmondriaan::hyper
     world.sync();
 
     auto C_my_nets = bulk::coarray<long>(world, net_partition.local_count(s));
-    for (auto i = 0; i < net_partition.local_count(s); i++) {
+    for (auto i = 0u; i < net_partition.local_count(s); i++) {
         C_my_nets[i] = 0;
     }
     for (const auto& [net, count] : count_queue) {
@@ -272,8 +273,9 @@ long cutsize(pmondriaan::hypergraph& H, pmondriaan::m metric) {
  */
 long cutsize(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::m metric) {
     long result = 0;
-    auto net_partition = bulk::block_partitioning<1>({H.global_number_nets()},
-                                                     {world.active_processors()});
+    auto net_partition =
+    bulk::block_partitioning<1>({H.global_number_nets()},
+                                {(size_t)world.active_processors()});
 
     // this queue contains all labels present for each net
     auto labels = bulk::queue<long, long[]>(world);
@@ -292,7 +294,7 @@ long cutsize(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::m metric
 
     for (const auto& [net, labels_net] : labels) {
         for (auto l : labels_net) {
-            total_cut[net_partition.local({net})[0]].insert(l);
+            total_cut[net_partition.local({(size_t)net})[0]].insert(l);
         }
     }
 
@@ -326,8 +328,9 @@ long cutsize(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::m metric
  */
 std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph& H) {
 
-    auto net_partition = bulk::block_partitioning<1>({H.global_number_nets()},
-                                                     {world.active_processors()});
+    auto net_partition =
+    bulk::block_partitioning<1>({H.global_number_nets()},
+                                {(size_t)world.active_processors()});
 
     auto nets = H.nets();
     bulk::queue<long, size_t> net_size_queue(world);
@@ -340,11 +343,11 @@ std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph&
 
     auto size_nets =
     bulk::coarray<size_t>(world, net_partition.local_count(world.rank()));
-    for (auto i = 0; i < net_partition.local_count(world.rank()); i++) {
+    for (auto i = 0u; i < net_partition.local_count(world.rank()); i++) {
         size_nets[i] = 0;
     }
     for (const auto& [id, size] : net_size_queue) {
-        size_nets[net_partition.local({id})[0]] += size;
+        size_nets[net_partition.local({(size_t)id})[0]] += size;
     }
 
     auto future_result = std::vector<bulk::future<size_t>>();
@@ -405,7 +408,7 @@ create_new_hypergraph(bulk::world& new_world, pmondriaan::hypergraph& H, long st
         }
     }
 
-    auto new_size = (long)new_vertices.size();
+    auto new_size = new_vertices.size();
     auto new_global_size = bulk::sum(new_world, new_size);
     auto new_H = pmondriaan::hypergraph(new_global_size, H.global_number_nets(),
                                         new_vertices, new_nets);

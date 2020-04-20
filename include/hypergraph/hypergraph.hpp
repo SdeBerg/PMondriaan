@@ -80,8 +80,8 @@ class net {
 class hypergraph {
 
   public:
-    hypergraph(long global_size,
-               long global_number_nets,
+    hypergraph(size_t global_size,
+               size_t global_number_nets,
                std::vector<pmondriaan::vertex> vertices,
                std::vector<pmondriaan::net> nets)
     : global_size_(global_size), global_number_nets_(global_number_nets),
@@ -174,8 +174,8 @@ class hypergraph {
     void print();
 
   private:
-    long global_size_ = -1;
-    long global_number_nets_ = -1;
+    size_t global_size_;
+    size_t global_number_nets_;
     std::vector<pmondriaan::vertex> vertices_;
     std::vector<pmondriaan::net> nets_;
     std::unordered_map<long, long> global_to_local;

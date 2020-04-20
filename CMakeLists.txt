@@ -34,8 +34,8 @@ target_include_directories(PMondriaan PUBLIC "include")
 
 target_compile_features(PMondriaan PUBLIC cxx_std_17)
 target_compile_options(PMondriaan PUBLIC
-    #"-Wfatal-errors"
-    #"-Werror"
+    "-Wfatal-errors"
+    "-Werror"
     "-Wall"
     "-O3")
 

@@ -90,7 +90,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
 
     auto H_reduced = pmondriaan::create_new_hypergraph(world, H, start, end);
 
-    long nc_par = 0;
+    size_t nc_par = 0;
 
     auto HC_list = std::vector<pmondriaan::hypergraph>{H_reduced};
     auto C_list = std::vector<pmondriaan::contraction>();
@@ -98,7 +98,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
     auto time = bulk::util::timer();
 
     if (world.active_processors() > 1) {
-        auto coarsening_nrvertices_par =
+        size_t coarsening_nrvertices_par =
         std::max(opts.coarsening_nrvertices, world.active_processors() * opts.sample_size *
                                              parameters::stopping_time_par);
 
@@ -160,7 +160,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
 
     time.get();
 
-    long nc_tot = nc_par;
+    auto nc_tot = nc_par;
     while ((HC_list[nc_tot].global_size() > opts.coarsening_nrvertices) &&
            (nc_tot - 1 < opts.coarsening_maxrounds)) {
         C_list.push_back(pmondriaan::contraction());

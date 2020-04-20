@@ -30,7 +30,7 @@ long KLFM_par(bulk::world& world,
               std::mt19937& rng,
               long cut_size) {
 
-    long pass = 0;
+    size_t pass = 0;
     long prev_cut_size;
 
     // TODO: use C to compute cutsize without communication
@@ -77,7 +77,8 @@ long KLFM_pass_par(bulk::world& world,
     auto no_improvement_moves = std::vector<long>();
 
     // Each processor is responsible for keeping track of some nets
-    auto net_partition = bulk::block_partitioning<1>({H.global_number_nets()}, {p});
+    auto net_partition =
+    bulk::block_partitioning<1>({H.global_number_nets()}, {(size_t)p});
     /*We keep track of the previous counts we are responsible for,
     we have the count of part 0 and the count of part 1 for each net */
     auto previous_C = bulk::coarray<long>(world, net_partition.local_count(s) * 2);
@@ -156,7 +157,7 @@ long KLFM_pass_par(bulk::world& world,
 
         auto C_new = std::vector<std::vector<long>>(net_partition.local_count(s),
                                                     std::vector<long>(2, 0));
-        for (auto i = 0; i < net_partition.local_count(s); i++) {
+        for (auto i = 0u; i < net_partition.local_count(s); i++) {
             C_new[i][0] = previous_C[2 * i];
             C_new[i][1] = previous_C[(2 * i) + 1];
         }
@@ -176,7 +177,7 @@ long KLFM_pass_par(bulk::world& world,
                 }
             }
         }
-        for (auto i = 0; i < net_partition.local_count(s); i++) {
+        for (auto i = 0u; i < net_partition.local_count(s); i++) {
             previous_C[2 * i] = C_new[i][0];
             previous_C[(2 * i) + 1] = C_new[i][1];
         }
@@ -253,10 +254,10 @@ long init_previous_C(bulk::world& world,
                      bulk::coarray<long>& cost_my_nets,
                      bulk::block_partitioning<1>& net_partition) {
     auto s = world.rank();
-    for (auto i = 0; i < net_partition.local_count(s); i++) {
+    for (auto i = 0u; i < net_partition.local_count(s); i++) {
         cost_my_nets[i] = 0;
     }
-    for (auto i = 0; i < net_partition.local_count(s) * 2; i++) {
+    for (auto i = 0u; i < net_partition.local_count(s) * 2; i++) {
         previous_C[i] = 0;
     }
 
@@ -271,7 +272,7 @@ long init_previous_C(bulk::world& world,
     world.sync();
 
     long cut_size_my_nets = 0;
-    for (auto i = 0; i < net_partition.local_count(s); i++) {
+    for (auto i = 0u; i < net_partition.local_count(s); i++) {
         if (!((previous_C[i * 2] == 0) || (previous_C[(i * 2) + 1] == 0))) {
             cut_size_my_nets += cost_my_nets[i];
         }

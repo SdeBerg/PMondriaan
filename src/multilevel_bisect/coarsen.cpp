@@ -140,8 +140,8 @@ void request_matches(pmondriaan::hypergraph& H,
     auto request_queue = bulk::queue<long, long, long, double>(world);
     for (long sample = 0; sample < total_samples; sample++) {
         long t = sample / opts.sample_size;
-        long number_to_send = std::min((long)requested_matches[sample].size(),
-                                       opts.coarsening_max_clustersize);
+        long number_to_send =
+        std::min(requested_matches[sample].size(), opts.coarsening_max_clustersize);
         for (long i = 0; i < number_to_send; i++) {
             request_queue(t).send(s, sample - t * opts.sample_size,
                                   requested_matches[sample][i].first,
@@ -164,8 +164,7 @@ void request_matches(pmondriaan::hypergraph& H,
                       return std::get<2>(match1) > std::get<2>(match2);
                   });
 
-        long number_to_send =
-        std::min((long)match_list.size(), opts.coarsening_max_clustersize);
+        long number_to_send = std::min(match_list.size(), opts.coarsening_max_clustersize);
         for (long j = 0; j < number_to_send; j++) {
             auto& match = match_list[j];
             C.add_match(i, std::get<1>(match), std::get<0>(match));
@@ -265,7 +264,7 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
         }
     }
 
-    long new_size = (long)new_vertices.size();
+    auto new_size = new_vertices.size();
     auto new_global_size = bulk::sum(matches.world(), new_size);
     auto HC = pmondriaan::hypergraph(new_global_size, H.global_number_nets(),
                                      new_vertices, new_nets);
@@ -335,8 +334,7 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
             long best_match = -1;
             for (auto u : visited) {
                 ip[u] *= (1.0 / (double)std::min(v.degree(), H(u).degree()));
-                if ((ip[u] > max_ip) &&
-                    ((long)matches[u].size() < opts.coarsening_max_clustersize)) {
+                if ((ip[u] > max_ip) && (matches[u].size() < opts.coarsening_max_clustersize)) {
                     max_ip = ip[u];
                     best_match = u;
                 }

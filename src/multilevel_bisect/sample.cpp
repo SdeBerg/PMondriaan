@@ -51,7 +51,7 @@ sample_lp(pmondriaan::hypergraph& H, pmondriaan::options& opts, std::mt19937& rn
 
     auto samples = std::vector<long>();
     auto found_sample = std::vector<bool>(opts.sample_size, false);
-    long number_samples_found = 0;
+    size_t number_samples_found = 0;
     auto current = 0u;
     while ((number_samples_found < opts.sample_size - empty_count) &&
            (current < H.size())) {
