@@ -1,7 +1,7 @@
 #include <array>
 #include <limits>
+#include <queue>
 #include <random>
-#include <stack>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
@@ -85,7 +85,8 @@ long KLFM_pass_par(bulk::world& world,
     auto cut_size_my_nets =
     init_previous_C(world, H, C, previous_C, cost_my_nets, net_partition);
 
-    auto moves_queue = bulk::queue<long, long, long>(world);
+    // Stores the proposed moves as: gain, weight change, processor id
+    auto moves_queue = bulk::queue<long, long, int>(world);
     auto update_nets = bulk::queue<long, long>(world);
     bulk::var<long> rejected(world);
     bulk::var<long> new_weight_0(world);
@@ -97,6 +98,7 @@ long KLFM_pass_par(bulk::world& world,
         auto prev_total_weights = total_weights;
 
         // Find best KLFM_par_number_send_moves moves
+        // A move is stored as v_to_move, gain_v, weight change
         auto moves =
         std::vector<std::tuple<long, long, long>>(opts.KLFM_par_number_send_moves);
         find_top_moves(H, gain_structure, moves, total_weights, max_weight_0,
@@ -371,10 +373,10 @@ void find_top_moves(pmondriaan::hypergraph& H,
 /**
  * Determines how many moves from part 0 or 1 should be rejected on each processor.
  * Return the number of rejected moves for each processor. This is positive when
- * we have to move back vertices from part 0 to part 1 and positive otherwise.
+ * we have to move back vertices from part 0 to part 1 and negative otherwise.
  */
 std::vector<long> reject_unbalanced_moves(long p,
-                                          bulk::queue<long, long, long>& moves_queue,
+                                          bulk::queue<long, long, int>& moves_queue,
                                           std::array<long, 2>& total_weights,
                                           long max_weight_0,
                                           long max_weight_1) {
@@ -384,7 +386,7 @@ std::vector<long> reject_unbalanced_moves(long p,
 
     // Sort queue on gain
     std::sort(moves_queue.begin(), moves_queue.end());
-    std::stack<std::pair<long, long>> received_moves;
+    std::queue<std::pair<long, long>> received_moves;
     long total_balance = 0;
     for (const auto& [gain, weight_change, t] : moves_queue) {
         total_balance += weight_change;
@@ -396,13 +398,15 @@ std::vector<long> reject_unbalanced_moves(long p,
         if (received_moves.empty()) {
             break;
         }
-        if ((received_moves.top().first < 0) && (!done[received_moves.top().second])) {
-            if (total_weights[1] - received_moves.top().first <= max_weight_1) {
-                rejected[received_moves.top().second]++;
-                total_weights[0] += received_moves.top().first;
-                total_weights[1] -= received_moves.top().first;
+        auto weight_change = received_moves.front().first;
+        auto t = received_moves.front().second;
+        if ((weight_change > 0) && (!done[t])) {
+            if (total_weights[1] + weight_change <= max_weight_1) {
+                rejected[t]++;
+                total_weights[0] -= weight_change;
+                total_weights[1] += weight_change;
             } else {
-                done[received_moves.top().second] = true;
+                done[t] = true;
             }
         }
         received_moves.pop();
@@ -412,13 +416,15 @@ std::vector<long> reject_unbalanced_moves(long p,
         if (received_moves.empty()) {
             break;
         }
-        if ((received_moves.top().first > 0) && (!done[received_moves.top().second])) {
-            if (total_weights[0] + received_moves.top().first <= max_weight_0) {
-                rejected[received_moves.top().second]--;
-                total_weights[0] += received_moves.top().first;
-                total_weights[1] -= received_moves.top().first;
+        auto weight_change = received_moves.front().first;
+        auto t = received_moves.front().second;
+        if ((weight_change < 0) && (!done[t])) {
+            if (total_weights[0] - weight_change <= max_weight_0) {
+                rejected[t]--;
+                total_weights[0] -= weight_change;
+                total_weights[1] += weight_change;
             } else {
-                done[received_moves.top().second] = true;
+                done[t] = true;
             }
         }
         received_moves.pop();

@@ -80,5 +80,37 @@ TEST(KLFMParallel, InitPreviousC) {
     });
 }
 
+TEST(KLFMParallel, RejectMoves) {
+    environment env;
+    env.spawn(2, [](bulk::world& world) {
+        auto s = world.rank();
+        // Stores the proposed moves as: gain, weight change, processor id
+        auto moves_queue = bulk::queue<long, long, int>(world);
+        if (s == 0) {
+            moves_queue(0).send(5, -3, s);
+            moves_queue(0).send(-2, -1, s);
+            moves_queue(0).send(1, 3, s);
+            moves_queue(0).send(-2, 2, s);
+            moves_queue(0).send(3, -4, s);
+        } else {
+            moves_queue(0).send(-5, 0, s);
+            moves_queue(0).send(5, -1, s);
+            moves_queue(0).send(2, -3, s);
+            moves_queue(0).send(1, 4, s);
+            moves_queue(0).send(4, -2, s);
+        }
+        world.sync();
+        auto prev_total_weights = std::array<long, 2>({20, 18});
+        long max_weight_0 = 22;
+        long max_weight_1 = 22;
+        if (s == 0) {
+            auto rejected = reject_unbalanced_moves(2, moves_queue, prev_total_weights,
+                                                    max_weight_0, max_weight_1);
+            ASSERT_EQ(rejected[0], -1);
+            ASSERT_EQ(rejected[1], 0);
+        }
+    });
+}
+
 } // namespace
 } // namespace pmondriaan

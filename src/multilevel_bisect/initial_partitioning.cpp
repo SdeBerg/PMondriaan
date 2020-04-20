@@ -41,12 +41,12 @@ long initial_partitioning(pmondriaan::hypergraph& H,
             H(i).set_part(L[i]);
         }
 
-        std::cout << "time lp :" << time.get_change() << "(round " << i << ")\n";
+        std::cout << "time lp: " << time.get_change() << "(round " << i << ")\n";
 
         auto cut = pmondriaan::KLFM(H, C, H.weight_part(0), H.weight_part(1),
                                     max_weight_0, max_weight_1, opts, rng);
 
-        std::cout << "time KLFM :" << time.get_change() << "(round " << i << ")\n";
+        std::cout << "time KLFM: " << time.get_change() << "(round " << i << ")\n";
 
         if (cut < best_cut) {
             for (auto i = 0u; i < H.size(); i++) {
