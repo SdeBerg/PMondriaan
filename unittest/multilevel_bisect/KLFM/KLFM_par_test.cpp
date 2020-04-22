@@ -22,7 +22,7 @@ std::string mtx_three_nonzeros = R"(%%MatrixMarket matrix coordinate real genera
 1 3 1.0
 )";
 
-TEST(KLFMParallel, InitCounts) {
+TEST(KLFMParallel, KLFMParPass) {
     environment env;
     env.spawn(2, [](bulk::world& world) {
         std::stringstream mtx_ss(mtx_three_nonzeros);
@@ -42,6 +42,16 @@ TEST(KLFMParallel, InitCounts) {
             ASSERT_EQ(C[1][0], 1);
             ASSERT_EQ(C[1][1], 1);
         }
+
+        pmondriaan::options opts;
+        opts.KLFM_max_passes = 1;
+        opts.KLFM_par_number_send_moves = 1;
+        opts.metric = pmondriaan::m::cut_net;
+        std::mt19937 rng(world.rank() + 1);
+        auto cut = KLFM_par(world, H, C, global_weight_part(world, H, 0),
+                            global_weight_part(world, H, 1), 3, 3, opts, rng);
+        ASSERT_LE(cut, 2);
+        ASSERT_EQ(cut, pmondriaan::cutsize(world, H, opts.metric));
     });
 }
 
@@ -85,19 +95,19 @@ TEST(KLFMParallel, RejectMoves) {
     env.spawn(2, [](bulk::world& world) {
         auto s = world.rank();
         // Stores the proposed moves as: gain, weight change, processor id
-        auto moves_queue = bulk::queue<long, long, int>(world);
+        auto moves_queue = bulk::queue<long, long, int, long>(world);
         if (s == 0) {
-            moves_queue(0).send(5, -3, s);
-            moves_queue(0).send(-2, -1, s);
-            moves_queue(0).send(1, 3, s);
-            moves_queue(0).send(-2, 2, s);
-            moves_queue(0).send(3, -4, s);
+            moves_queue(0).send(5, -3, s, 0);
+            moves_queue(0).send(3, -4, s, 1);
+            moves_queue(0).send(1, 3, s, 2);
+            moves_queue(0).send(-2, -1, s, 3);
+            moves_queue(0).send(-2, 2, s, 4);
         } else {
-            moves_queue(0).send(-5, 0, s);
-            moves_queue(0).send(5, -1, s);
-            moves_queue(0).send(2, -3, s);
-            moves_queue(0).send(1, 4, s);
-            moves_queue(0).send(4, -2, s);
+            moves_queue(0).send(5, -1, s, 0);
+            moves_queue(0).send(4, -2, s, 1);
+            moves_queue(0).send(2, -3, s, 2);
+            moves_queue(0).send(1, 4, s, 3);
+            moves_queue(0).send(-5, 0, s, 4);
         }
         world.sync();
         auto prev_total_weights = std::array<long, 2>({20, 18});
@@ -111,6 +121,31 @@ TEST(KLFMParallel, RejectMoves) {
         }
     });
 }
+
+TEST(KLFMParallel, KLFMPar) {
+    environment env;
+    env.spawn(2, [](bulk::world& world) {
+        auto hypergraph =
+        read_hypergraph("../test/data/matrices/dolphins/dolphins.mtx", world, "degree");
+        auto H = hypergraph.value();
+        pmondriaan::interval labels = {0, 1};
+        std::mt19937 rng(world.rank() + 1);
+        bisect_random(H, 85, 85, 0, H.size(), labels, rng);
+        ASSERT_LE(global_weight_part(world, H, 0), 170);
+        ASSERT_LE(global_weight_part(world, H, 1), 170);
+
+        pmondriaan::options opts;
+        opts.KLFM_max_passes = 10;
+        opts.KLFM_par_number_send_moves = 3;
+        opts.metric = pmondriaan::m::cut_net;
+        auto C = init_counts(world, H);
+        auto cut = KLFM_par(world, H, C, global_weight_part(world, H, 0),
+                            global_weight_part(world, H, 1), 170, 170, opts, rng);
+        ASSERT_EQ(cut, pmondriaan::cutsize(world, H, opts.metric));
+        ASSERT_LE(global_weight_part(world, H, 0), 170);
+        ASSERT_LE(global_weight_part(world, H, 1), 170);
+    });
+} // namespace
 
 } // namespace
 } // namespace pmondriaan

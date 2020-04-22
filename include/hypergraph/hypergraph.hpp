@@ -198,7 +198,17 @@ std::vector<std::vector<long>> init_counts(bulk::world& world, pmondriaan::hyper
 long global_weight(bulk::world& world, pmondriaan::hypergraph& H);
 
 /**
- * Compute the global load imbalance of a hypergraph.
+ * Compute the global weight of a part of a hypergraph.
+ */
+long global_weight_part(bulk::world& world, pmondriaan::hypergraph& H, int part);
+
+/**
+ * Compute the load imbalance of a hypergraph.
+ */
+double load_balance(pmondriaan::hypergraph& H, long k);
+
+/**
+ * Compute the global load imbalance of a distributed hypergraph.
  */
 double load_balance(bulk::world& world, pmondriaan::hypergraph& H, long k);
 

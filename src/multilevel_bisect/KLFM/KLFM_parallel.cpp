@@ -87,12 +87,13 @@ long KLFM_pass_par(bulk::world& world,
     init_previous_C(world, H, C, previous_C, cost_my_nets, net_partition);
 
     // Stores the proposed moves as: gain, weight change, processor id
-    auto moves_queue = bulk::queue<long, long, int>(world);
+    auto moves_queue = bulk::queue<long, long, int, long>(world);
     auto update_nets = bulk::queue<long, long>(world);
     bulk::var<long> rejected(world);
     bulk::var<long> new_weight_0(world);
     bulk::var<long> new_weight_1(world);
-    bulk::var<bool> done(world);
+    bulk::var<int> done(world);
+    done = 0;
 
     bool all_done = false;
     while (!all_done) {
@@ -101,14 +102,19 @@ long KLFM_pass_par(bulk::world& world,
         // Find best KLFM_par_number_send_moves moves
         // A move is stored as v_to_move, gain_v, weight change
         auto moves =
-        std::vector<std::tuple<long, long, long>>(opts.KLFM_par_number_send_moves);
+        std::vector<std::tuple<long, long, long>>(opts.KLFM_par_number_send_moves,
+                                                  std::make_tuple(-1, 0, 0));
         find_top_moves(H, gain_structure, moves, total_weights, max_weight_0,
                        max_weight_1, rng);
-        world.sync();
 
         // Send moves to processor 0
+        long tag = 0;
         for (auto& move : moves) {
-            moves_queue(0).send(std::get<1>(move), std::get<2>(move), s);
+            if (std::get<0>(move) == -1) {
+                break;
+            }
+            moves_queue(0).send(std::get<1>(move), std::get<2>(move), s, tag);
+            tag++;
         }
         world.sync();
 
@@ -127,8 +133,8 @@ long KLFM_pass_par(bulk::world& world,
 
         // We reverse moves that have not been selected
         auto index = moves.size() - 1;
-        if (rejected > 0) {
-            while (rejected != 0) {
+        if (rejected.value() > 0) {
+            while (rejected.value() != 0) {
                 if (std::get<2>(moves[index]) > 0) {
                     auto& vertex = H(H.local_id(std::get<0>(moves[index])));
                     H.move(vertex.id(), C);
@@ -137,7 +143,7 @@ long KLFM_pass_par(bulk::world& world,
                 index--;
             }
         } else {
-            while (rejected != 0) {
+            while (rejected.value() != 0) {
                 if (std::get<2>(moves[index]) < 0) {
                     auto& vertex = H(H.local_id(std::get<0>(moves[index])));
                     H.move(vertex.id(), C);
@@ -155,55 +161,9 @@ long KLFM_pass_par(bulk::world& world,
         }
         world.sync();
 
-        auto C_new = std::vector<std::vector<long>>(net_partition.local_count(s),
-                                                    std::vector<long>(2, 0));
-        for (auto i = 0u; i < net_partition.local_count(s); i++) {
-            C_new[i][0] = previous_C[2 * i];
-            C_new[i][1] = previous_C[(2 * i) + 1];
-        }
-        // Update the counts of my nets
-        for (const auto& [net, C_0] : update_nets) {
-            auto local = net_partition.local(net)[0];
-            auto change = C_0 - previous_C[2 * local];
-            if (change != 0) {
-                if ((C_new[local][0] == 0) || (C_new[local][1] == 0)) {
-                    cut_size_my_nets += cost_my_nets[net_partition.local(net)[0]];
-                }
-                C_new[local][0] += change;
-                C_new[local][1] -= change;
-                // TODO make sure we also adjust the gains here
-                if ((C_new[local][0] == 0) || (C_new[local][1] == 0)) {
-                    cut_size_my_nets -= cost_my_nets[net_partition.local(net)[0]];
-                }
-            }
-        }
-        for (auto i = 0u; i < net_partition.local_count(s); i++) {
-            previous_C[2 * i] = C_new[i][0];
-            previous_C[(2 * i) + 1] = C_new[i][1];
-        }
-
-        // Each processor uses a get to find the updated counts it needs.
-        auto future_counts = std::vector<bulk::future<long>>();
-        for (auto i = 0u; i < H.nets().size(); i++) {
-            auto net = H.nets()[i].id();
-            future_counts.push_back(
-            previous_C(net_partition.owner(net))[2 * net_partition.local(net)[0]]
-            .get());
-        }
-        world.sync();
-
-        // TODO: Update C and update gains
-        for (auto i = 0u; i < H.nets().size(); i++) {
-            if (future_counts[i].value() != C[i][0]) {
-                update_gains(H, H.nets()[i], C[i],
-                             std::vector<long>({future_counts[i].value(),
-                                                (long)H.nets()[i].global_size() -
-                                                future_counts[i].value()}),
-                             gain_structure);
-                C[i][0] = future_counts[i].value();
-                C[i][1] = H.nets()[i].global_size() - future_counts[i].value();
-            }
-        }
+        cut_size_my_nets =
+        update_C(world, H, C, previous_C, update_nets, net_partition,
+                 cost_my_nets, cut_size_my_nets, true, gain_structure);
 
         // We also send all processors the total cutsize of the nets this p is responsible for
         cut_size = bulk::sum(world, cut_size_my_nets);
@@ -218,15 +178,16 @@ long KLFM_pass_par(bulk::world& world,
         }
 
         if (gain_structure.done()) {
-            done = true;
+            done = 1;
         }
-        all_done =
-        bulk::foldl(done, [](auto& lhs, auto rhs) { lhs = (lhs && rhs); });
-        // all_done = true;
+        if (bulk::sum(done) == world.active_processors()) {
+            all_done = true;
+        }
     }
 
     // Reverse moves up to best point
     long weight_change = 0;
+    auto changed_nets = std::unordered_set<long>();
     for (auto v : no_improvement_moves) {
         auto& vertex = H(H.local_id(v));
         if (vertex.part() == 0) {
@@ -234,8 +195,20 @@ long KLFM_pass_par(bulk::world& world,
         } else {
             weight_change += vertex.weight();
         }
+        for (auto n : vertex.nets()) {
+            changed_nets.insert(n);
+        }
         H.move(v, C);
     }
+
+    // We send updates about counts in nets to responsible processors
+    for (auto n : changed_nets) {
+        update_nets(net_partition.owner(n)).send(n, C[H.local_id_net(n)][0]);
+    }
+    world.sync();
+    update_C(world, H, C, previous_C, update_nets, net_partition, cost_my_nets,
+             cut_size_my_nets, false, gain_structure);
+
     auto total_change = bulk::sum(world, weight_change);
     total_weights[0] += total_change;
     total_weights[1] -= total_change;
@@ -377,7 +350,7 @@ void find_top_moves(pmondriaan::hypergraph& H,
  * we have to move back vertices from part 0 to part 1 and negative otherwise.
  */
 std::vector<long> reject_unbalanced_moves(long p,
-                                          bulk::queue<long, long, int>& moves_queue,
+                                          bulk::queue<long, long, int, long>& moves_queue,
                                           std::array<long, 2>& total_weights,
                                           long max_weight_0,
                                           long max_weight_1) {
@@ -386,10 +359,16 @@ std::vector<long> reject_unbalanced_moves(long p,
     auto done = std::vector<bool>(p, false);
 
     // Sort queue on gain
-    std::sort(moves_queue.begin(), moves_queue.end());
+    std::sort(moves_queue.begin(), moves_queue.end(), [](auto lhs, auto rhs) {
+        if (std::get<0>(lhs) == std::get<0>(rhs)) {
+            return std::get<3>(lhs) > std::get<3>(rhs);
+        } else {
+            return std::get<0>(lhs) < std::get<0>(rhs);
+        }
+    });
     std::queue<std::pair<long, long>> received_moves;
     long total_balance = 0;
-    for (const auto& [gain, weight_change, t] : moves_queue) {
+    for (const auto& [gain, weight_change, t, tag] : moves_queue) {
         total_balance += weight_change;
         received_moves.push(std::make_pair(weight_change, t));
     }
@@ -431,6 +410,87 @@ std::vector<long> reject_unbalanced_moves(long p,
         received_moves.pop();
     }
     return rejected;
+}
+
+/**
+ * Updates the counts by communicating with the responsible processor, returns the new cutsize_my_nets.
+ */
+long update_C(bulk::world& world,
+              pmondriaan::hypergraph& H,
+              std::vector<std::vector<long>>& C,
+              bulk::coarray<long>& previous_C,
+              bulk::queue<long, long>& update_nets,
+              bulk::partitioning<1>& net_partition,
+              bulk::coarray<long>& cost_my_nets,
+              long cut_size_my_nets,
+              bool update_g,
+              pmondriaan::gain_structure& gain_structure) {
+    auto s = world.rank();
+    auto C_new = std::vector<std::vector<long>>(net_partition.local_count(s),
+                                                std::vector<long>(2, 0));
+    for (auto i = 0u; i < net_partition.local_count(s); i++) {
+        C_new[i][0] = previous_C[2 * i];
+        C_new[i][1] = previous_C[(2 * i) + 1];
+    }
+    // Update the counts of my nets
+    for (const auto& [net, C_0] : update_nets) {
+        auto local = net_partition.local(net)[0];
+        auto change = C_0 - previous_C[2 * local];
+        if (change != 0) {
+            if ((C_new[local][0] == 0) || (C_new[local][1] == 0)) {
+                cut_size_my_nets += cost_my_nets[net_partition.local(net)[0]];
+            }
+            C_new[local][0] += change;
+            C_new[local][1] -= change;
+            // TODO make sure we also adjust the gains here
+            if ((C_new[local][0] == 0) || (C_new[local][1] == 0)) {
+                cut_size_my_nets -= cost_my_nets[net_partition.local(net)[0]];
+            }
+        }
+    }
+    for (auto i = 0u; i < net_partition.local_count(s); i++) {
+        previous_C[2 * i] = C_new[i][0];
+        previous_C[(2 * i) + 1] = C_new[i][1];
+    }
+
+    // Each processor uses a get to find the updated counts it needs.
+    auto future_counts = std::vector<bulk::future<long>>();
+    for (auto i = 0u; i < H.nets().size(); i++) {
+        auto net = H.nets()[i].id();
+        future_counts.push_back(
+        previous_C(net_partition.owner(net))[2 * net_partition.local(net)[0]].get());
+    }
+    world.sync();
+
+    if (update_g) {
+        for (auto i = 0u; i < H.nets().size(); i++) {
+            if (future_counts[i].value() != C[i][0]) {
+                update_gains(H, H.nets()[i], C[i],
+                             std::vector<long>({future_counts[i].value(),
+                                                (long)H.nets()[i].global_size() -
+                                                future_counts[i].value()}),
+                             gain_structure);
+            }
+        }
+    }
+    for (auto i = 0u; i < H.nets().size(); i++) {
+        C[i][0] = future_counts[i].value();
+        C[i][1] = H.nets()[i].global_size() - future_counts[i].value();
+    }
+    return cut_size_my_nets;
+}
+
+// For testing purposes
+void check_C(bulk::world& world, pmondriaan::hypergraph& H, std::vector<std::vector<long>>& C) {
+    auto correct_C = init_counts(world, H);
+    for (auto i = 0u; i < C.size(); i++) {
+        if (C[i][0] != correct_C[i][0]) {
+            world.log("s %d: C[%d][0] incorrect", world.rank(), i);
+        }
+        if (C[i][1] != correct_C[i][1]) {
+            world.log("s %d: C[%d][1] incorrect", world.rank(), i);
+        }
+    }
 }
 
 } // namespace pmondriaan

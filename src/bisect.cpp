@@ -183,6 +183,10 @@ std::vector<long> bisect_multilevel(bulk::world& world,
 
     world.log("s: %d, time in initial partitioning: %lf", world.rank(), time.get_change());
 
+    world.log("cut after initial partitioning: %d, epsilon: %lf",
+              pmondriaan::cutsize(HC_list[nc_tot], opts.metric),
+              load_balance(HC_list[nc_tot], 2));
+
     while (nc_tot > nc_par) {
         nc_tot--;
         cut = pmondriaan::uncoarsen_hypergraph_seq(world, HC_list[nc_tot + 1],
@@ -202,6 +206,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         // the processor that has found the best solution now sends the labels to all others
         auto label_queue = bulk::queue<long, long>(world);
         if (world.rank() == best_proc) {
+            cut_size.broadcast(cut);
             for (auto& v : HC_list[nc_par].vertices()) {
                 for (long t = 0; t < world.active_processors(); t++) {
                     label_queue(t).send(v.id(), v.part());
@@ -216,13 +221,24 @@ std::vector<long> bisect_multilevel(bulk::world& world,
             }
         }
 
+        cut = cut_size;
+
         time.get();
         while (nc_par > 0) {
             nc_par--;
-            pmondriaan::uncoarsen_hypergraph(world, HC_list[nc_par + 1],
-                                             HC_list[nc_par], C_list[nc_par]);
+
+            world.log("Cut before KLFM: %ld", cut);
+            cut = pmondriaan::uncoarsen_hypergraph_par(world, HC_list[nc_par + 1],
+                                                       HC_list[nc_par], C_list[nc_par],
+                                                       opts, max_weight_0,
+                                                       max_weight_1, cut, rng);
+
+            world.log("Cut after KLFM: %ld", cut);
             world.log("s: %d, time in iteration par uncoarsening: %lf",
                       world.rank(), time.get_change());
+            world.log("cut after par uncoarsening: %d, epsilon: %lf",
+                      pmondriaan::cutsize(HC_list[nc_par], opts.metric),
+                      load_balance(world, HC_list[nc_par], 2));
         }
     }
 

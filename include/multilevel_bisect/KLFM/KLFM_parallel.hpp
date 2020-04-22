@@ -79,9 +79,26 @@ void find_top_moves(pmondriaan::hypergraph& H,
  * we have to move back vertices from part 0 to part 1 and positive otherwise.
  */
 std::vector<long> reject_unbalanced_moves(long p,
-                                          bulk::queue<long, long, int>& moves_queue,
+                                          bulk::queue<long, long, int, long>& moves_queue,
                                           std::array<long, 2>& total_weights,
                                           long max_weight_0,
                                           long max_weight_1);
+
+/**
+ * Updates the counts by communicating with the responsible processor, returns the new cutsize_my_nets.
+ */
+long update_C(bulk::world& world,
+              pmondriaan::hypergraph& H,
+              std::vector<std::vector<long>>& C,
+              bulk::coarray<long>& previous_C,
+              bulk::queue<long, long>& update_nets,
+              bulk::partitioning<1>& net_partition,
+              bulk::coarray<long>& cost_my_nets,
+              long cut_size_my_nets,
+              bool update_g,
+              pmondriaan::gain_structure& gain_structure);
+
+// For testing purposes
+void check_C(bulk::world& world, pmondriaan::hypergraph& H, std::vector<std::vector<long>>& C);
 
 } // namespace pmondriaan

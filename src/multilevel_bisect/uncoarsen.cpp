@@ -12,6 +12,7 @@
 #include "hypergraph/contraction.hpp"
 #include "hypergraph/hypergraph.hpp"
 #include "multilevel_bisect/KLFM/KLFM.hpp"
+#include "multilevel_bisect/KLFM/KLFM_parallel.hpp"
 #include "multilevel_bisect/uncoarsen.hpp"
 
 namespace pmondriaan {
@@ -67,6 +68,27 @@ long uncoarsen_hypergraph_seq(bulk::world& world,
     auto counts = pmondriaan::init_counts(H);
     return KLFM(H, counts, H.weight_part(0), H.weight_part(1), max_weight_0,
                 max_weight_1, opts, rng);
+}
+
+/**
+ * Uncoarsens the hypergraph HC into the hypergraph H.
+ * The cutsize is then optimized using the parallel KLFM algorithm. Returns
+ * the cutsize of the partitioning found.
+ */
+long uncoarsen_hypergraph_par(bulk::world& world,
+                              pmondriaan::hypergraph& HC,
+                              pmondriaan::hypergraph& H,
+                              pmondriaan::contraction& C,
+                              pmondriaan::options& opts,
+                              long max_weight_0,
+                              long max_weight_1,
+                              long cut_size,
+                              std::mt19937& rng) {
+    uncoarsen_hypergraph(world, HC, H, C);
+    auto counts = pmondriaan::init_counts(world, H);
+    return KLFM_par(world, H, counts, global_weight_part(world, H, 0),
+                    global_weight_part(world, H, 1), max_weight_0, max_weight_1,
+                    opts, rng, cut_size);
 }
 
 } // namespace pmondriaan

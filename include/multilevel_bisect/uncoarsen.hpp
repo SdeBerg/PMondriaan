@@ -36,4 +36,19 @@ long uncoarsen_hypergraph_seq(bulk::world& world,
                               long cut_size,
                               std::mt19937& rng);
 
+/**
+ * Uncoarsens the hypergraph HC into the hypergraph H.
+ * The cutsize is then optimized using the parallel KLFM algorithm. Returns
+ * the cutsize of the partitioning found.
+ */
+long uncoarsen_hypergraph_par(bulk::world& world,
+                              pmondriaan::hypergraph& HC,
+                              pmondriaan::hypergraph& H,
+                              pmondriaan::contraction& C,
+                              pmondriaan::options& opts,
+                              long max_weight_0,
+                              long max_weight_1,
+                              long cut_size,
+                              std::mt19937& rng);
+
 } // namespace pmondriaan

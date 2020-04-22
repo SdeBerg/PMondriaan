@@ -30,7 +30,7 @@ long initial_partitioning(pmondriaan::hypergraph& H,
     auto L_best = std::vector<long>(H.size());
     long best_cut = std::numeric_limits<long>::max();
     auto time = bulk::util::timer();
-    for (long i = 0; i < 10; i++) {
+    for (long i = 0; i < 1; i++) {
         time.get();
         // counts of all labels for each net
         auto C =

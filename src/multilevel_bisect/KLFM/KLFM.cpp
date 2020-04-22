@@ -1,5 +1,5 @@
 #include <array>
-#include <limits.h>
+#include <limits>
 #include <random>
 
 #include <bulk/bulk.hpp>
@@ -30,7 +30,7 @@ long KLFM(pmondriaan::hypergraph& H,
 
     size_t pass = 0;
     long prev_cut_size;
-    if (cut_size == LONG_MAX) {
+    if (cut_size == std::numeric_limits<long>::max()) {
         prev_cut_size = pmondriaan::cutsize(H, opts.metric);
     } else {
         prev_cut_size = cut_size;
