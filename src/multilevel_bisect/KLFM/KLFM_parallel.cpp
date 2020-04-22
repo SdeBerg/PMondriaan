@@ -371,6 +371,8 @@ std::vector<long> reject_unbalanced_moves(long p,
     for (const auto& [gain, weight_change, t, tag] : moves_queue) {
         total_balance += weight_change;
         received_moves.push(std::make_pair(weight_change, t));
+        (void)gain;
+        (void)tag;
     }
     total_weights[0] += total_balance;
     total_weights[1] -= total_balance;
