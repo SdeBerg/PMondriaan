@@ -28,10 +28,13 @@ long contraction::remove_free_vertices_(pmondriaan::hypergraph& H) {
     long total_weight = 0;
     for (auto& v : H.vertices()) {
         if (v.degree() == 0) {
+            std::cout << "Add free vertex " << v.id() << "\n";
             add_free_vertex_(v.id(), v.weight());
             total_weight += v.weight();
-            H.remove_free_vertex(v.id());
         }
+    }
+    for (auto free_vertex : free_vertices_) {
+        H.remove_free_vertex(free_vertex.first);
     }
     return total_weight;
 }

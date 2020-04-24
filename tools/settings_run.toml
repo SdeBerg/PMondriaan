@@ -1,4 +1,4 @@
-file="../test/data/matrices/conf5_0-4x4-10/conf5_0-4x4-10.mtx"
+file="../test/data/matrices/mhd4800b/mhd4800b.mtx"
 processors=1
 parts=2
 eps=0.03
@@ -11,6 +11,6 @@ sample_size=200
 max_cluster_size=400
 lp_max_iter=100
 coarsening_nrvertices=800
-coarsening_max_rounds=100
+coarsening_max_rounds=20
 KLFM_max_passes=100
 KLFM_par_send_moves=100

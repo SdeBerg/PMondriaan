@@ -51,6 +51,9 @@ std::vector<long> hypergraph::weight_all_parts(long k) {
     auto total = std::vector<long>(k);
     for (auto v : vertices_) {
         total[v.part()] += v.weight();
+        if (v.part() == -1) {
+            std::cout << "vertex " << v.id() << " has no part assigned yet!\n";
+        }
     }
     return total;
 }
@@ -258,11 +261,19 @@ double load_balance(bulk::world& world, pmondriaan::hypergraph& H, long k) {
         weight_parts_coar[i] = weight_parts[i];
     }
 
-    long global_weight = pmondriaan::global_weight(world, H);
+    auto global_weight = pmondriaan::global_weight(world, H);
 
     // compute the global part weights
     weight_parts =
     bulk::foldl_each(weight_parts_coar, [](auto& lhs, auto rhs) { lhs += rhs; });
+
+    long sum_weight_parts = 0;
+    for (auto w : weight_parts) {
+        sum_weight_parts += w;
+    }
+    if (sum_weight_parts != global_weight) {
+        world.log("Global weight not equal to sum of part weights!");
+    }
 
     // we compute the global part with largest weight
     long max_weight_part = *std::max_element(weight_parts.begin(), weight_parts.end());
