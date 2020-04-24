@@ -95,6 +95,14 @@ std::vector<long> bisect_multilevel(bulk::world& world,
     auto HC_list = std::vector<pmondriaan::hypergraph>{H_reduced};
     auto C_list = std::vector<pmondriaan::contraction>();
 
+    C_list.push_back({});
+    if (world.active_processors() > 1) {
+        C_list[0].merge_free_vertices(world, HC_list[0]);
+    } else {
+        C_list[0].merge_free_vertices(HC_list[0]);
+    }
+
+
     auto time = bulk::util::timer();
 
     if (world.active_processors() > 1) {
@@ -106,7 +114,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                (nc_par < opts.coarsening_maxrounds)) {
             C_list.push_back({});
             HC_list.push_back(coarsen_hypergraph_par(world, HC_list[nc_par],
-                                                     C_list[nc_par], opts, rng));
+                                                     C_list[nc_par + 1], opts, rng));
             nc_par++;
             world.log("After iteration %d, size is %d (par)", nc_par,
                       HC_list[nc_par].global_size());
@@ -161,13 +169,19 @@ std::vector<long> bisect_multilevel(bulk::world& world,
     time.get();
 
     auto nc_tot = nc_par;
+    auto max_rounds = opts.coarsening_maxrounds;
+    if (world.active_processors() > 1) {
+        max_rounds++;
+    }
+    world.log("size %d greater than %d", HC_list[nc_tot].global_size(),
+              opts.coarsening_nrvertices);
     while ((HC_list[nc_tot].global_size() > opts.coarsening_nrvertices) &&
-           (nc_tot - 1 < opts.coarsening_maxrounds)) {
-        C_list.push_back(pmondriaan::contraction());
+           (nc_tot < max_rounds)) {
+        C_list.push_back({});
         time.get();
 
         HC_list.push_back(coarsen_hypergraph_seq(world, HC_list[nc_tot],
-                                                 C_list[nc_tot], opts, rng));
+                                                 C_list[nc_tot + 1], opts, rng));
 
         world.log("s: %d, time in iteration seq coarsening: %lf", world.rank(),
                   time.get_change());
@@ -189,10 +203,10 @@ std::vector<long> bisect_multilevel(bulk::world& world,
 
     while (nc_tot > nc_par) {
         nc_tot--;
-        cut = pmondriaan::uncoarsen_hypergraph_seq(world, HC_list[nc_tot + 1],
-                                                   HC_list[nc_tot], C_list[nc_tot],
-                                                   opts, max_weight_0,
-                                                   max_weight_1, cut, rng);
+        cut =
+        pmondriaan::uncoarsen_hypergraph_seq(world, HC_list[nc_tot + 1],
+                                             HC_list[nc_tot], C_list[nc_tot + 1], opts,
+                                             max_weight_0, max_weight_1, cut, rng);
         world.log("s: %d, time in iteration seq uncoarsening: %lf",
                   world.rank(), time.get_change());
     }
@@ -229,8 +243,8 @@ std::vector<long> bisect_multilevel(bulk::world& world,
 
             world.log("Cut before KLFM: %ld", cut);
             cut = pmondriaan::uncoarsen_hypergraph_par(world, HC_list[nc_par + 1],
-                                                       HC_list[nc_par], C_list[nc_par],
-                                                       opts, max_weight_0,
+                                                       HC_list[nc_par],
+                                                       C_list[nc_par + 1], opts, max_weight_0,
                                                        max_weight_1, cut, rng);
 
             world.log("Cut after KLFM: %ld", cut);
@@ -240,6 +254,12 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                       pmondriaan::cutsize(HC_list[nc_par], opts.metric),
                       load_balance(world, HC_list[nc_par], 2));
         }
+    }
+
+    if (world.active_processors() > 1) {
+        C_list[0].assign_free_vertices(world, HC_list[0], max_weight_0, max_weight_1, rng);
+    } else {
+        C_list[0].assign_free_vertices(HC_list[0], max_weight_0, max_weight_1, rng);
     }
 
     for (auto& v : HC_list[0].vertices()) {

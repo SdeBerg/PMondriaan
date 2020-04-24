@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <iostream>
+#include <random>
 #include <unordered_set>
 #include <vector>
 
@@ -54,6 +55,12 @@ std::vector<long> hypergraph::weight_all_parts(long k) {
     return total;
 }
 
+// add a vertex
+void hypergraph::add_vertex(long id, std::vector<long> nets, long weight) {
+    vertices_.push_back(pmondriaan::vertex(id, nets, weight));
+    global_to_local[id] = (long)vertices_.size() - 1;
+}
+
 // add a net if it does not exist yet
 void hypergraph::add_net(long id, std::vector<long> vertices, long cost) {
     if (net_global_to_local.count(id) == 0) {
@@ -79,12 +86,20 @@ void hypergraph::remove_from_nets(long id) {
     }
 }
 
+// removes a free vertex from the vertex list
+void hypergraph::remove_free_vertex(long id) {
+    auto index = global_to_local[id];
+    std::iter_swap(vertices_.begin() + index, vertices_.end() - 1);
+    vertices().pop_back();
+    global_to_local.insert_or_assign(vertices_[index].id(), index);
+    global_to_local.erase(id);
+}
+
 // removes a net and the net from all net lists of vertices
 void hypergraph::remove_net_by_index(long index) {
     long id = nets_[index].id();
     for (auto& v : nets_[index].vertices()) {
         vertices_[local_id(v)].remove_net(id);
-        // std::cout << "removed from vertex " << v << "\n";
     }
     std::iter_swap(nets_.begin() + index, nets_.end() - 1);
     nets_.pop_back();
@@ -196,6 +211,13 @@ std::vector<std::vector<long>> init_counts(bulk::world& world, pmondriaan::hyper
 }
 
 /**
+ * Recompute the global size of a hypergraph.
+ */
+void recompute_global_size(bulk::world& world, pmondriaan::hypergraph& H) {
+    H.set_global_size(bulk::sum(world, H.size()));
+}
+
+/**
  * Compute the global weight of a hypergraph.
  */
 long global_weight(bulk::world& world, pmondriaan::hypergraph& H) {
@@ -222,7 +244,6 @@ double load_balance(pmondriaan::hypergraph& H, long k) {
     long max_weight_part = *std::max_element(weight_parts.begin(), weight_parts.end());
     double eps = ((double)(max_weight_part * k) / (double)H.total_weight()) - 1.0;
     return eps;
-    return 0;
 }
 
 /**
@@ -406,6 +427,8 @@ void remove_free_nets(pmondriaan::hypergraph& H) {
     for (auto n = 0u; n < H.nets().size(); n++) {
         if (H.nets()[n].size() <= 1) {
             H.remove_net_by_index(n);
+        } else {
+            H.nets()[n].set_global_size(H.nets()[n].size());
         }
     }
 }

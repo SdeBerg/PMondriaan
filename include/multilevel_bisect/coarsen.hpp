@@ -48,6 +48,7 @@ void send_information_matches(pmondriaan::hypergraph& H,
 
 pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
                                            pmondriaan::hypergraph& H,
+                                           pmondriaan::contraction& C,
                                            const std::vector<long> samples,
                                            bulk::queue<long, long, long[], long[]>& matches,
                                            std::vector<bool>& matched);

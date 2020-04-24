@@ -33,7 +33,7 @@ class match {
  */
 class contraction {
   public:
-    contraction() {}
+    contraction() { global_free_weight_ = 0; }
 
     void add_sample(long id_sample) {
         ids_samples_.push_back(id_sample);
@@ -53,16 +53,50 @@ class contraction {
         matches_[sample].push_back(pmondriaan::match(match, proc));
     }
 
+    void merge_free_vertices(bulk::world& world, pmondriaan::hypergraph& H);
+    void merge_free_vertices(pmondriaan::hypergraph& H);
+
+    /**
+     * Assign the free vertices greedily to optimize the weight balance. Returns
+     * the weights of the parts.
+     */
+    std::vector<long> assign_free_vertices(pmondriaan::hypergraph& H,
+                                           long max_weight_0,
+                                           long max_weight_1,
+                                           std::mt19937& rng);
+
+    /**
+     * Assign the free vertices greedily to optimize the weight balance. Returns
+     * the weights of the parts.
+     */
+    std::vector<long> assign_free_vertices(bulk::world& world,
+                                           pmondriaan::hypergraph& H,
+                                           long max_weight_0,
+                                           long max_weight_1,
+                                           std::mt19937& rng) {
+        return std::vector<long>();
+    }
+
     auto& matches(long sample) { return matches_[sample]; }
 
     long id_sample(long i) { return ids_samples_[i]; }
 
-    size_t size() { return ids_samples_.size(); }
+    auto& free_vertices() { return free_vertices_; }
 
+    long global_free_weight() { return global_free_weight_; }
+
+    size_t size() { return ids_samples_.size(); }
 
   private:
     std::vector<long> ids_samples_;
     std::vector<std::vector<pmondriaan::match>> matches_;
+    std::vector<std::pair<long, long>> free_vertices_;
+    long global_free_weight_;
+
+    void add_free_vertex_(long id, long weight) {
+        free_vertices_.push_back(std::make_pair(id, weight));
+    }
+    long remove_free_vertices_(pmondriaan::hypergraph& H);
 };
 
 

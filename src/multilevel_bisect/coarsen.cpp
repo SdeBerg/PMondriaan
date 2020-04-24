@@ -62,7 +62,8 @@ pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
     pmondriaan::send_information_matches(H, accepted_matches, info_queue,
                                          matched, opts.sample_size);
 
-    auto HC = pmondriaan::contract_hypergraph(world, H, indices_samples, info_queue, matched);
+    auto HC =
+    pmondriaan::contract_hypergraph(world, H, C, indices_samples, info_queue, matched);
     return HC;
 }
 
@@ -216,6 +217,7 @@ void send_information_matches(pmondriaan::hypergraph& H,
 
 pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
                                            pmondriaan::hypergraph& H,
+                                           pmondriaan::contraction& C,
                                            const std::vector<long> samples,
                                            bulk::queue<long, long, long[], long[]>& matches,
                                            std::vector<bool>& matched) {
@@ -287,8 +289,8 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
         }
     }
 
-    pmondriaan::global_net_sizes(world, HC);
     remove_free_nets(world, HC);
+    C.merge_free_vertices(world, HC);
 
     return HC;
 }
@@ -407,12 +409,8 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
     }
 
     remove_free_nets(HC);
-
-    for (auto& net : HC.nets()) {
-        net.set_global_size(net.size());
-    }
-
+    C.merge_free_vertices(HC);
     return HC;
-} // namespace pmondriaan
+}
 
 } // namespace pmondriaan

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <random>
 #include <unordered_map>
 #include <vector>
 
@@ -119,6 +120,9 @@ class hypergraph {
     // computes the weights of all parts upto k
     std::vector<long> weight_all_parts(long k);
 
+    // add a vertex
+    void add_vertex(long id, std::vector<long> nets, long weight = 1);
+
     // add a net if it does not exist yet
     void add_net(long id, std::vector<long> vertices, long cost = 1);
 
@@ -127,6 +131,9 @@ class hypergraph {
 
     // removes vertex id from all nets
     void remove_from_nets(long id);
+
+    // removes a free vertex from the vertex list
+    void remove_free_vertex(long id);
 
     // removes a net and the net from all net lists of vertices
     void remove_net_by_index(long index);
@@ -152,6 +159,7 @@ class hypergraph {
         return (global_to_local.count(global_id) > 0);
     }
 
+    void set_global_size(size_t size) { global_size_ = size; }
     void set_global_net_sizes(std::vector<size_t>& sizes);
 
     std::vector<pmondriaan::vertex>& vertices() { return vertices_; }
@@ -191,6 +199,11 @@ std::vector<std::vector<long>> init_counts(pmondriaan::hypergraph& H);
  * Initialize the counts for parts 0,1 for a parallel hypergraph.
  */
 std::vector<std::vector<long>> init_counts(bulk::world& world, pmondriaan::hypergraph& H);
+
+/**
+ * Recompute the global size of a hypergraph.
+ */
+void recompute_global_size(bulk::world& world, pmondriaan::hypergraph& H);
 
 /**
  * Compute the global weight of a hypergraph.

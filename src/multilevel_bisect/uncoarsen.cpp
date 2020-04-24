@@ -25,7 +25,7 @@ void uncoarsen_hypergraph(bulk::world& world,
                           pmondriaan::hypergraph& H,
                           pmondriaan::contraction& C) {
 
-    /* The part_queue will contain the vertex and the part is has been assigned to in the uncoarsened hypergraph */
+    // The part_queue will contain the vertex and the part is has been assigned to in the uncoarsened hypergraph
     auto part_queue = bulk::queue<long, long>(world);
 
     for (auto& v : HC.vertices()) {
@@ -64,9 +64,11 @@ long uncoarsen_hypergraph_seq(bulk::world& world,
                               long max_weight_1,
                               long cut_size,
                               std::mt19937& rng) {
+    // We first assign the free vertices of HC greedily such that the imbalance is minimized
+    auto new_weights = C.assign_free_vertices(HC, max_weight_0, max_weight_1, rng);
     uncoarsen_hypergraph(world, HC, H, C);
     auto counts = pmondriaan::init_counts(H);
-    return KLFM(H, counts, H.weight_part(0), H.weight_part(1), max_weight_0,
+    return KLFM(H, counts, new_weights[0], new_weights[1], max_weight_0,
                 max_weight_1, opts, rng);
 }
 
@@ -84,11 +86,12 @@ long uncoarsen_hypergraph_par(bulk::world& world,
                               long max_weight_1,
                               long cut_size,
                               std::mt19937& rng) {
+    // We first assign the free vertices of HC greedily such that the imbalance is minimized
+    auto new_weights = C.assign_free_vertices(world, HC, max_weight_0, max_weight_1, rng);
     uncoarsen_hypergraph(world, HC, H, C);
     auto counts = pmondriaan::init_counts(world, H);
-    return KLFM_par(world, H, counts, global_weight_part(world, H, 0),
-                    global_weight_part(world, H, 1), max_weight_0, max_weight_1,
-                    opts, rng, cut_size);
+    return KLFM_par(world, H, counts, new_weights[0], new_weights[1],
+                    max_weight_0, max_weight_1, opts, rng, cut_size);
 }
 
 } // namespace pmondriaan

@@ -11,6 +11,7 @@ set(LIB_SOURCES
   "src/hypergraph/readhypergraph.cpp"
   "src/bisect.cpp"
   "src/hypergraph/hypergraph.cpp"
+  "src/hypergraph/contraction.cpp"
   "src/recursive_bisection.cpp"
   "src/multilevel_bisect/sample.cpp"
   "src/multilevel_bisect/coarsen.cpp"
