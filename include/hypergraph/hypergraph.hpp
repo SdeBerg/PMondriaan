@@ -216,6 +216,11 @@ long global_weight(bulk::world& world, pmondriaan::hypergraph& H);
 long global_weight_part(bulk::world& world, pmondriaan::hypergraph& H, int part);
 
 /**
+ * Compute the global weight of all parts up to k of a hypergraph.
+ */
+std::vector<long> global_weight_parts(bulk::world& world, pmondriaan::hypergraph& H, long k);
+
+/**
  * Compute the load imbalance of a hypergraph.
  */
 double load_balance(pmondriaan::hypergraph& H, long k);

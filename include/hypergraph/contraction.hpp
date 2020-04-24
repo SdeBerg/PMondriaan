@@ -73,9 +73,7 @@ class contraction {
                                            pmondriaan::hypergraph& H,
                                            long max_weight_0,
                                            long max_weight_1,
-                                           std::mt19937& rng) {
-        return std::vector<long>();
-    }
+                                           std::mt19937& rng);
 
     auto& matches(long sample) { return matches_[sample]; }
 
@@ -91,12 +89,23 @@ class contraction {
     std::vector<long> ids_samples_;
     std::vector<std::vector<pmondriaan::match>> matches_;
     std::vector<std::pair<long, long>> free_vertices_;
+    long local_free_weight_;
     long global_free_weight_;
 
     void add_free_vertex_(long id, long weight) {
         free_vertices_.push_back(std::make_pair(id, weight));
     }
     long remove_free_vertices_(pmondriaan::hypergraph& H);
+    void assign_all_vertices_(pmondriaan::hypergraph& H, long part);
+
+    /**
+     * Assign  the free vertices greedily to optimize the weight balance.
+     */
+    void assign_free_vertices_(pmondriaan::hypergraph& H,
+                               std::vector<long>& weight_parts,
+                               long max_weight_0,
+                               long max_weight_1,
+                               std::mt19937& rng);
 };
 
 

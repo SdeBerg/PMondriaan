@@ -51,9 +51,6 @@ std::vector<long> hypergraph::weight_all_parts(long k) {
     auto total = std::vector<long>(k);
     for (auto v : vertices_) {
         total[v.part()] += v.weight();
-        if (v.part() == -1) {
-            std::cout << "vertex " << v.id() << " has no part assigned yet!\n";
-        }
     }
     return total;
 }
@@ -217,7 +214,8 @@ std::vector<std::vector<long>> init_counts(bulk::world& world, pmondriaan::hyper
  * Recompute the global size of a hypergraph.
  */
 void recompute_global_size(bulk::world& world, pmondriaan::hypergraph& H) {
-    H.set_global_size(bulk::sum(world, H.size()));
+    auto new_size = bulk::sum(world, H.size());
+    H.set_global_size(new_size);
 }
 
 /**
@@ -238,6 +236,19 @@ long global_weight_part(bulk::world& world, pmondriaan::hypergraph& H, int part)
     return global_weight;
 }
 
+std::vector<long> global_weight_parts(bulk::world& world, pmondriaan::hypergraph& H, long k) {
+    auto weight_parts_coar = bulk::coarray<long>(world, k);
+    auto weight_parts = H.weight_all_parts(k);
+    world.log("s %d: weight part 0: %d, weight part 1: %d", world.rank(),
+              weight_parts[0], weight_parts[1]);
+    for (long i = 0; i < k; i++) {
+        weight_parts_coar[i] = weight_parts[i];
+    }
+    weight_parts =
+    bulk::foldl_each(weight_parts_coar, [](auto& lhs, auto rhs) { lhs += rhs; });
+    return weight_parts;
+}
+
 /**
  * Compute the load imbalance of a hypergraph.
  */
@@ -253,26 +264,15 @@ double load_balance(pmondriaan::hypergraph& H, long k) {
  * Compute the global load imbalance of a hypergraph split into k parts.
  */
 double load_balance(bulk::world& world, pmondriaan::hypergraph& H, long k) {
-
-    auto weight_parts_coar = bulk::coarray<long>(world, k);
-    auto weight_parts = H.weight_all_parts(k);
-
-    for (long i = 0; i < k; i++) {
-        weight_parts_coar[i] = weight_parts[i];
-    }
-
+    auto weight_parts = global_weight_parts(world, H, k);
     auto global_weight = pmondriaan::global_weight(world, H);
-
-    // compute the global part weights
-    weight_parts =
-    bulk::foldl_each(weight_parts_coar, [](auto& lhs, auto rhs) { lhs += rhs; });
 
     long sum_weight_parts = 0;
     for (auto w : weight_parts) {
         sum_weight_parts += w;
     }
     if (sum_weight_parts != global_weight) {
-        world.log("Global weight not equal to sum of part weights!");
+        std::cerr << "Global weight not equal to sum of part weights!";
     }
 
     // we compute the global part with largest weight

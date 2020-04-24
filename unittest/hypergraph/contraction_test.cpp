@@ -44,5 +44,25 @@ TEST(Contraction, MergeFreeVertices) {
     ASSERT_EQ(result[1], 2);
 }
 
+TEST(Contraction, ParallelMergeFreeVertices) {
+    environment env;
+    env.spawn(2, [](bulk::world& world) {
+        std::stringstream mtx_ss(test_mtx);
+        auto hypergraph = read_hypergraph_istream(mtx_ss, world, "one");
+        auto H = hypergraph.value();
+        ASSERT_EQ(H.global_size(), 4);
+        auto C = pmondriaan::contraction();
+        C.merge_free_vertices(world, H);
+        ASSERT_EQ(H.global_size(), 3);
+        H(0).set_part(0);
+        H(1).set_part(1);
+        H(2).set_part(0);
+        std::mt19937 rng(1);
+        auto result = C.assign_free_vertices(world, H, 3, 3, rng);
+        ASSERT_EQ(result[0], 2);
+        ASSERT_EQ(result[1], 2);
+    });
+}
+
 } // namespace
 } // namespace pmondriaan

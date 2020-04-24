@@ -78,11 +78,11 @@ void find_top_moves(pmondriaan::hypergraph& H,
  * Return the number of rejected moves for each processor. This is positive when
  * we have to move back vertices from part 0 to part 1 and positive otherwise.
  */
-std::vector<long> reject_unbalanced_moves(long p,
-                                          bulk::queue<long, long, int, long>& moves_queue,
-                                          std::array<long, 2>& total_weights,
-                                          long max_weight_0,
-                                          long max_weight_1);
+long reject_unbalanced_moves(bulk::world& world,
+                             bulk::queue<long, long, int, long>& moves_queue,
+                             std::array<long, 2>& total_weights,
+                             long max_weight_0,
+                             long max_weight_1);
 
 /**
  * Updates the counts by communicating with the responsible processor, returns the new cutsize_my_nets.

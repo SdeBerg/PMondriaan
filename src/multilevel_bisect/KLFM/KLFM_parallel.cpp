@@ -89,7 +89,6 @@ long KLFM_pass_par(bulk::world& world,
     // Stores the proposed moves as: gain, weight change, processor id
     auto moves_queue = bulk::queue<long, long, int, long>(world);
     auto update_nets = bulk::queue<long, long>(world);
-    bulk::var<long> rejected(world);
     bulk::var<long> new_weight_0(world);
     bulk::var<long> new_weight_1(world);
     bulk::var<int> done(world);
@@ -113,28 +112,22 @@ long KLFM_pass_par(bulk::world& world,
             if (std::get<0>(move) == -1) {
                 break;
             }
-            moves_queue(0).send(std::get<1>(move), std::get<2>(move), s, tag);
+            for (auto t = 0; t < p; t++) {
+                moves_queue(t).send(std::get<1>(move), std::get<2>(move), s, tag);
+            }
             tag++;
         }
         world.sync();
 
-        if (s == 0) {
-            auto rejected_all = reject_unbalanced_moves(p, moves_queue, prev_total_weights,
-                                                        max_weight_0, max_weight_1);
-            for (auto t = 0; t < p; t++) {
-                rejected(t) = rejected_all[t];
-            }
-            new_weight_0.broadcast(prev_total_weights[0]);
-            new_weight_1.broadcast(prev_total_weights[1]);
-        }
-        world.sync();
-        total_weights[0] = new_weight_0.value();
-        total_weights[1] = new_weight_1.value();
+        auto rejected = reject_unbalanced_moves(world, moves_queue, prev_total_weights,
+                                                max_weight_0, max_weight_1);
+        total_weights[0] = prev_total_weights[0];
+        total_weights[1] = prev_total_weights[1];
 
         // We reverse moves that have not been selected
         auto index = moves.size() - 1;
-        if (rejected.value() > 0) {
-            while (rejected.value() != 0) {
+        if (rejected > 0) {
+            while (rejected != 0) {
                 if (std::get<2>(moves[index]) > 0) {
                     auto& vertex = H(H.local_id(std::get<0>(moves[index])));
                     H.move(vertex.id(), C);
@@ -143,7 +136,7 @@ long KLFM_pass_par(bulk::world& world,
                 index--;
             }
         } else {
-            while (rejected.value() != 0) {
+            while (rejected != 0) {
                 if (std::get<2>(moves[index]) < 0) {
                     auto& vertex = H(H.local_id(std::get<0>(moves[index])));
                     H.move(vertex.id(), C);
@@ -214,7 +207,7 @@ long KLFM_pass_par(bulk::world& world,
     total_weights[1] -= total_change;
 
     return best_cut_size;
-}
+} // namespace pmondriaan
 
 /**
  * Initializes the previous_C counts using communication and return the cutsize
@@ -346,14 +339,15 @@ void find_top_moves(pmondriaan::hypergraph& H,
 
 /**
  * Determines how many moves from part 0 or 1 should be rejected on each processor.
- * Return the number of rejected moves for each processor. This is positive when
+ * Return the number of rejected moves for this processor. This is positive when
  * we have to move back vertices from part 0 to part 1 and negative otherwise.
  */
-std::vector<long> reject_unbalanced_moves(long p,
-                                          bulk::queue<long, long, int, long>& moves_queue,
-                                          std::array<long, 2>& total_weights,
-                                          long max_weight_0,
-                                          long max_weight_1) {
+long reject_unbalanced_moves(bulk::world& world,
+                             bulk::queue<long, long, int, long>& moves_queue,
+                             std::array<long, 2>& total_weights,
+                             long max_weight_0,
+                             long max_weight_1) {
+    auto p = world.active_processors();
     // The number of moves to be rejected for each processor
     auto rejected = std::vector<long>(p, 0);
     auto done = std::vector<bool>(p, false);
@@ -411,7 +405,7 @@ std::vector<long> reject_unbalanced_moves(long p,
         }
         received_moves.pop();
     }
-    return rejected;
+    return rejected[world.rank()];
 }
 
 /**

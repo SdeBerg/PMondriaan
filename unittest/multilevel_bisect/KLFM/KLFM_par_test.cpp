@@ -113,11 +113,13 @@ TEST(KLFMParallel, RejectMoves) {
         auto prev_total_weights = std::array<long, 2>({20, 18});
         long max_weight_0 = 22;
         long max_weight_1 = 22;
+        auto rejected = reject_unbalanced_moves(world, moves_queue, prev_total_weights,
+                                                max_weight_0, max_weight_1);
         if (s == 0) {
-            auto rejected = reject_unbalanced_moves(2, moves_queue, prev_total_weights,
-                                                    max_weight_0, max_weight_1);
-            ASSERT_EQ(rejected[0], -1);
-            ASSERT_EQ(rejected[1], 0);
+            ASSERT_EQ(rejected, -1);
+        }
+        if (s == 1) {
+            ASSERT_EQ(rejected, 0);
         }
     });
 }
