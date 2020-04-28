@@ -59,6 +59,9 @@ TEST(Contraction, ParallelMergeFreeVertices) {
         H(2).set_part(0);
         std::mt19937 rng(1);
         auto result = C.assign_free_vertices(world, H, 3, 3, rng);
+
+        world.log("new weights %d %d", result[0], result[1]);
+        world.sync();
         ASSERT_EQ(result[0], 2);
         ASSERT_EQ(result[1], 2);
     });

@@ -72,7 +72,6 @@ std::vector<long> contraction::assign_free_vertices(bulk::world& world,
         assigned += local_free_weights[split_proc];
         split_proc++;
     }
-    world.log("split proc: %d", split_proc);
     auto new_weight_0 = bulk::var<long>(world);
     auto new_weight_1 = bulk::var<long>(world);
 
