@@ -54,14 +54,15 @@ TEST(Contraction, ParallelMergeFreeVertices) {
         auto C = pmondriaan::contraction();
         C.merge_free_vertices(world, H);
         ASSERT_EQ(H.global_size(), 3);
-        H(0).set_part(0);
-        H(1).set_part(1);
-        H(2).set_part(0);
+        if (world.rank() == 0) {
+            H(0).set_part(0);
+            H(1).set_part(1);
+        }
+        if (world.rank() == 1) {
+            H(0).set_part(0);
+        }
         std::mt19937 rng(1);
         auto result = C.assign_free_vertices(world, H, 3, 3, rng);
-
-        world.log("new weights %d %d", result[0], result[1]);
-        world.sync();
         ASSERT_EQ(result[0], 2);
         ASSERT_EQ(result[1], 2);
     });

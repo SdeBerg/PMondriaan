@@ -239,8 +239,6 @@ long global_weight_part(bulk::world& world, pmondriaan::hypergraph& H, int part)
 std::vector<long> global_weight_parts(bulk::world& world, pmondriaan::hypergraph& H, long k) {
     auto weight_parts_coar = bulk::coarray<long>(world, k);
     auto weight_parts = H.weight_all_parts(k);
-    world.log("s %d: weight part 0: %d, weight part 1: %d", world.rank(),
-              weight_parts[0], weight_parts[1]);
     for (long i = 0; i < k; i++) {
         weight_parts_coar[i] = weight_parts[i];
     }
