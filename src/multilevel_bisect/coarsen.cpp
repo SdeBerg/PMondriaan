@@ -364,7 +364,6 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
             add_v_to_list(new_v, v);
         }
     }
-    world.sync();
     auto result = pmondriaan::contract_hypergraph(world, H, C, matches, new_v);
     return result;
 }

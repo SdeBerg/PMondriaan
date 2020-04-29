@@ -10,5 +10,5 @@ max_cluster_size=400
 lp_max_iter=100
 coarsening_nrvertices = 800
 coarsening_max_rounds = 20
-KLFM_max_passes = 2
-KLFM_par_send_moves = 100
+KLFM_max_passes = 100
+KLFM_par_send_moves = 50
