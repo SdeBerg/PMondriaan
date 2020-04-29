@@ -15,6 +15,9 @@ void gain_buckets::insert(long id, long gain) {
         if (gain < min_value_present) {
             min_value_present = gain;
         }
+        if (gain_to_index(gain) > max_index_present) {
+            max_index_present = gain_to_index(gain);
+        }
     }
     buckets[index].insert(id);
 }
@@ -86,7 +89,6 @@ void gain_structure::init_() {
                 gain -= H_.net(n).cost();
             }
         }
-
         buckets[from].insert(v.id(), gain);
         gains[i] = gain;
         if (gain > max_gain[from]) {

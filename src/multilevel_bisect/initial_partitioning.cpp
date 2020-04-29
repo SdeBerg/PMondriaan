@@ -29,6 +29,7 @@ long initial_partitioning(pmondriaan::hypergraph& H,
 
     auto L_best = std::vector<long>(H.size());
     long best_cut = std::numeric_limits<long>::max();
+    long best_imbalance = std::numeric_limits<long>::max();
     auto time = bulk::util::timer();
     for (long i = 0; i < 10; i++) {
         time.get();
@@ -48,11 +49,16 @@ long initial_partitioning(pmondriaan::hypergraph& H,
 
         std::cout << "time KLFM: " << time.get_change() << "(round " << i << ")\n";
 
-        if (cut < best_cut) {
+        long imbalance =
+        std::max(H.weight_part(0) - max_weight_0, H.weight_part(1) - max_weight_1);
+
+        if (((cut < best_cut) && (imbalance <= 0)) ||
+            (((cut == best_cut) || (best_imbalance > 0)) && (imbalance < best_imbalance))) {
             for (auto i = 0u; i < H.size(); i++) {
                 L_best[i] = H(i).part();
             }
             best_cut = cut;
+            best_imbalance = imbalance;
         }
     }
 

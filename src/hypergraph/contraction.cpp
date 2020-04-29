@@ -35,6 +35,10 @@ std::vector<long> contraction::assign_free_vertices(pmondriaan::hypergraph& H,
                                                     long max_weight_1,
                                                     std::mt19937& rng) {
     auto weight_parts = H.weight_all_parts(2);
+    // If there is no free weight, we are done
+    if (global_free_weight_ == 0) {
+        return weight_parts;
+    }
     assign_free_vertices_(H, weight_parts, max_weight_0, max_weight_1, rng);
     return weight_parts;
 }
@@ -49,21 +53,21 @@ std::vector<long> contraction::assign_free_vertices(bulk::world& world,
                                                     long max_weight_1,
                                                     std::mt19937& rng) {
     auto weight_parts = global_weight_parts(world, H, 2);
+    // If there is no free weight, we are done
+    if (global_free_weight_ == 0) {
+        return weight_parts;
+    }
 
     auto local_free_weights = bulk::coarray<long>(world, world.active_processors());
     for (auto t = 0; t < world.active_processors(); t++) {
         local_free_weights(t)[world.rank()] = local_free_weight_;
     }
     world.sync();
-    long total_free_weight = 0;
-    for (auto t = 0; t < world.active_processors(); t++) {
-        total_free_weight += local_free_weights[t];
-    }
 
     long extra_weight_0 = max_weight_0 - weight_parts[0];
     long extra_weight_1 = max_weight_1 - weight_parts[1];
     long assign_to_part_0 =
-    (extra_weight_0 * total_free_weight) / (extra_weight_0 + extra_weight_1);
+    (extra_weight_0 * global_free_weight_) / (extra_weight_0 + extra_weight_1);
     // We find the processor whose free vertices have to be split over the parts
     long assigned = 0;
     int split_proc = 0;
@@ -75,13 +79,13 @@ std::vector<long> contraction::assign_free_vertices(bulk::world& world,
     auto new_weight_0 = bulk::var<long>(world);
     auto new_weight_1 = bulk::var<long>(world);
 
+    weight_parts[0] += assigned;
     if (world.rank() < split_proc) {
         assign_all_vertices_(H, 0);
     } else if (world.rank() > split_proc) {
         assign_all_vertices_(H, 1);
     } else {
         // We compute the new part weights assigned so far
-        weight_parts[0] += assigned;
         for (auto t = split_proc + 1; t < world.active_processors(); t++) {
             weight_parts[1] += local_free_weights[t];
         }
@@ -90,8 +94,10 @@ std::vector<long> contraction::assign_free_vertices(bulk::world& world,
         new_weight_1.broadcast(weight_parts[1]);
     }
     world.sync();
-    weight_parts[0] = new_weight_0;
-    weight_parts[1] = new_weight_1;
+    if (split_proc < world.active_processors()) {
+        weight_parts[0] = new_weight_0;
+        weight_parts[1] = new_weight_1;
+    }
     return weight_parts;
 }
 
@@ -149,7 +155,7 @@ void contraction::assign_free_vertices_(pmondriaan::hypergraph& H,
         }
         weight_parts[part] += weight;
         H.add_vertex(id, std::vector<long>(), weight);
-        H(id).set_part(part);
+        H(H.local_id(id)).set_part(part);
     }
 }
 

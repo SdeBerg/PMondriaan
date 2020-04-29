@@ -1,5 +1,5 @@
-file="../test/data/matrices/mhd4800b/mhd4800b.mtx"
-processors=1
+file="../test/data/matrices/gemat11/gemat11.mtx"
+processors=2
 parts=2
 eps=0.03
 eta=0.03
@@ -12,5 +12,5 @@ max_cluster_size=400
 lp_max_iter=100
 coarsening_nrvertices=800
 coarsening_max_rounds=20
-KLFM_max_passes=100
+KLFM_max_passes=2
 KLFM_par_send_moves=100

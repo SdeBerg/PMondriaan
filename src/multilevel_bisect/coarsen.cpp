@@ -39,8 +39,6 @@ pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
         indices_samples = sample_lp(H, opts, rng);
     }
 
-    world.log("samples: %d", indices_samples.size());
-
     // we now send the samples and the processor id to all processors
     auto sample_queue = bulk::queue<long, long, long[]>(world);
     for (auto i = 0u; i < indices_samples.size(); i++) {
@@ -59,7 +57,7 @@ pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
     // queue to send the information about the accepted samples
     auto info_queue = bulk::queue<long, long, long[], long[]>(world);
     auto matched = std::vector<bool>(H.size(), false);
-    pmondriaan::send_information_matches(H, accepted_matches, info_queue,
+    pmondriaan::send_information_matches(world, H, accepted_matches, info_queue,
                                          matched, opts.sample_size);
 
     auto HC =
@@ -172,7 +170,6 @@ void request_matches(pmondriaan::hypergraph& H,
             accepted_matches(std::get<0>(match)).send(i + s * opts.sample_size, std::get<1>(match));
         }
     }
-
     world.sync();
 }
 
@@ -180,7 +177,8 @@ void request_matches(pmondriaan::hypergraph& H,
  * First merges the nets and weight of all vertices matched to a sample and
  * then sends this information to the owner of the sample.
  */
-void send_information_matches(pmondriaan::hypergraph& H,
+void send_information_matches(bulk::world& world,
+                              pmondriaan::hypergraph& H,
                               bulk::queue<long, long>& accepted_matches,
                               bulk::queue<long, long, long[], long[]>& info_queue,
                               std::vector<bool>& matched,
@@ -200,19 +198,30 @@ void send_information_matches(pmondriaan::hypergraph& H,
                 nets_vector.push_back(n);
                 cost_nets.push_back(H.net(n).cost());
             }
-
-            info_queue(t).send(sample - t * sample_size, total_weight_sample,
-                               nets_vector, cost_nets);
+            info_queue(t).send(prev_sample - t * sample_size,
+                               total_weight_sample, nets_vector, cost_nets);
             total_weight_sample = 0;
             total_nets_sample.clear();
-            prev_sample = sample;
         }
         matched[H.local_id(proposer)] = true;
         auto v = H(H.local_id(proposer));
         total_weight_sample += v.weight();
         total_nets_sample.insert(v.nets().begin(), v.nets().end());
+        prev_sample = sample;
     }
-    info_queue.world().sync();
+
+    // We send all information about the last sample
+    long t = prev_sample / sample_size;
+    auto nets_vector = std::vector<long>();
+    auto cost_nets = std::vector<long>();
+    for (auto n : total_nets_sample) {
+        nets_vector.push_back(n);
+        cost_nets.push_back(H.net(n).cost());
+    }
+    info_queue(t).send(prev_sample - t * sample_size, total_weight_sample,
+                       nets_vector, cost_nets);
+
+    world.sync();
 }
 
 pmondriaan::hypergraph contract_hypergraph(bulk::world& world,

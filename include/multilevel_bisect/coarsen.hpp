@@ -40,7 +40,8 @@ void request_matches(pmondriaan::hypergraph& H,
  * First merges the nets and weight of all vertices matched to a sample and
  * then sends this information to the owner of the sample.
  */
-void send_information_matches(pmondriaan::hypergraph& H,
+void send_information_matches(bulk::world& world,
+                              pmondriaan::hypergraph& H,
                               bulk::queue<long, long>& accepted_matches,
                               bulk::queue<long, long, long[], long[]>& info_queue,
                               std::vector<bool>& matched,

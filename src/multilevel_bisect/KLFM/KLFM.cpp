@@ -81,9 +81,7 @@ long KLFM_pass(pmondriaan::hypergraph& H,
             cut_size -= gain_structure.gain_next(part_to_move);
             weights[part_to_move] -= H(H.local_id(v_to_move)).weight();
             weights[(part_to_move + 1) % 2] += H(H.local_id(v_to_move)).weight();
-            // std::cout << "weights: " << weights[0] << " " << weights[1] << "\n";
             gain_structure.move(v_to_move);
-
             if (cut_size > best_cut_size) {
                 no_improvement_moves.push_back(v_to_move);
             } else {

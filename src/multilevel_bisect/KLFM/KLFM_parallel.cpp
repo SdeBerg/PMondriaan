@@ -97,7 +97,6 @@ long KLFM_pass_par(bulk::world& world,
     bool all_done = false;
     while (!all_done) {
         auto prev_total_weights = total_weights;
-
         // Find best KLFM_par_number_send_moves moves
         // A move is stored as v_to_move, gain_v, weight change
         auto moves =
@@ -132,6 +131,8 @@ long KLFM_pass_par(bulk::world& world,
                     auto& vertex = H(H.local_id(std::get<0>(moves[index])));
                     H.move(vertex.id(), C);
                     rejected--;
+                    // We set the move to -1 so we do not add it to the no improvement moves
+                    moves[index] = std::make_tuple(-1, 0, 0);
                 }
                 index--;
             }
@@ -141,6 +142,8 @@ long KLFM_pass_par(bulk::world& world,
                     auto& vertex = H(H.local_id(std::get<0>(moves[index])));
                     H.move(vertex.id(), C);
                     rejected++;
+                    // We set the move to -1 so we do not add it to the no improvement moves
+                    moves[index] = std::make_tuple(-1, 0, 0);
                 }
                 index--;
             }
@@ -163,7 +166,9 @@ long KLFM_pass_par(bulk::world& world,
 
         if (cut_size > best_cut_size) {
             for (auto& move : moves) {
-                no_improvement_moves.push_back(std::get<0>(move));
+                if (std::get<0>(move) != -1) {
+                    no_improvement_moves.push_back(std::get<0>(move));
+                }
             }
         } else {
             best_cut_size = cut_size;
