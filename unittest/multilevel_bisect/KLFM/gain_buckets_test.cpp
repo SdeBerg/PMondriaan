@@ -37,9 +37,7 @@ TEST(GainBucket, GainBucketInit) {
     pmondriaan::options opts;
     opts.KLFM_max_passes = 1;
     opts.metric = pmondriaan::m::cut_net;
-    std::cout << "start\n";
     auto sol = pmondriaan::initial_partitioning(H, 3, 3, opts, rng);
-    std::cout << "end\n";
     ASSERT_EQ(sol, 0);
 }
 

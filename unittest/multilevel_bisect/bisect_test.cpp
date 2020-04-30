@@ -63,6 +63,7 @@ TEST(BisectMultilevel, ParBisectMultilevel) {
         bisect_multilevel(world, H, opts, 163, 163, 0, H.size(), labels, rng);
         ASSERT_LE(global_weight_part(world, H, 0), 163);
         ASSERT_LE(global_weight_part(world, H, 3), 163);
+        ASSERT_EQ(global_weight_part(world, H, 1), 0);
         for (auto v : H.vertices()) {
             ASSERT_NE(v.part(), -1);
         }
