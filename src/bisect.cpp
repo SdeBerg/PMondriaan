@@ -163,14 +163,14 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                       world.rank(), time.get_change());
         }
 
-        // TODO: Take this out in the final version! This is only included to get reproducibility
+        /* TODO: Take this out in the final version! This is only included to get reproducibility
         sort(HC_list[nc_par].vertices().begin(), HC_list[nc_par].vertices().end(),
              [](pmondriaan::vertex a, pmondriaan::vertex b) {
                  return a.id() < b.id();
              });
         if (print_time && (world.rank() == 0)) {
             world.log("s: %d, time in sorting: %lf", world.rank(), time.get_change());
-        }
+        }*/
 
         HC_list[nc_par].update_map();
     }

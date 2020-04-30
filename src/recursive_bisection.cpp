@@ -142,6 +142,8 @@ void recursive_bisect(bulk::world& world,
         end = job.end();
         labels = {job.label_low(), job.label_high()};
         weight_mypart = job.weight();
+        world.log("start %d end %d, labels %d - %d, weight_mypart %d", start,
+                  end, labels.low, labels.high, weight_mypart);
 
         while (labels.length() > 0) {
             long k_ = labels.length() + 1;
