@@ -10,3 +10,4 @@ build/
 *.exe
 *.o
 *.so
+*.mtx
