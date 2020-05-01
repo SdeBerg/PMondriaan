@@ -163,19 +163,26 @@ long KLFM_pass_par(bulk::world& world,
 
         // We also send all processors the total cutsize of the nets this p is responsible for
         cut_size = bulk::sum(world, cut_size_my_nets);
-
+        long moves_found = 0;
         if (cut_size > best_cut_size) {
             for (auto& move : moves) {
                 if (std::get<0>(move) != -1) {
                     no_improvement_moves.push_back(std::get<0>(move));
+                    moves_found++;
                 }
             }
         } else {
             best_cut_size = cut_size;
             no_improvement_moves.clear();
+            for (auto& move : moves) {
+                if (std::get<0>(move) != -1) {
+                    moves_found++;
+                }
+            }
         }
 
-        if (gain_structure.done()) {
+        // Positive gain
+        if (gain_structure.done() || (moves_found == 0)) {
             done = 1;
         }
         if (bulk::sum(done) == world.active_processors()) {
@@ -319,6 +326,11 @@ void find_top_moves(pmondriaan::hypergraph& H,
         long part_to_move =
         gain_structure.part_next(max_extra_weight[0], max_extra_weight[1], rng);
         auto v_to_move = gain_structure.next(part_to_move);
+
+        // We do not accept moves with negative gain. (positive gain)
+        if (gain_structure.gain_next(part_to_move) < 0) {
+            return;
+        }
 
         if (max_extra_weight[(part_to_move + 1) % 2] - H(H.local_id(v_to_move)).weight() >= 0) {
             auto weight_v = H(H.local_id(v_to_move)).weight();

@@ -267,8 +267,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                 world.log("s: %d, time in iteration par uncoarsening: %lf",
                           world.rank(), time.get_change());
             }
-            world.log("s %d: cut after par uncoarsening: %d, epsilon: %lf",
-                      world.rank(), cut, load_balance(HC_list[nc_par], 2));
+            world.log("s %d: cut after par uncoarsening: %d", world.rank(), cut);
         }
     }
 

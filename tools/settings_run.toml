@@ -1,6 +1,6 @@
 file="../test/data/matrices/gemat11/gemat11.mtx"
-processors=1
-parts=16
+processors=2
+parts=2
 eps=0.03
 eta=0.03
 weights="degree"
