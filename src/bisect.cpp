@@ -223,8 +223,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
             world.log("s: %d, time in iteration seq uncoarsening: %lf",
                       world.rank(), time.get_change());
         }
-        world.log("s %d: cut after seq uncoarsening: %d, epsilon: %lf",
-                  world.rank(), cut, load_balance(HC_list[nc_tot], 2));
+        world.log("s %d: cut after seq uncoarsening: %d", world.rank(), cut);
     }
 
     if (world.active_processors() > 1) {
