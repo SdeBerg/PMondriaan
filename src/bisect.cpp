@@ -193,6 +193,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         HC_list.push_back(coarsen_hypergraph_seq(world, HC_list[nc_tot],
                                                  C_list[nc_tot + 1], opts, rng));
 
+        nc_tot++;
         if (world.rank() == 0) {
             if (print_time) {
                 world.log("s: %d, time in iteration seq coarsening: %lf",
@@ -201,7 +202,6 @@ std::vector<long> bisect_multilevel(bulk::world& world,
             world.log("After iteration %d, size is %d (seq)", nc_tot - 1,
                       HC_list[nc_tot].global_size());
         }
-        nc_tot++;
     }
     if (print_time && (world.rank() == 0)) {
         world.log("s: %d, time in sequential coarsening: %lf", world.rank(),
