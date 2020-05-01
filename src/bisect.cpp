@@ -116,11 +116,14 @@ std::vector<long> bisect_multilevel(bulk::world& world,
             HC_list.push_back(coarsen_hypergraph_par(world, HC_list[nc_par],
                                                      C_list[nc_par + 1], opts, rng));
             nc_par++;
-            world.log("After iteration %d, size is %d (par)", nc_par,
-                      HC_list[nc_par].global_size());
-        }
-        if (print_time && (world.rank() == 0)) {
-            world.log("s: %d, time in par coarsening: %lf", world.rank(), time.get_change());
+            if (world.rank() == 0) {
+                if (print_time) {
+                    world.log("s: %d, time in iteration par coarsening: %lf",
+                              world.rank(), time.get_change());
+                }
+                world.log("After iteration %d, size is %d (par)", nc_par,
+                          HC_list[nc_par].global_size());
+            }
         }
 
         // we now communicate the entire hypergraph to all processors using a queue containing id, weight and nets
@@ -190,13 +193,15 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         HC_list.push_back(coarsen_hypergraph_seq(world, HC_list[nc_tot],
                                                  C_list[nc_tot + 1], opts, rng));
 
-        if (print_time && (world.rank() == 0)) {
-            world.log("s: %d, time in iteration seq coarsening: %lf",
-                      world.rank(), time.get_change());
+        if (world.rank() == 0) {
+            if (print_time) {
+                world.log("s: %d, time in iteration seq coarsening: %lf",
+                          world.rank(), time.get_change());
+            }
+            world.log("After iteration %d, size is %d (seq)", nc_tot - 1,
+                      HC_list[nc_tot].global_size());
         }
         nc_tot++;
-        world.log("After iteration %d, size is %d (seq)", nc_tot - 1,
-                  HC_list[nc_tot].global_size());
     }
     if (print_time && (world.rank() == 0)) {
         world.log("s: %d, time in sequential coarsening: %lf", world.rank(),
@@ -219,11 +224,13 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         cut = pmondriaan::uncoarsen_hypergraph_seq(HC_list[nc_tot + 1], HC_list[nc_tot],
                                                    C_list[nc_tot + 1], opts, max_weight_0,
                                                    max_weight_1, cut, rng);
-        if (print_time && (world.rank() == 0)) {
-            world.log("s: %d, time in iteration seq uncoarsening: %lf",
-                      world.rank(), time.get_change());
+        if (world.rank() == 0) {
+            if (print_time) {
+                world.log("s: %d, time in iteration seq uncoarsening: %lf",
+                          world.rank(), time.get_change());
+            }
+            world.log("s %d: cut after seq uncoarsening: %d", world.rank(), cut);
         }
-        world.log("s %d: cut after seq uncoarsening: %d", world.rank(), cut);
     }
 
     if (world.active_processors() > 1) {
@@ -252,21 +259,24 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         }
 
         cut = cut_size;
-
+        if (world.rank() == 0) {
+            world.log("s %d: cut at start par uncoarsening: %d", world.rank(), cut);
+        }
         time.get();
         while (nc_par > 0) {
             nc_par--;
-
             cut = pmondriaan::uncoarsen_hypergraph_par(world, HC_list[nc_par + 1],
                                                        HC_list[nc_par],
                                                        C_list[nc_par + 1], opts, max_weight_0,
                                                        max_weight_1, cut, rng);
 
-            if (print_time && (world.rank() == 0)) {
-                world.log("s: %d, time in iteration par uncoarsening: %lf",
-                          world.rank(), time.get_change());
+            if (world.rank() == 0) {
+                if (print_time) {
+                    world.log("s: %d, time in iteration par uncoarsening: %lf",
+                              world.rank(), time.get_change());
+                }
+                world.log("s %d: cut after par uncoarsening: %d", world.rank(), cut);
             }
-            world.log("s %d: cut after par uncoarsening: %d", world.rank(), cut);
         }
     }
 

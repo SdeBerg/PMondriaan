@@ -1,5 +1,5 @@
-file="../test/data/matrices/gemat11/gemat11.mtx"
-processors=2
+file="../test/data/matrices/tbdlinux.mtx"
+processors=1
 parts=2
 eps=0.03
 eta=0.03
