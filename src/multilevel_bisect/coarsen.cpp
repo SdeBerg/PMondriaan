@@ -231,7 +231,7 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
                                            bulk::queue<long, long, long[], long[]>& matches,
                                            std::vector<bool>& matched) {
 
-    // we new nets to which we will later add the vertices
+    // new nets to which we will later add the vertices
     auto new_nets = std::vector<pmondriaan::net>();
     std::unordered_map<long, long> net_global_to_local;
     size_t number_nets = 0;

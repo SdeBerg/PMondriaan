@@ -4,6 +4,7 @@
 #include <stack>
 #include <stdlib.h>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include <iostream>
@@ -70,6 +71,11 @@ void recursive_bisect(bulk::world& world,
         auto total_weight_0 = bulk::sum(*sub_world, weight_parts[0]);
         auto total_weight_1 = bulk::sum(*sub_world, weight_parts[1]);
 
+        if (sub_world->rank() == 0) {
+            world.log("s: %d, weight part %d: %d, weight part %d: %d", world.rank(),
+                      labels.low, total_weight_0, labels.high, total_weight_1);
+        }
+
         // number of processors working on the low and high part respectively
         long p_low =
         (double)total_weight_0 / (double)(total_weight_0 + total_weight_1) * (double)p + 0.5;
@@ -106,8 +112,6 @@ void recursive_bisect(bulk::world& world,
                                           labels.high, new_max_local_weight,
                                           weight_parts[0], weight_parts[1], p_low);
 
-            // procs_mypart[0] += my_part * p_low;
-            // procs_mypart[1] -= (1 - my_part) * p_high;
             // the processors in the new world will work together on the next part
             sub_world = sub_world->split(my_part);
             p = sub_world->active_processors();
@@ -126,8 +130,6 @@ void recursive_bisect(bulk::world& world,
             }
         }
 
-        world.log("s: %d, weight part %d: %d, weight part %d: %d", world.rank(),
-                  labels.low, total_weight_0, labels.high, total_weight_1);
         sub_world->sync();
 
         labels = new_labels;
@@ -168,7 +170,6 @@ void recursive_bisect(bulk::world& world,
 
             world.log("s: %d, weight part %d: %d, weight part %d: %d", world.rank(),
                       labels.low, weight_parts[0], labels.high, weight_parts[1]);
-            sub_world->sync();
             weight_mypart = weight_parts[0];
             labels = labels_0;
         }
@@ -223,10 +224,12 @@ long redistribute_hypergraph(bulk::world& world,
 
     // queue for all received vertices
     auto q = bulk::queue<long, long, long, long[]>(world);
-    reduce_surplus(world, H, label_high, all_surplus_1, q);
+    // the weights of new nets are communicated through this queue
+    auto cost_queue = bulk::queue<long, long>(world);
+    reduce_surplus(world, H, label_high, all_surplus_1, q, cost_queue);
 
     if (p_low > 0) {
-        reduce_surplus(world, H, label_low, all_surplus_0, q);
+        reduce_surplus(world, H, label_low, all_surplus_0, q, cost_queue);
     } else {
         long i = H.size();
         while (i >= 0) {
@@ -241,18 +244,27 @@ long redistribute_hypergraph(bulk::world& world,
 
     world.sync();
 
-    for (auto& [id, weight, part, nets] : q) {
+    // We add the new nets we received
+    for (const auto& [net_id, cost] : cost_queue) {
+        H.add_net(net_id, std::vector<long>(), cost);
+    }
+
+    for (const auto& [id, weight, part, nets] : q) {
         H.vertices().push_back({id, nets, weight});
         H.vertices().back().set_part(part);
         H.add_to_nets(H.vertices().back());
     }
-
 
     if (p_low == 0) {
         H.vertices().insert(end(H.vertices()), begin(vertices_0), end(vertices_0));
     }
 
     H.update_map();
+
+    /*for (auto v : H.vertices()) {
+        world.log("s %d: part %d", world.rank(), v.part());
+    }
+    world.sync(); */
 
     return H.size() - vertices_0.size();
 }
@@ -265,7 +277,8 @@ long reduce_surplus(bulk::world& world,
                     pmondriaan::hypergraph& H,
                     long label,
                     bulk::coarray<long>& surplus,
-                    bulk::queue<long, long, long, long[]>& q) {
+                    bulk::queue<long, long, long, long[]>& q,
+                    bulk::queue<long, long>& cost_queue) {
 
     auto s = world.rank();
     auto p = world.active_processors();
@@ -289,6 +302,8 @@ long reduce_surplus(bulk::world& world,
         surplus_others += surplus[t];
         if (surplus[t] > 0 && surplus_others > 0) {
 
+            auto nets_to_send = std::unordered_set<long>();
+
             long max = std::min(surplus[t], surplus_others);
             max = std::min(max, -1 * surplus[s]);
 
@@ -299,16 +314,25 @@ long reduce_surplus(bulk::world& world,
                     index++;
                 }
 
-                total_sent += H(index).weight();
-                q(t).send(H(index).id(), H(index).weight(), H(index).part(),
-                          H(index).nets());
+                auto v = H(index);
+                if (total_sent + v.weight() > max) {
+                    break;
+                }
 
-                long id = H(index).id();
+                total_sent += v.weight();
+                nets_to_send.insert(v.nets().begin(), v.nets().end());
+                q(t).send(v.id(), v.weight(), v.part(), v.nets());
+
+                long id = v.id();
                 H.remove_from_nets(id);
                 H.map().erase(id);
                 H.vertices().erase(H.vertices().begin() + index);
             }
 
+            // We send the information on the cost of the nets.
+            for (auto n : nets_to_send) {
+                cost_queue(t).send(n, H.net(n).cost());
+            }
             surplus[s] += total_sent;
             surplus_others = 0;
         }

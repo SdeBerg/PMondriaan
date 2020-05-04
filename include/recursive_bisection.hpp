@@ -47,7 +47,8 @@ long reduce_surplus(bulk::world& world,
                     pmondriaan::hypergraph& H,
                     long label,
                     bulk::coarray<long>& surplus,
-                    bulk::queue<long, long, long, long[]>& q);
+                    bulk::queue<long, long, long, long[]>& q,
+                    bulk::queue<long, long>& cost_queue);
 
 /**
  * Reorders the hypergraph such that all vertices with label_high are at the end of the vertex list.

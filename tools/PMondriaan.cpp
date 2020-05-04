@@ -133,6 +133,7 @@ int main(int argc, char** argv) {
             return;
         }
 
+        auto weight_parts = pmondriaan::global_weight_parts(world, H, settings.k);
         if (s == 0) {
             world.log("Partitioned hypergraph with %d vertices into %d parts "
                       "using %d processors",
@@ -140,6 +141,10 @@ int main(int argc, char** argv) {
             world.log("Load balance of partitioning found: %lf", lb);
             world.log("Cutsize of partitioning found: %d", cutsize);
             world.log("Time used: %lf milliseconds", time_used);
+
+            for (int i = 0; i < settings.k; i++) {
+                world.log("Weight part %d: %ld", i, weight_parts[i]);
+            }
         }
 
         world.sync();
