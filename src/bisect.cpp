@@ -211,13 +211,14 @@ std::vector<long> bisect_multilevel(bulk::world& world,
     auto cut = pmondriaan::initial_partitioning(HC_list[nc_tot], max_weight_0,
                                                 max_weight_1, opts, rng);
 
-    if (print_time && (world.rank() == 0)) {
-        world.log("s: %d, time in initial partitioning: %lf", world.rank(),
-                  time.get_change());
+    if (world.rank() == 0) {
+        if (print_time) {
+            world.log("s: %d, time in initial partitioning: %lf", world.rank(),
+                      time.get_change());
+        }
+        world.log("s %d: cut after initial partitioning: %d, epsilon: %lf",
+                  world.rank(), cut, load_balance(HC_list[nc_tot], 2));
     }
-
-    world.log("s %d: cut after initial partitioning: %d, epsilon: %lf",
-              world.rank(), cut, load_balance(HC_list[nc_tot], 2));
 
     while (nc_tot > nc_par) {
         nc_tot--;

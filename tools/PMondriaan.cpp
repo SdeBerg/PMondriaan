@@ -116,7 +116,10 @@ int main(int argc, char** argv) {
             return;
         }
         auto H = hypergraph.value();
+
+        auto time = bulk::util::timer();
         recursive_bisect(world, H, settings.k, settings.eps, settings.eta, options);
+        auto time_used = time.get();
 
         auto lb = pmondriaan::load_balance(world, H, settings.k);
         auto cutsize = pmondriaan::cutsize(world, H, options.metric);
@@ -131,9 +134,12 @@ int main(int argc, char** argv) {
         }
 
         if (s == 0) {
-            world.log("Partitioned hypergraph with %d vertices", H.global_size());
+            world.log("Partitioned hypergraph with %d vertices into %d parts "
+                      "using %d processors",
+                      H.global_size(), settings.k, world.active_processors());
             world.log("Load balance of partitioning found: %lf", lb);
             world.log("Cutsize of partitioning found: %d", cutsize);
+            world.log("Time used: %lf milliseconds", time_used);
         }
 
         world.sync();
