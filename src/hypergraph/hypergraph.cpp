@@ -420,10 +420,10 @@ std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph&
 /**
  * Removes all free nets.
  */
-void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H) {
+void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H, size_t max_size) {
     auto net_sizes = global_net_sizes(world, H);
     for (auto n = 0u; n < H.nets().size(); n++) {
-        if (net_sizes[n] == 1) {
+        if (net_sizes[n] <= max_size) {
             H.remove_net_by_index(n);
         }
     }
@@ -432,9 +432,9 @@ void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H) {
 /**
  * Removes all free nets.
  */
-void remove_free_nets(pmondriaan::hypergraph& H) {
+void remove_free_nets(pmondriaan::hypergraph& H, size_t max_size) {
     for (auto n = 0u; n < H.nets().size(); n++) {
-        if (H.nets()[n].size() <= 1) {
+        if (H.nets()[n].size() <= max_size) {
             H.remove_net_by_index(n);
         } else {
             H.nets()[n].set_global_size(H.nets()[n].size());
@@ -466,7 +466,7 @@ create_new_hypergraph(bulk::world& new_world, pmondriaan::hypergraph& H, long st
     auto new_H = pmondriaan::hypergraph(new_global_size, H.global_number_nets(),
                                         new_vertices, new_nets);
 
-    remove_free_nets(new_world, new_H);
+    remove_free_nets(new_world, new_H, 1);
     return new_H;
 }
 

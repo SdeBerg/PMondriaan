@@ -298,7 +298,7 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
         }
     }
 
-    remove_free_nets(world, HC);
+    remove_free_nets(world, HC, 1);
     C.merge_free_vertices(world, HC);
 
     return HC;
@@ -416,7 +416,7 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
         }
     }
 
-    remove_free_nets(HC);
+    remove_free_nets(HC, 1);
     C.merge_free_vertices(HC);
     return HC;
 }

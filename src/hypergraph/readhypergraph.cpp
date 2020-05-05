@@ -102,8 +102,8 @@ read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
         }
     }
 
-    auto H = pmondriaan::hypergraph(V, E, vertices, nets);
-    remove_free_nets(H);
+    auto H = pmondriaan::hypergraph(V, E, vertices, nets, L);
+    remove_free_nets(H, 0);
     return std::move(H);
 }
 
@@ -206,9 +206,9 @@ read_hypergraph_istream(std::istream& fin, bulk::world& world, std::string mode_
         }
     }
 
-    auto H = pmondriaan::hypergraph(V, E, vertices, nets);
+    auto H = pmondriaan::hypergraph(V, E, vertices, nets, L);
 
-    pmondriaan::remove_free_nets(world, H);
+    pmondriaan::remove_free_nets(world, H, 0);
     return std::move(H);
 }
 

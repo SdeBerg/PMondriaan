@@ -30,6 +30,10 @@ long KLFM_par(bulk::world& world,
               std::mt19937& rng,
               long cut_size) {
 
+    if (((weight_0 > max_weight_0) || (weight_1 > max_weight_1)) && (world.rank() == 0)) {
+        world.log("Partitioning does not adhere to balance constraint at start "
+                  "parallel KLFM!");
+    }
     size_t pass = 0;
     long prev_cut_size;
 

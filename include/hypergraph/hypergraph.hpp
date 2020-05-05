@@ -84,16 +84,17 @@ class hypergraph {
     hypergraph(size_t global_size,
                size_t global_number_nets,
                std::vector<pmondriaan::vertex> vertices,
-               std::vector<pmondriaan::net> nets)
+               std::vector<pmondriaan::net> nets,
+               size_t nr_nz = 0)
     : global_size_(global_size), global_number_nets_(global_number_nets),
-      vertices_(std::move(vertices)), nets_(std::move(nets)) {
+      vertices_(std::move(vertices)), nets_(std::move(nets)), nr_nz_(nr_nz) {
         update_map();
         update_map_nets();
     }
 
     hypergraph(const hypergraph& other)
-    : global_size_(other.global_size_),
-      global_number_nets_(other.global_number_nets_), vertices_(other.vertices_) {
+    : global_size_(other.global_size_), global_number_nets_(other.global_number_nets_),
+      vertices_(other.vertices_), nr_nz_(other.nr_nz_) {
         for (const auto& n : other.nets()) {
             nets_.push_back(pmondriaan::net(n.id(), std::vector<long>()));
             nets_.back().set_global_size(n.global_size());
@@ -176,6 +177,7 @@ class hypergraph {
     auto size() { return vertices_.size(); }
     auto global_size() const { return global_size_; }
     auto global_number_nets() const { return global_number_nets_; }
+    auto nr_nz() const { return nr_nz_; }
     auto& map() { return global_to_local; }
     auto& map_nets() { return net_global_to_local; }
 
@@ -186,6 +188,7 @@ class hypergraph {
     size_t global_number_nets_;
     std::vector<pmondriaan::vertex> vertices_;
     std::vector<pmondriaan::net> nets_;
+    size_t nr_nz_;
     std::unordered_map<long, long> global_to_local;
     std::unordered_map<long, long> net_global_to_local;
 };
@@ -248,12 +251,12 @@ std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph&
 /**
  * Removes all free nets.
  */
-void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H);
+void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H, size_t max_size);
 
 /**
  * Removes all free nets.
  */
-void remove_free_nets(pmondriaan::hypergraph& H);
+void remove_free_nets(pmondriaan::hypergraph& H, size_t max_size);
 
 /**
  * Creates a new hypergraph that only contains the vertices of H with local id between start and end.

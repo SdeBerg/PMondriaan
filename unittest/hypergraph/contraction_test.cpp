@@ -29,6 +29,7 @@ TEST(Contraction, MergeFreeVertices) {
     std::stringstream mtx_ss(test_mtx);
     auto hypergraph = read_hypergraph_istream(mtx_ss, "one");
     auto H = hypergraph.value();
+    remove_free_nets(H, 1);
     ASSERT_EQ(H.size(), 4);
     ASSERT_EQ(H.global_size(), 4);
     auto C = pmondriaan::contraction();
@@ -50,6 +51,7 @@ TEST(Contraction, ParallelMergeFreeVertices) {
         std::stringstream mtx_ss(test_mtx);
         auto hypergraph = read_hypergraph_istream(mtx_ss, world, "one");
         auto H = hypergraph.value();
+        remove_free_nets(world, H, 1);
         ASSERT_EQ(H.global_size(), 4);
         auto C = pmondriaan::contraction();
         C.merge_free_vertices(world, H);

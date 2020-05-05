@@ -128,7 +128,8 @@ int main(int argc, char** argv) {
                                   settings.matrix_file.substr(
                                   settings.matrix_file.find_last_of('/') + 1) +
                                   "-k" + std::to_string(settings.k) + "-p" +
-                                  std::to_string(settings.p))) {
+                                  std::to_string(settings.p),
+                                  settings.k)) {
             std::cerr << "Error: failed to write partitioning to file\n";
             return;
         }

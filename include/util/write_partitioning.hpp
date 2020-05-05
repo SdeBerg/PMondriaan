@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
@@ -13,6 +14,8 @@
 
 namespace pmondriaan {
 
-bool partitioning_to_file(bulk::world& world, pmondriaan::hypergraph& H, std::string file);
+bool partitioning_to_file(bulk::world& world, pmondriaan::hypergraph& H, std::string file, int k);
+
+std::vector<long> start_parts(bulk::world& world, pmondriaan::hypergraph& H, int k);
 
 } // namespace pmondriaan

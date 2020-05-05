@@ -167,9 +167,6 @@ void recursive_bisect(bulk::world& world,
                 jobs.push(pmondriaan::work_item(end, end_1, labels_1.low,
                                                 labels_1.high, weight_parts[1]));
             }
-
-            world.log("s: %d, weight part %d: %d, weight part %d: %d", world.rank(),
-                      labels.low, weight_parts[0], labels.high, weight_parts[1]);
             weight_mypart = weight_parts[0];
             labels = labels_0;
         }

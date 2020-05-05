@@ -35,11 +35,17 @@ std::vector<long> contraction::assign_free_vertices(pmondriaan::hypergraph& H,
                                                     long max_weight_1,
                                                     std::mt19937& rng) {
     auto weight_parts = H.weight_all_parts(2);
+    if ((weight_parts[0] > max_weight_0) || (weight_parts[1] > max_weight_1)) {
+        std::cout << "Unbalanced partitioning before assigning free vertices!";
+    }
     // If there is no free weight, we are done
     if (global_free_weight_ == 0) {
         return weight_parts;
     }
     assign_free_vertices_(H, weight_parts, max_weight_0, max_weight_1, rng);
+    if ((weight_parts[0] > max_weight_0) || (weight_parts[1] > max_weight_1)) {
+        std::cout << "Unbalanced partitioning after assigning free vertices!";
+    }
     return weight_parts;
 }
 
@@ -53,6 +59,10 @@ std::vector<long> contraction::assign_free_vertices(bulk::world& world,
                                                     long max_weight_1,
                                                     std::mt19937& rng) {
     auto weight_parts = global_weight_parts(world, H, 2);
+    if (((weight_parts[0] > max_weight_0) || (weight_parts[1] > max_weight_1)) &&
+        world.rank() == 0) {
+        world.log("Unbalanced partitioning before assigning free vertices!");
+    }
     // If there is no free weight, we are done
     if (global_free_weight_ == 0) {
         return weight_parts;
@@ -97,6 +107,10 @@ std::vector<long> contraction::assign_free_vertices(bulk::world& world,
     if (split_proc < world.active_processors()) {
         weight_parts[0] = new_weight_0;
         weight_parts[1] = new_weight_1;
+    }
+    if (((weight_parts[0] > max_weight_0) || (weight_parts[1] > max_weight_1)) &&
+        world.rank() == 0) {
+        world.log("Unbalanced partitioning after assigning free vertices!");
     }
     return weight_parts;
 }

@@ -28,6 +28,10 @@ long KLFM(pmondriaan::hypergraph& H,
           std::mt19937& rng,
           long cut_size) {
 
+    if ((weight_0 > max_weight_0) || (weight_1 > max_weight_1)) {
+        std::cout
+        << "Partitioning does not adhere to balance constraint at start KLFM!";
+    }
     size_t pass = 0;
     long prev_cut_size;
     if (cut_size == std::numeric_limits<long>::max()) {

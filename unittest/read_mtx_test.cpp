@@ -31,6 +31,7 @@ TEST(ReadMTX, ReadingFile) {
     auto H = read_hypergraph_istream(mtx_ss, "degree");
     ASSERT_TRUE(H);
     ASSERT_EQ(H->size(), 3);
+    ASSERT_EQ(H->nr_nz(), 4);
 }
 
 TEST(Bisect, BisectLP) {

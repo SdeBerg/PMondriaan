@@ -80,6 +80,7 @@ set(
 	"unittest/multilevel_bisect/initial_partitioning_test.cpp"
 	"unittest/multilevel_bisect/label_propagation_bisect_test.cpp"
 	"unittest/multilevel_bisect/bisect_test.cpp"
+	"unittest/util/partitioning_to_file_test.cpp"
 )
 
 add_executable(pmondriaan_test ${UNIT_TEST_SOURCES})
