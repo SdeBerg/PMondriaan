@@ -261,11 +261,6 @@ long redistribute_hypergraph(bulk::world& world,
 
     H.update_map();
 
-    /*for (auto v : H.vertices()) {
-        world.log("s %d: part %d", world.rank(), v.part());
-    }
-    world.sync(); */
-
     return H.size() - vertices_0.size();
 }
 
@@ -315,9 +310,6 @@ long reduce_surplus(bulk::world& world,
                 }
 
                 auto v = H(index);
-                if (total_sent + v.weight() > max) {
-                    break;
-                }
 
                 total_sent += v.weight();
                 nets_to_send.insert(v.nets().begin(), v.nets().end());
