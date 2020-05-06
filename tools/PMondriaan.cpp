@@ -89,6 +89,9 @@ int main(int argc, char** argv) {
                    "The maximum number of coarsening rounds");
     app.add_option("--KLFM_max_passes", options.KLFM_max_passes,
                    "The maximum number of passes during the KLFM algorithm");
+    app.add_option("--KLFM_max_no_gain_moves", options.KLFM_max_no_gain_moves,
+                   "The maximum number of moves that do not give any positive "
+                   "gain during the KLFM algorithm");
     app.add_option("--KLFM_par_send_moves", options.KLFM_par_number_send_moves,
                    "The number of moves to find before synchronizing in the "
                    "parallel KLFM algorithm");

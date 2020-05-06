@@ -13,4 +13,5 @@ lp_max_iter=100
 coarsening_nrvertices = 300
 coarsening_max_rounds = 20
 KLFM_max_passes = 100
+KLFM_max_no_gain_moves = 200
 KLFM_par_send_moves = 20

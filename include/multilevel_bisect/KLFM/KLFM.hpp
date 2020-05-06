@@ -34,6 +34,7 @@ long KLFM_pass(pmondriaan::hypergraph& H,
                std::array<long, 2>& weights,
                long max_weight_0,
                long max_weight_1,
+               pmondriaan::options& opts,
                std::mt19937& rng);
 
 } // namespace pmondriaan

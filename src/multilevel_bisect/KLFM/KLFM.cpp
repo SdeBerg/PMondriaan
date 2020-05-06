@@ -44,7 +44,7 @@ long KLFM(pmondriaan::hypergraph& H,
     weights[1] = weight_1;
     while (pass < opts.KLFM_max_passes) {
         auto result =
-        KLFM_pass(H, C, prev_cut_size, weights, max_weight_0, max_weight_1, rng);
+        KLFM_pass(H, C, prev_cut_size, weights, max_weight_0, max_weight_1, opts, rng);
         if (result < prev_cut_size) {
             prev_cut_size = result;
         } else {
@@ -64,6 +64,7 @@ long KLFM_pass(pmondriaan::hypergraph& H,
                std::array<long, 2>& weights,
                long max_weight_0,
                long max_weight_1,
+               pmondriaan::options& opts,
                std::mt19937& rng) {
 
     auto max_extra_weight = std::array<long, 2>();
@@ -72,7 +73,8 @@ long KLFM_pass(pmondriaan::hypergraph& H,
     long best_cut_size = cut_size;
     auto no_improvement_moves = std::vector<long>();
 
-    while (!gain_structure.done()) {
+    while (!gain_structure.done() &&
+           (no_improvement_moves.size() < opts.KLFM_max_no_gain_moves)) {
         max_extra_weight[0] = max_weight_0 - weights[0];
         max_extra_weight[1] = max_weight_1 - weights[1];
 

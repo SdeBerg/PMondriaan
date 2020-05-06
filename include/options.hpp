@@ -16,6 +16,7 @@ class options {
     size_t coarsening_nrvertices;
     size_t coarsening_maxrounds;
     size_t KLFM_max_passes;
+    size_t KLFM_max_no_gain_moves;
     size_t KLFM_par_number_send_moves;
 
     m metric;
