@@ -33,7 +33,8 @@ void recursive_bisect(bulk::world& world,
     auto s = world.rank();
     auto p = world.active_processors();
 
-    std::mt19937 rng(s + 1);
+    std::random_device rd;
+    std::mt19937 rng(rd());
 
     auto global_weight = pmondriaan::global_weight(world, H);
     long maxweight = ((1.0 + epsilon) * global_weight) / k;
