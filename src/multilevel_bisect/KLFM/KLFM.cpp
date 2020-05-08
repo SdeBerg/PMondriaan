@@ -28,10 +28,6 @@ long KLFM(pmondriaan::hypergraph& H,
           std::mt19937& rng,
           long cut_size) {
 
-    if ((weight_0 > max_weight_0) || (weight_1 > max_weight_1)) {
-        std::cout
-        << "Partitioning does not adhere to balance constraint at start KLFM!";
-    }
     size_t pass = 0;
     long prev_cut_size;
     if (cut_size == std::numeric_limits<long>::max()) {
@@ -39,9 +35,17 @@ long KLFM(pmondriaan::hypergraph& H,
     } else {
         prev_cut_size = cut_size;
     }
+
     auto weights = std::array<long, 2>();
     weights[0] = weight_0;
     weights[1] = weight_1;
+    if ((weight_0 > max_weight_0) || (weight_1 > max_weight_1)) {
+        std::cout << "w: " << weight_0 << " " << max_weight_0 << " " << weight_1
+                  << " " << max_weight_1 << "\n";
+        prev_cut_size =
+        make_balanced(H, C, prev_cut_size, weights, max_weight_0, max_weight_1);
+    }
+
     while (pass < opts.KLFM_max_passes) {
         auto result =
         KLFM_pass(H, C, prev_cut_size, weights, max_weight_0, max_weight_1, opts, rng);
@@ -108,6 +112,35 @@ long KLFM_pass(pmondriaan::hypergraph& H,
     }
 
     return best_cut_size;
+}
+
+long make_balanced(pmondriaan::hypergraph& H,
+                   std::vector<std::vector<long>>& C,
+                   long cut_size,
+                   std::array<long, 2>& weights,
+                   long max_weight_0,
+                   long max_weight_1) {
+
+    auto max_weights = std::array<long, 2>({max_weight_0, max_weight_1});
+    auto gain_structure = pmondriaan::gain_structure(H, C);
+    int part = 0;
+    if (weights[1] > max_weight_1) {
+        part = 1;
+    }
+
+    while ((weights[part] > max_weights[part]) && !gain_structure.bucket_done(part)) {
+        auto v_to_move = gain_structure.next(part);
+        auto weight_v = H(H.local_id(v_to_move)).weight();
+        if (weights[(part + 1) % 2] + weight_v <= max_weights[(part + 1) % 2]) {
+            cut_size -= gain_structure.gain_next(part);
+            weights[part] -= weight_v;
+            weights[(part + 1) % 2] += weight_v;
+            gain_structure.move(v_to_move);
+        } else {
+            gain_structure.remove(v_to_move);
+        }
+    }
+    return cut_size;
 }
 
 } // namespace pmondriaan

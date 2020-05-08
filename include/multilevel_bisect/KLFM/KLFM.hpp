@@ -37,4 +37,11 @@ long KLFM_pass(pmondriaan::hypergraph& H,
                pmondriaan::options& opts,
                std::mt19937& rng);
 
+long make_balanced(pmondriaan::hypergraph& H,
+                   std::vector<std::vector<long>>& C,
+                   long cut_size,
+                   std::array<long, 2>& weights,
+                   long max_weight_0,
+                   long max_weight_1);
+
 } // namespace pmondriaan

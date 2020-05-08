@@ -76,6 +76,8 @@ class gain_structure {
 
     void add_gain(long v, long value);
 
+    bool bucket_done(int part) { return buckets[part].next() == -1; }
+
   private:
     void init_();
 
