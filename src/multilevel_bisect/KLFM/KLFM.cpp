@@ -31,7 +31,7 @@ long KLFM(pmondriaan::hypergraph& H,
     size_t pass = 0;
     long prev_cut_size;
     if (cut_size == std::numeric_limits<long>::max()) {
-        prev_cut_size = pmondriaan::cutsize(H, opts.metric);
+        prev_cut_size = pmondriaan::cutsize(H, C);
     } else {
         prev_cut_size = cut_size;
     }

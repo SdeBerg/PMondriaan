@@ -373,6 +373,19 @@ long cutsize(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::m metric
     return bulk::sum(world, result);
 }
 
+/**
+ * Compute the cutsize of a bisected hypergraph using the vector C of the counts of all nets
+ */
+long cutsize(pmondriaan::hypergraph& H, std::vector<std::vector<long>>& C) {
+    long cut = 0;
+    for (auto i = 0u; i < C.size(); i++) {
+        if ((C[i][0] > 0) && (C[i][1] > 0)) {
+            cut += H.nets()[i].cost();
+        }
+    }
+    return cut;
+}
+
 
 /**
  * Compute the global net sizes of a hypergraph.
