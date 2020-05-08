@@ -194,11 +194,8 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                       HC_list[nc_tot].global_size());
         }
     }
-    if (print_time && (world.rank() == 0)) {
-        world.log("s: %d, time in sequential coarsening: %lf", world.rank(),
-                  time.get_change());
-    }
 
+    time.get();
     auto cut = pmondriaan::initial_partitioning(HC_list[nc_tot], max_weight_0,
                                                 max_weight_1, opts, rng);
 
