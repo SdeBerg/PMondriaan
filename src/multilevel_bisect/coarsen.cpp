@@ -51,16 +51,14 @@ pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
 
     C.add_samples(H, indices_samples);
     auto accepted_matches = bulk::queue<long, long>(world);
-    auto nets_samples = std::vector<std::unordered_set<long>>(opts.sample_size * p);
     // after his funtion, accepted matches contains the matches that have been accepted
-    request_matches(H, C, sample_queue, nets_samples, accepted_matches,
-                    indices_samples, opts);
+    request_matches(H, C, sample_queue, accepted_matches, indices_samples, opts);
 
     // queue to send the information about the accepted samples
     auto info_queue = bulk::queue<long, long, long[], long[]>(world);
     auto matched = std::vector<bool>(H.size(), false);
     pmondriaan::send_information_matches(world, H, accepted_matches, info_queue,
-                                         matched, nets_samples, opts.sample_size);
+                                         matched, opts.sample_size);
 
     auto HC =
     pmondriaan::contract_hypergraph(world, H, C, indices_samples, info_queue, matched);
@@ -75,7 +73,6 @@ pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
 void request_matches(pmondriaan::hypergraph& H,
                      pmondriaan::contraction& C,
                      bulk::queue<long, long, long[]>& sample_queue,
-                     std::vector<std::unordered_set<long>>& nets_samples,
                      bulk::queue<long, long>& accepted_matches,
                      const std::vector<long>& indices_samples,
                      pmondriaan::options& opts) {
@@ -90,10 +87,11 @@ void request_matches(pmondriaan::hypergraph& H,
     // compute the inner products of the samples and the local vertices
     auto ip =
     std::vector<std::vector<double>>(H.size(), std::vector<double>(total_samples, 0.0));
+    auto degree_samples = std::vector<long>(total_samples);
 
     for (const auto& [t, number_sample, sample_nets] : sample_queue) {
+        degree_samples[t * opts.sample_size + number_sample] = sample_nets.size();
         for (auto n_id : sample_nets) {
-            nets_samples[t * opts.sample_size + number_sample].insert(n_id);
             double scaled_cost = H.net(n_id).scaled_cost();
             for (auto u_id : H.net(n_id).vertices()) {
                 ip[H.local_id(u_id)][t * opts.sample_size + number_sample] += scaled_cost;
@@ -118,7 +116,7 @@ void request_matches(pmondriaan::hypergraph& H,
         for (auto u = 0; u < total_samples; u++) {
             double ip_vu = ip[local_id][u];
             if (ip_vu > 0) {
-                ip_vu *= (1.0 / (double)std::min(v.degree(), nets_samples[u].size()));
+                ip_vu *= (1.0 / (double)std::min((long)v.degree(), degree_samples[u]));
                 if (ip_vu > max_ip) {
                     max_ip = ip_vu;
                     best_match = u;
@@ -184,7 +182,6 @@ void send_information_matches(bulk::world& world,
                               bulk::queue<long, long>& accepted_matches,
                               bulk::queue<long, long, long[], long[]>& info_queue,
                               std::vector<bool>& matched,
-                              std::vector<std::unordered_set<long>>& nets_samples,
                               long sample_size) {
 
     std::sort(accepted_matches.begin(), accepted_matches.end());
@@ -198,10 +195,8 @@ void send_information_matches(bulk::world& world,
             auto nets_vector = std::vector<long>();
             auto cost_nets = std::vector<long>();
             for (auto n : total_nets_sample) {
-                if (nets_samples[prev_sample].count(n) == 0) {
-                    nets_vector.push_back(n);
-                    cost_nets.push_back(H.net(n).cost());
-                }
+                nets_vector.push_back(n);
+                cost_nets.push_back(H.net(n).cost());
             }
             info_queue(t).send(prev_sample - t * sample_size,
                                total_weight_sample, nets_vector, cost_nets);
@@ -220,10 +215,8 @@ void send_information_matches(bulk::world& world,
     auto nets_vector = std::vector<long>();
     auto cost_nets = std::vector<long>();
     for (auto n : total_nets_sample) {
-        if (nets_samples[prev_sample].count(n) == 0) {
-            nets_vector.push_back(n);
-            cost_nets.push_back(H.net(n).cost());
-        }
+        nets_vector.push_back(n);
+        cost_nets.push_back(H.net(n).cost());
     }
     info_queue(t).send(prev_sample - t * sample_size, total_weight_sample,
                        nets_vector, cost_nets);

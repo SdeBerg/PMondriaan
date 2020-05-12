@@ -1,6 +1,5 @@
 #include <random>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 #include <bulk/bulk.hpp>
@@ -33,7 +32,6 @@ pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
 void request_matches(pmondriaan::hypergraph& H,
                      pmondriaan::contraction& C,
                      bulk::queue<long, long, long[]>& sample_queue,
-                     std::vector<std::unordered_set<long>>& nets_samples,
                      bulk::queue<long, long>& accepted_matches,
                      const std::vector<long>& indices_samples,
                      pmondriaan::options& opts);
@@ -47,7 +45,6 @@ void send_information_matches(bulk::world& world,
                               bulk::queue<long, long>& accepted_matches,
                               bulk::queue<long, long, long[], long[]>& info_queue,
                               std::vector<bool>& matched,
-                              std::vector<std::unordered_set<long>>& nets_samples,
                               long sample_size);
 
 pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
