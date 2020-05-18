@@ -40,8 +40,6 @@ long KLFM(pmondriaan::hypergraph& H,
     weights[0] = weight_0;
     weights[1] = weight_1;
     if ((weight_0 > max_weight_0) || (weight_1 > max_weight_1)) {
-        std::cout << "w: " << weight_0 << " " << max_weight_0 << " " << weight_1
-                  << " " << max_weight_1 << "\n";
         prev_cut_size =
         make_balanced(H, C, prev_cut_size, weights, max_weight_0, max_weight_1);
     }
@@ -141,6 +139,19 @@ long make_balanced(pmondriaan::hypergraph& H,
         }
     }
     return cut_size;
+}
+
+// For testing purposes
+void check_C(pmondriaan::hypergraph& H, std::vector<std::vector<long>>& C) {
+    auto correct_C = init_counts(H);
+    for (auto i = 0u; i < C.size(); i++) {
+        if (C[i][0] != correct_C[i][0]) {
+            std::cout << "C[" << i << "][0] incorrect, id " << H.nets()[i].id() << "\n";
+        }
+        if (C[i][1] != correct_C[i][1]) {
+            std::cout << "C[" << i << "][1] incorrect, id " << H.nets()[i].id() << "\n";
+        }
+    }
 }
 
 } // namespace pmondriaan

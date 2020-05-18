@@ -78,6 +78,9 @@ class gain_structure {
 
     bool bucket_done(int part) { return buckets[part].next() == -1; }
 
+    // for testing purposes
+    void check_gains();
+
   private:
     void init_();
 

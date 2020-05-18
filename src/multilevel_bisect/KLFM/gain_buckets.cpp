@@ -1,4 +1,5 @@
 #include <iostream>
+#include <limits>
 #include <random>
 #include <unordered_set>
 #include <vector>
@@ -131,9 +132,10 @@ void gain_structure::move(long v) {
     long from = vertex.part();
     long to = (vertex.part() + 1) % 2;
 
-    // We first move v and remove it from its bucket
+    // We move v and remove v from its bucket
     H_.move(v);
     buckets[from].remove(v, gains[H_.local_id(v)]);
+    gains[H_.local_id(v)] = std::numeric_limits<long>::min();
 
     for (auto n : vertex.nets()) {
         if (C_[H_.local_id_net(n)][to] == 0) {
@@ -143,7 +145,7 @@ void gain_structure::move(long v) {
         }
         if (C_[H_.local_id_net(n)][to] == 1) {
             for (auto u : H_.net(n).vertices()) {
-                if (H_(H_.local_id(u)).part() == to) {
+                if ((H_(H_.local_id(u)).part() == to) && (u != v)) {
                     add_gain(u, -1 * H_.net(n).cost());
                     break;
                 }
@@ -175,6 +177,7 @@ void gain_structure::remove(long v) {
     if (!buckets[from].remove(v, gains[H_.local_id(v)])) {
         std::cerr << "Error: Could not remove v from buckets";
     }
+    gains[H_.local_id(v)] = std::numeric_limits<long>::min();
 }
 
 bool gain_structure::done() {
@@ -203,12 +206,36 @@ long gain_structure::compute_size_buckets() {
 void gain_structure::add_gain(long v, long value) {
     long local_id = H_.local_id(v);
     long old_gain = gains[local_id];
-    if (!buckets[H_(local_id).part()].remove(v, old_gain)) {
+    if (old_gain == std::numeric_limits<long>::min()) {
         return;
     }
+    buckets[H_(local_id).part()].remove(v, old_gain);
     long new_gain = old_gain + value;
     buckets[H_(local_id).part()].insert(v, new_gain);
     gains[local_id] = new_gain;
+}
+
+void gain_structure::check_gains() {
+    for (auto i = 0u; i < H_.size(); i++) {
+        if (gains[i] != std::numeric_limits<long>::min()) {
+            auto& v = H_(i);
+            long gain = 0;
+            long from = v.part();
+            long to = (v.part() + 1) % 2;
+            for (auto n : v.nets()) {
+                if (C_[H_.local_id_net(n)][from] == 1) {
+                    gain += H_.net(n).cost();
+                }
+                if (C_[H_.local_id_net(n)][to] == 0) {
+                    gain -= H_.net(n).cost();
+                }
+            }
+            if (gain != gains[i]) {
+                std::cout << "Gain of vertex " << v.id() << " incorrect! Is "
+                          << gains[i] << " should be " << gain << "\n";
+            }
+        }
+    }
 }
 
 } // namespace pmondriaan

@@ -44,4 +44,7 @@ long make_balanced(pmondriaan::hypergraph& H,
                    long max_weight_0,
                    long max_weight_1);
 
+// For testing purposes
+void check_C(pmondriaan::hypergraph& H, std::vector<std::vector<long>>& C);
+
 } // namespace pmondriaan
