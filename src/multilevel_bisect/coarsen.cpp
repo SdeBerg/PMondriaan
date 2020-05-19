@@ -129,10 +129,12 @@ void request_matches(pmondriaan::hypergraph& H,
     }
 
     for (auto& match_list : requested_matches) {
-        std::sort(match_list.begin(), match_list.end(),
-                  [](const auto& match1, const auto& match2) -> bool {
-                      return match1.second > match2.second;
-                  });
+        if (match_list.size() > opts.coarsening_max_clustersize) {
+            std::sort(match_list.begin(), match_list.end(),
+                      [](const auto& match1, const auto& match2) -> bool {
+                          return match1.second > match2.second;
+                      });
+        }
     }
 
     // queue for the vertex requests with the sender, the vertex to match with, the id of the vertex that wants to match and their ip
@@ -158,10 +160,12 @@ void request_matches(pmondriaan::hypergraph& H,
 
     for (auto i = 0u; i < number_local_samples; i++) {
         auto& match_list = matches[i];
-        std::sort(match_list.begin(), match_list.end(),
-                  [](const auto& match1, const auto& match2) -> bool {
-                      return std::get<2>(match1) > std::get<2>(match2);
-                  });
+        if (match_list.size() > opts.coarsening_max_clustersize) {
+            std::sort(match_list.begin(), match_list.end(),
+                      [](const auto& match1, const auto& match2) -> bool {
+                          return std::get<2>(match1) > std::get<2>(match2);
+                      });
+        }
 
         long number_to_send = std::min(match_list.size(), opts.coarsening_max_clustersize);
         for (long j = 0; j < number_to_send; j++) {
