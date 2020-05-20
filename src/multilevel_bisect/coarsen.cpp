@@ -85,46 +85,44 @@ void request_matches(pmondriaan::hypergraph& H,
     long total_samples = p * opts.sample_size;
 
     // compute the inner products of the samples and the local vertices
-    auto ip =
-    std::vector<std::vector<double>>(H.size(), std::vector<double>(total_samples, 0.0));
-    auto degree_samples = std::vector<long>(total_samples);
+    auto best_ip =
+    std::vector<std::pair<double, long>>(H.size(), std::make_pair(0.0, -1));
+    auto current_ip = std::vector<double>(H.size(), 0.0);
+    std::unordered_set<long> changed_indices;
 
     for (const auto& [t, number_sample, sample_nets] : sample_queue) {
-        degree_samples[t * opts.sample_size + number_sample] = sample_nets.size();
         for (auto n_id : sample_nets) {
             double scaled_cost = H.net(n_id).scaled_cost();
             for (auto u_id : H.net(n_id).vertices()) {
-                ip[H.local_id(u_id)][t * opts.sample_size + number_sample] += scaled_cost;
+                current_ip[H.local_id(u_id)] += scaled_cost;
+                changed_indices.insert(H.local_id(u_id));
             }
         }
+        for (auto index : changed_indices) {
+            current_ip[index] *=
+            (1.0 / (double)std::min(H(index).degree(), sample_nets.size()));
+            if (current_ip[index] > best_ip[index].first) {
+                best_ip[index] =
+                std::make_pair(current_ip[index], t * opts.sample_size + number_sample);
+            }
+            current_ip[index] = 0.0;
+        }
+        changed_indices.clear();
     }
 
     // we set the ip of all local samples with all samples to 0, so they will not match eachother
-    for (auto i = 0u; i < number_local_samples; i++) {
-        for (auto j = 0; j < total_samples; j++) {
-            ip[indices_samples[i]][j] = 0.0;
-        }
+    for (auto local_sample : indices_samples) {
+        best_ip[local_sample] = std::make_pair(0.0, -1);
     }
 
     // find best sample for vertex v and add it to the list of that sample
     auto requested_matches =
     std::vector<std::vector<std::pair<long, double>>>(total_samples);
     for (auto& v : H.vertices()) {
-        double max_ip = 0.0;
-        long best_match = -1;
         auto local_id = H.local_id(v.id());
-        for (auto u = 0; u < total_samples; u++) {
-            double ip_vu = ip[local_id][u];
-            if (ip_vu > 0) {
-                ip_vu *= (1.0 / (double)std::min((long)v.degree(), degree_samples[u]));
-                if (ip_vu > max_ip) {
-                    max_ip = ip_vu;
-                    best_match = u;
-                }
-            }
-        }
-        if (best_match != -1) {
-            requested_matches[best_match].push_back(std::make_pair(v.id(), max_ip));
+        if (best_ip[local_id].second != -1) {
+            requested_matches[best_ip[local_id].second].push_back(
+            std::make_pair(v.id(), best_ip[local_id].first));
         }
     }
 
