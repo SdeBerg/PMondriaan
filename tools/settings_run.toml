@@ -1,14 +1,14 @@
 file="../test/data/matrices/mhd4800b/mhd4800b.mtx"
 processors=2
-parts=4
+parts=2
 eps=0.03
 eta=0.03
 weights="degree"
 bisect=1
-sampling=1
+sampling=0
 metric=1
 sample_size=130
-max_cluster_size=20
+max_cluster_size=50
 lp_max_iter=25
 coarsening_nrvertices=400
 coarsening_max_rounds=20

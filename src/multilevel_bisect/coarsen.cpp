@@ -128,10 +128,11 @@ void request_matches(pmondriaan::hypergraph& H,
 
     for (auto& match_list : requested_matches) {
         if (match_list.size() > opts.coarsening_max_clustersize) {
-            std::sort(match_list.begin(), match_list.end(),
-                      [](const auto& match1, const auto& match2) -> bool {
-                          return match1.second > match2.second;
-                      });
+            std::nth_element(match_list.begin(), match_list.begin() + opts.coarsening_max_clustersize,
+                             match_list.end(),
+                             [](const auto& match1, const auto& match2) -> bool {
+                                 return match1.second > match2.second;
+                             });
         }
     }
 
@@ -159,10 +160,11 @@ void request_matches(pmondriaan::hypergraph& H,
     for (auto i = 0u; i < number_local_samples; i++) {
         auto& match_list = matches[i];
         if (match_list.size() > opts.coarsening_max_clustersize) {
-            std::sort(match_list.begin(), match_list.end(),
-                      [](const auto& match1, const auto& match2) -> bool {
-                          return std::get<2>(match1) > std::get<2>(match2);
-                      });
+            std::nth_element(match_list.begin(), match_list.begin() + opts.coarsening_max_clustersize,
+                             match_list.end(),
+                             [](const auto& match1, const auto& match2) -> bool {
+                                 return std::get<2>(match1) > std::get<2>(match2);
+                             });
         }
 
         long number_to_send = std::min(match_list.size(), opts.coarsening_max_clustersize);

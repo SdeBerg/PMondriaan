@@ -120,6 +120,10 @@ int main(int argc, char** argv) {
         }
         auto H = hypergraph.value();
 
+        std::cout << "After reading hypergraph. Continue?\n";
+        int c = 0;
+        std::cin >> c;
+
         auto time = bulk::util::timer();
         recursive_bisect(world, H, settings.k, settings.eps, settings.eta, options);
         auto time_used = time.get();
