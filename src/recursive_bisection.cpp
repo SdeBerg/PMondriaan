@@ -54,6 +54,8 @@ void recursive_bisect(bulk::world& world,
         jobs.push(pmondriaan::work_item(start, end, labels.low, labels.high, weight_mypart));
     }
 
+    opts.sample_size = opts.sample_size / p;
+
     // while we need to give more than one label and need to use more than one processor, we bisect the hypergraph in parallel
     while ((labels.length() > 0) && (p > 1)) {
 

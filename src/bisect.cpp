@@ -213,6 +213,9 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         cut = pmondriaan::uncoarsen_hypergraph_seq(HC_list[nc_tot + 1], HC_list[nc_tot],
                                                    C_list[nc_tot + 1], opts, max_weight_0,
                                                    max_weight_1, cut, rng);
+        HC_list.pop_back();
+        C_list.pop_back();
+
         if (world.rank() == 0) {
             if (print_time) {
                 world.log("s: %d, time in iteration seq uncoarsening: %lf",
@@ -258,6 +261,9 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                                                        HC_list[nc_par],
                                                        C_list[nc_par + 1], opts, max_weight_0,
                                                        max_weight_1, cut, rng);
+
+            HC_list.pop_back();
+            C_list.pop_back();
 
             if (world.rank() == 0) {
                 if (print_time) {
