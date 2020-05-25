@@ -133,7 +133,7 @@ void gain_structure::move(long v) {
     long to = (vertex.part() + 1) % 2;
 
     // We move v and remove v from its bucket
-    H_.move(v);
+    H_.move_sorted(v, C_);
     buckets[from].remove(v, gains[H_.local_id(v)]);
     gains[H_.local_id(v)] = std::numeric_limits<long>::min();
 
@@ -144,12 +144,20 @@ void gain_structure::move(long v) {
             }
         }
         if (C_[H_.local_id_net(n)][to] == 1) {
-            for (auto u : H_.net(n).vertices()) {
-                if ((H_(H_.local_id(u)).part() == to) && (u != v)) {
-                    add_gain(u, -1 * H_.net(n).cost());
-                    break;
+            long u = -1;
+            if (to == 1) {
+                u = H_.net(n).vertices()[H_.net(n).size() - 1];
+            } else {
+                u = H_.net(n).vertices()[0];
+            }
+
+            if (H_(H_.local_id(u)).part() != to || u == v) {
+                std::cout << "Adding gain to wrong vertex!!\n";
+                for (auto t : H_.net(n).vertices()) {
+                    std::cout << H_(H_.local_id(t)).part() << " ";
                 }
             }
+            add_gain(u, -1 * H_.net(n).cost());
         }
 
         C_[H_.local_id_net(n)][to]++;
@@ -161,12 +169,78 @@ void gain_structure::move(long v) {
             }
         }
         if (C_[H_.local_id_net(n)][from] == 1) {
-            for (auto u : H_.net(n).vertices()) {
-                if (H_(H_.local_id(u)).part() == from) {
-                    add_gain(u, H_.net(n).cost());
-                    break;
+            long u = -1;
+            if (from == 1) {
+                u = H_.net(n).vertices()[H_.net(n).size() - 1];
+            } else {
+                u = H_.net(n).vertices()[0];
+            }
+
+            if (H_(H_.local_id(u)).part() != from || u == v) {
+                std::cout << "Adding gain to wrong vertex from " << from
+                          << "C: " << C_[H_.local_id_net(n)][0] << " "
+                          << C_[H_.local_id_net(n)][1] << "!!\n";
+                for (auto t : H_.net(n).vertices()) {
+                    std::cout << t << " " << H_(H_.local_id(t)).part() << " ";
                 }
             }
+            add_gain(u, H_.net(n).cost());
+        }
+    }
+}
+
+void gain_structure::move(long v, std::vector<std::vector<long>>& C_loc) {
+    auto& vertex = H_(H_.local_id(v));
+    long from = vertex.part();
+    long to = (vertex.part() + 1) % 2;
+
+    // We move v and remove v from its bucket
+    H_.move_sorted(v, C_loc);
+    buckets[from].remove(v, gains[H_.local_id(v)]);
+    gains[H_.local_id(v)] = std::numeric_limits<long>::min();
+
+    for (auto n : vertex.nets()) {
+        if (C_[H_.local_id_net(n)][to] == 0) {
+            for (auto u : H_.net(n).vertices()) {
+                add_gain(u, H_.net(n).cost());
+            }
+        }
+        if ((C_[H_.local_id_net(n)][to] == 1) && (C_loc[H_.local_id_net(n)][to] == 1)) {
+            long u = -1;
+            if (to == 1) {
+                u = H_.net(n).vertices()[H_.net(n).size() - 1];
+            } else {
+                u = H_.net(n).vertices()[0];
+            }
+
+            if (H_(H_.local_id(u)).part() != to || u == v) {
+                std::cout << "Adding gain to wrong vertex!!";
+            }
+            add_gain(u, -1 * H_.net(n).cost());
+        }
+
+        C_[H_.local_id_net(n)][to]++;
+        C_[H_.local_id_net(n)][from]--;
+        C_loc[H_.local_id_net(n)][to]++;
+        C_loc[H_.local_id_net(n)][from]--;
+
+        if (C_[H_.local_id_net(n)][from] == 0) {
+            for (auto u : H_.net(n).vertices()) {
+                add_gain(u, -1 * H_.net(n).cost());
+            }
+        }
+        if ((C_[H_.local_id_net(n)][from] == 1) && (C_loc[H_.local_id_net(n)][from] == 1)) {
+            long u = -1;
+            if (from == 1) {
+                u = H_.net(n).vertices()[H_.net(n).size() - 1];
+            } else {
+                u = H_.net(n).vertices()[0];
+            }
+
+            if (H_(H_.local_id(u)).part() != from || u == v) {
+                std::cout << "Adding gain to wrong vertex!!";
+            }
+            add_gain(u, H_.net(n).cost());
         }
     }
 }

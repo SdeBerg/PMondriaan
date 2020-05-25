@@ -47,8 +47,11 @@ long KLFM_par(bulk::world& world,
     total_weights[0] = weight_0;
     total_weights[1] = weight_1;
 
+    auto C_loc = init_counts(H);
+    H.sort_vertices_on_part(C_loc);
+
     while (pass < opts.KLFM_max_passes) {
-        auto result = KLFM_pass_par(world, H, C, prev_cut_size, total_weights,
+        auto result = KLFM_pass_par(world, H, C, C_loc, prev_cut_size, total_weights,
                                     max_weight_0, max_weight_1, opts, rng);
         if (result < prev_cut_size) {
             prev_cut_size = result;
@@ -66,6 +69,7 @@ long KLFM_par(bulk::world& world,
 long KLFM_pass_par(bulk::world& world,
                    pmondriaan::hypergraph& H,
                    std::vector<std::vector<long>>& C,
+                   std::vector<std::vector<long>>& C_loc,
                    long cut_size,
                    std::array<long, 2>& total_weights,
                    long max_weight_0,
@@ -90,6 +94,9 @@ long KLFM_pass_par(bulk::world& world,
     auto cut_size_my_nets =
     init_previous_C(world, H, C, previous_C, cost_my_nets, net_partition);
 
+    // Store the previous counts of part 0, so we can easily check for change later
+    auto prev_C_0 = std::vector<long>(H.nets().size());
+
     // Stores the proposed moves as: gain, weight change, processor id
     auto moves_queue = bulk::queue<long, long, int, long>(world);
     auto update_nets = bulk::queue<long, long>(world);
@@ -101,13 +108,16 @@ long KLFM_pass_par(bulk::world& world,
     bool all_done = false;
     while (!all_done) {
         auto prev_total_weights = total_weights;
+        for (auto i = 0u; i < H.nets().size(); i++) {
+            prev_C_0[i] = C[i][0];
+        }
         // Find best KLFM_par_number_send_moves moves
         // A move is stored as v_to_move, gain_v, weight change
         auto moves =
         std::vector<std::tuple<long, long, long>>(opts.KLFM_par_number_send_moves,
                                                   std::make_tuple(-1, 0, 0));
-        find_top_moves(H, gain_structure, moves, total_weights, max_weight_0,
-                       max_weight_1, rng);
+        find_top_moves(H, gain_structure, C_loc, moves, total_weights,
+                       max_weight_0, max_weight_1, rng);
 
         // Send moves to processor 0
         long tag = 0;
@@ -133,7 +143,7 @@ long KLFM_pass_par(bulk::world& world,
             while (rejected != 0) {
                 if (std::get<2>(moves[index]) > 0) {
                     auto& vertex = H(H.local_id(std::get<0>(moves[index])));
-                    H.move(vertex.id(), C);
+                    H.move(vertex.id(), C, C_loc);
                     rejected--;
                     // We set the move to -1 so we do not add it to the no improvement moves
                     moves[index] = std::make_tuple(-1, 0, 0);
@@ -144,7 +154,7 @@ long KLFM_pass_par(bulk::world& world,
             while (rejected != 0) {
                 if (std::get<2>(moves[index]) < 0) {
                     auto& vertex = H(H.local_id(std::get<0>(moves[index])));
-                    H.move(vertex.id(), C);
+                    H.move(vertex.id(), C, C_loc);
                     rejected++;
                     // We set the move to -1 so we do not add it to the no improvement moves
                     moves[index] = std::make_tuple(-1, 0, 0);
@@ -154,10 +164,12 @@ long KLFM_pass_par(bulk::world& world,
         }
 
         // We send updates about counts in nets to responsible processors
-        // TODO: Make this more efficient by not sending everything
         for (auto i = 0u; i < H.nets().size(); i++) {
-            update_nets(net_partition.owner(H.nets()[i].id()))
-            .send(H.nets()[i].id(), C[H.local_id_net(H.nets()[i].id())][0]);
+            // We only send the new count if it has been changed
+            if (prev_C_0[i] != C[i][0]) {
+                update_nets(net_partition.owner(H.nets()[i].id()))
+                .send(H.nets()[i].id(), C[i][0]);
+            }
         }
         world.sync();
 
@@ -207,7 +219,7 @@ long KLFM_pass_par(bulk::world& world,
         for (auto n : vertex.nets()) {
             changed_nets.insert(n);
         }
-        H.move(v, C);
+        H.move(v, C, C_loc);
     }
 
     // We send updates about counts in nets to responsible processors
@@ -276,17 +288,15 @@ void update_gains(pmondriaan::hypergraph& H,
         }
     }
     if ((C_new[0] == 1) && (C_loc[0] > 1)) {
-        for (auto v : net.vertices()) {
-            if (H(H.local_id(v)).part() == 0) {
-                gain_structure.add_gain(v, net.cost());
-            }
+        auto v = net.vertices().front();
+        if (H(H.local_id(v)).part() == 0) {
+            gain_structure.add_gain(v, net.cost());
         }
     }
     if ((C_new[1] == 1) && (C_loc[1] > 1)) {
-        for (auto v : net.vertices()) {
-            if (H(H.local_id(v)).part() == 1) {
-                gain_structure.add_gain(v, net.cost());
-            }
+        auto v = net.vertices().back();
+        if (H(H.local_id(v)).part() == 1) {
+            gain_structure.add_gain(v, net.cost());
         }
     }
     if (((C_new[0] > 0) && (C_loc[0] == 0)) || ((C_new[1] > 0) && (C_loc[1] == 0))) {
@@ -295,17 +305,15 @@ void update_gains(pmondriaan::hypergraph& H,
         }
     }
     if ((C_new[0] > 1) && (C_loc[0] == 1)) {
-        for (auto v : net.vertices()) {
-            if (H(H.local_id(v)).part() == 0) {
-                gain_structure.add_gain(v, -1 * net.cost());
-            }
+        auto v = net.vertices().front();
+        if (H(H.local_id(v)).part() == 0) {
+            gain_structure.add_gain(v, -1 * net.cost());
         }
     }
     if ((C_new[1] > 1) && (C_loc[1] == 1)) {
-        for (auto v : net.vertices()) {
-            if (H(H.local_id(v)).part() == 1) {
-                gain_structure.add_gain(v, -1 * net.cost());
-            }
+        auto v = net.vertices().back();
+        if (H(H.local_id(v)).part() == 1) {
+            gain_structure.add_gain(v, -1 * net.cost());
         }
     }
 }
@@ -315,6 +323,7 @@ void update_gains(pmondriaan::hypergraph& H,
  */
 void find_top_moves(pmondriaan::hypergraph& H,
                     pmondriaan::gain_structure& gain_structure,
+                    std::vector<std::vector<long>>& C_loc,
                     std::vector<std::tuple<long, long, long>>& moves,
                     std::array<long, 2>& weights,
                     long max_weight_0,
@@ -350,7 +359,7 @@ void find_top_moves(pmondriaan::hypergraph& H,
                 weights[1] -= weight_v;
                 weights[0] += weight_v;
             }
-            gain_structure.move(v_to_move);
+            gain_structure.move(v_to_move, C_loc);
             moves_found++;
         } else {
             gain_structure.remove(v_to_move);
@@ -459,7 +468,6 @@ long update_C(bulk::world& world,
             }
             C_new[local][0] += change;
             C_new[local][1] -= change;
-            // TODO make sure we also adjust the gains here
             if ((C_new[local][0] == 0) || (C_new[local][1] == 0)) {
                 cut_size_my_nets -= cost_my_nets[net_partition.local(net)[0]];
             }

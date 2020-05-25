@@ -70,6 +70,9 @@ class gain_structure {
 
     void move(long v);
 
+    // Move vertex using local counts C_loc
+    void move(long v, std::vector<std::vector<long>>& C_loc);
+
     void remove(long v);
 
     bool done();

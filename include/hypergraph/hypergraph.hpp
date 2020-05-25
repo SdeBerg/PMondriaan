@@ -139,11 +139,17 @@ class hypergraph {
     // removes a net and the net from all net lists of vertices
     void remove_net_by_index(long index);
 
+    // sorts the vertices in the nets of part 0 and 1 on their part
+    void sort_vertices_on_part(std::vector<std::vector<long>>& C);
+
     // moves a vertex to the other part in 0,1
-    void move(long id);
+    void move_sorted(long id, std::vector<std::vector<long>>& C);
 
     // moves a vertex to the other part in 0,1 and adjusts the vector with counts of the parts
     void move(long id, std::vector<std::vector<long>>& C);
+
+    // moves a vertex to the other part in 0,1 and adjusts the vector with counts of the parts for parallel hypergraph
+    void move(long id, std::vector<std::vector<long>>& C, std::vector<std::vector<long>>& C_loc);
 
     // updates the global_to_local map
     void update_map();

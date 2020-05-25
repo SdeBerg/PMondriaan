@@ -107,21 +107,84 @@ void hypergraph::remove_net_by_index(long index) {
     net_global_to_local.erase(id);
 }
 
-// moves a vertex to the other part in 0,1
-void hypergraph::move(long id) {
+// sorts the vertices in the nets of part 0 and 1 on their part
+void hypergraph::sort_vertices_on_part(std::vector<std::vector<long>>& C) {
+    for (auto i = 0u; i < nets_.size(); i++) {
+        auto& net = nets_[i];
+        auto& vertex_list = net.vertices();
+        long index = 0;
+        long end = net.size() - 1;
+        while (index < C[i][0]) {
+            if (vertices_[local_id(vertex_list[index])].part() != 0) {
+                while (vertices_[local_id(vertex_list[end])].part() == 1) {
+                    end--;
+                }
+                std::iter_swap(vertex_list.begin() + index, vertex_list.begin() + end);
+                end--;
+            } else {
+                index++;
+            }
+        }
+        /*std::cout << "C: " << C[i][0] << " " << C[i][1] << "\n";
+        for (auto v : vertex_list) {
+            std::cout << v << " " << vertices_[local_id(v)].part() << " ";
+        }*/
+    }
+}
+
+// moves a vertex to the other part in 0,1 (before updating the counts)
+void hypergraph::move_sorted(long id, std::vector<std::vector<long>>& C) {
     long idl = this->local_id(id);
     auto& vertex = vertices_[idl];
     vertex.set_part((vertex.part() + 1) % 2);
+    if (vertex.part() == 0) {
+        for (auto i = 0u; i < vertex.nets().size(); i++) {
+            auto n = vertex.nets()[i];
+            auto& vertex_list = this->net(n).vertices();
+            long index = C[local_id_net(n)][0];
+            while (vertex_list[index] != id) {
+                index++;
+            }
+            std::iter_swap(vertex_list.begin() + index,
+                           vertex_list.begin() + C[local_id_net(n)][0]);
+        }
+    } else {
+        for (auto i = 0u; i < vertex.nets().size(); i++) {
+            auto n = vertex.nets()[i];
+            auto& vertex_list = this->net(n).vertices();
+            long index = 0;
+            while (vertex_list[index] != id) {
+                index++;
+            }
+            std::iter_swap(vertex_list.begin() + index,
+                           vertex_list.begin() + C[local_id_net(n)][0] - 1);
+        }
+    }
 }
 
 void hypergraph::move(long id, std::vector<std::vector<long>>& C) {
     auto& v = vertices_[this->local_id(id)];
     long from = v.part();
-    move(id);
+    move_sorted(id, C);
     long to = v.part();
     for (auto n : v.nets()) {
         C[local_id_net(n)][from]--;
         C[local_id_net(n)][to]++;
+    }
+}
+
+void hypergraph::move(long id,
+                      std::vector<std::vector<long>>& C,
+                      std::vector<std::vector<long>>& C_loc) {
+    auto& v = vertices_[this->local_id(id)];
+    long from = v.part();
+    move_sorted(id, C_loc);
+    long to = v.part();
+    for (auto n : v.nets()) {
+        C[local_id_net(n)][from]--;
+        C[local_id_net(n)][to]++;
+        C_loc[local_id_net(n)][from]--;
+        C_loc[local_id_net(n)][to]++;
     }
 }
 
@@ -385,7 +448,6 @@ long cutsize(pmondriaan::hypergraph& H, std::vector<std::vector<long>>& C) {
     }
     return cut;
 }
-
 
 /**
  * Compute the global net sizes of a hypergraph.

@@ -137,7 +137,7 @@ TEST(KLFMParallel, KLFMPar) {
         ASSERT_LE(global_weight_part(world, H, 1), 170);
 
         pmondriaan::options opts;
-        opts.KLFM_max_passes = 10;
+        opts.KLFM_max_passes = 1;
         opts.KLFM_par_number_send_moves = 3;
         opts.metric = pmondriaan::m::cut_net;
         auto C = init_counts(world, H);

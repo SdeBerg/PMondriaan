@@ -77,6 +77,7 @@ set(
 	"unittest/hypergraph/contraction_test.cpp"
 	"unittest/multilevel_bisect/KLFM/gain_buckets_test.cpp"
 	"unittest/multilevel_bisect/KLFM/KLFM_par_test.cpp"
+	"unittest/multilevel_bisect/KLFM/sort_vertices_test.cpp"
 	"unittest/multilevel_bisect/initial_partitioning_test.cpp"
 	"unittest/multilevel_bisect/label_propagation_bisect_test.cpp"
 	"unittest/multilevel_bisect/bisect_test.cpp"

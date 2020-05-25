@@ -36,6 +36,8 @@ long KLFM(pmondriaan::hypergraph& H,
         prev_cut_size = cut_size;
     }
 
+    H.sort_vertices_on_part(C);
+
     auto weights = std::array<long, 2>();
     weights[0] = weight_0;
     weights[1] = weight_1;
