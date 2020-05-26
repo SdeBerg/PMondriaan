@@ -125,10 +125,6 @@ void hypergraph::sort_vertices_on_part(std::vector<std::vector<long>>& C) {
                 index++;
             }
         }
-        /*std::cout << "C: " << C[i][0] << " " << C[i][1] << "\n";
-        for (auto v : vertex_list) {
-            std::cout << v << " " << vertices_[local_id(v)].part() << " ";
-        }*/
     }
 }
 
@@ -189,12 +185,14 @@ void hypergraph::move(long id,
 }
 
 void hypergraph::update_map() {
+    global_to_local.clear();
     for (auto i = 0u; i < vertices_.size(); i++) {
         global_to_local[vertices_[i].id()] = i;
     }
 }
 
 void hypergraph::update_map_nets() {
+    net_global_to_local.clear();
     for (auto i = 0u; i < nets_.size(); i++) {
         net_global_to_local[nets_[i].id()] = i;
     }

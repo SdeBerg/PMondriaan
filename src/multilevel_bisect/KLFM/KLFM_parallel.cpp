@@ -490,7 +490,9 @@ long update_C(bulk::world& world,
     // We make prev_C_0 up-to-date with the new info
     for (const auto& [net, new_C_0] : update_nets) {
         if (H.is_local_net(net)) {
-            prev_C_0[H.local_id_net(net)] = new_C_0;
+            if (H.net(net).id() == net) {
+                prev_C_0[H.local_id_net(net)] = new_C_0;
+            }
         }
     }
 
@@ -516,10 +518,12 @@ void check_C(bulk::world& world, pmondriaan::hypergraph& H, std::vector<std::vec
     auto correct_C = init_counts(world, H);
     for (auto i = 0u; i < C.size(); i++) {
         if (C[i][0] != correct_C[i][0]) {
-            world.log("s %d: C[%d][0] incorrect", world.rank(), i);
+            world.log("s %d: C[%d][0] incorrect is %d, should be %d (net %d)",
+                      world.rank(), i, C[i][0], correct_C[i][0], H.nets()[i].id());
         }
         if (C[i][1] != correct_C[i][1]) {
-            world.log("s %d: C[%d][1] incorrect", world.rank(), i);
+            world.log("s %d: C[%d][1] incorrect is %d, should be %d (net %d)",
+                      world.rank(), i, C[i][1], correct_C[i][1], H.nets()[i].id());
         }
     }
 }
