@@ -165,6 +165,9 @@ class hypergraph {
     bool is_local(long global_id) {
         return (global_to_local.count(global_id) > 0);
     }
+    bool is_local_net(long global_id) {
+        return net_global_to_local.count(global_id) > 0;
+    }
 
     void set_global_size(size_t size) { global_size_ = size; }
     void set_global_net_sizes(std::vector<size_t>& sizes);

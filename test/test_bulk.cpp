@@ -4,16 +4,17 @@ int main() {
     bulk::thread::environment env;
 
     env.spawn(env.available_processors(), [](bulk::world& world) {
-        int s = world.rank();
+        // int s = world.rank();
         // int p = world.active_processors();
 
-        auto coar = bulk::coarray<int>(world, 1);
-        coar[0] = s + 1;
-        auto f = coar(0)[0].get();
+        auto q = bulk::queue<long>(world);
+        q(0).send(2);
         world.sync();
-        world.log("s %d: %d", s, f.value());
+        q(0).send(5);
         world.sync();
-        world.log("s %d: %d", s, f.value());
+        for (auto item : q) {
+            world.log("Received %d", item);
+        }
     });
 
     return 0;

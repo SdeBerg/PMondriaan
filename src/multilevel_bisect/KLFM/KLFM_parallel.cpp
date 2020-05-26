@@ -96,6 +96,9 @@ long KLFM_pass_par(bulk::world& world,
 
     // Store the previous counts of part 0, so we can easily check for change later
     auto prev_C_0 = std::vector<long>(H.nets().size());
+    for (auto i = 0u; i < H.nets().size(); i++) {
+        prev_C_0[i] = C[i][0];
+    }
 
     // Stores the proposed moves as: gain, weight change, processor id
     auto moves_queue = bulk::queue<long, long, int, long>(world);
@@ -108,9 +111,7 @@ long KLFM_pass_par(bulk::world& world,
     bool all_done = false;
     while (!all_done) {
         auto prev_total_weights = total_weights;
-        for (auto i = 0u; i < H.nets().size(); i++) {
-            prev_C_0[i] = C[i][0];
-        }
+
         // Find best KLFM_par_number_send_moves moves
         // A move is stored as v_to_move, gain_v, weight change
         auto moves =
@@ -174,7 +175,7 @@ long KLFM_pass_par(bulk::world& world,
         world.sync();
 
         cut_size_my_nets =
-        update_C(world, H, C, previous_C, update_nets, net_partition,
+        update_C(world, H, C, previous_C, prev_C_0, update_nets, net_partition,
                  cost_my_nets, cut_size_my_nets, true, gain_structure);
 
         // We also send all processors the total cutsize of the nets this p is responsible for
@@ -227,8 +228,8 @@ long KLFM_pass_par(bulk::world& world,
         update_nets(net_partition.owner(n)).send(n, C[H.local_id_net(n)][0]);
     }
     world.sync();
-    update_C(world, H, C, previous_C, update_nets, net_partition, cost_my_nets,
-             cut_size_my_nets, false, gain_structure);
+    update_C(world, H, C, previous_C, prev_C_0, update_nets, net_partition,
+             cost_my_nets, cut_size_my_nets, false, gain_structure);
 
     auto total_change = bulk::sum(world, weight_change);
     total_weights[0] += total_change;
@@ -445,6 +446,7 @@ long update_C(bulk::world& world,
               pmondriaan::hypergraph& H,
               std::vector<std::vector<long>>& C,
               bulk::coarray<long>& previous_C,
+              std::vector<long>& prev_C_0,
               bulk::queue<long, long>& update_nets,
               bulk::partitioning<1>& net_partition,
               bulk::coarray<long>& cost_my_nets,
@@ -473,34 +475,38 @@ long update_C(bulk::world& world,
             }
         }
     }
+    // We send changed counts to all processors
     for (auto i = 0u; i < net_partition.local_count(s); i++) {
-        previous_C[2 * i] = C_new[i][0];
-        previous_C[(2 * i) + 1] = C_new[i][1];
-    }
-
-    // Each processor uses a get to find the updated counts it needs.
-    auto future_counts = std::vector<bulk::future<long>>();
-    for (auto i = 0u; i < H.nets().size(); i++) {
-        auto net = H.nets()[i].id();
-        future_counts.push_back(
-        previous_C(net_partition.owner(net))[2 * net_partition.local(net)[0]].get());
+        if (previous_C[2 * i] != C_new[i][0]) {
+            for (int t = 0; t < world.active_processors(); t++) {
+                update_nets(t).send(net_partition.global(i, s)[0], C_new[i][0]);
+            }
+            previous_C[2 * i] = C_new[i][0];
+            previous_C[(2 * i) + 1] = C_new[i][1];
+        }
     }
     world.sync();
 
+    // We make prev_C_0 up-to-date with the new info
+    for (const auto& [net, new_C_0] : update_nets) {
+        if (H.is_local_net(net)) {
+            prev_C_0[H.local_id_net(net)] = new_C_0;
+        }
+    }
+
     if (update_g) {
         for (auto i = 0u; i < H.nets().size(); i++) {
-            if (future_counts[i].value() != C[i][0]) {
+            if (prev_C_0[i] != C[i][0]) {
                 update_gains(H, H.nets()[i], C[i],
-                             std::vector<long>({future_counts[i].value(),
-                                                (long)H.nets()[i].global_size() -
-                                                future_counts[i].value()}),
+                             std::vector<long>(
+                             {prev_C_0[i], (long)H.nets()[i].global_size() - prev_C_0[i]}),
                              gain_structure);
             }
         }
     }
     for (auto i = 0u; i < H.nets().size(); i++) {
-        C[i][0] = future_counts[i].value();
-        C[i][1] = H.nets()[i].global_size() - future_counts[i].value();
+        C[i][0] = prev_C_0[i];
+        C[i][1] = H.nets()[i].global_size() - prev_C_0[i];
     }
     return cut_size_my_nets;
 }
