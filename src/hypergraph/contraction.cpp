@@ -74,10 +74,12 @@ std::vector<long> contraction::assign_free_vertices(bulk::world& world,
     }
     world.sync();
 
-    long extra_weight_0 = max_weight_0 - weight_parts[0];
-    long extra_weight_1 = max_weight_1 - weight_parts[1];
-    long assign_to_part_0 =
-    (extra_weight_0 * global_free_weight_) / (extra_weight_0 + extra_weight_1);
+    // long extra_weight_0 = max_weight_0 - weight_parts[0];
+    // long extra_weight_1 = max_weight_1 - weight_parts[1];
+    long assign_to_part_0 = (weight_parts[1] * max_weight_0 - weight_parts[0] * max_weight_1 +
+                             global_free_weight_ * max_weight_0) /
+                            (max_weight_0 + max_weight_1);
+    //(extra_weight_0 * global_free_weight_) / (extra_weight_0 + extra_weight_1);
     // We find the processor whose free vertices have to be split over the parts
     long assigned = 0;
     int split_proc = 0;
