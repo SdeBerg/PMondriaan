@@ -214,6 +214,24 @@ void hypergraph::print() {
     }
 }
 
+// For testing purposes, checks if the maps are correct
+void hypergraph::check_maps() {
+    for (auto v : vertices_) {
+        if (local_id(v.id()) >= (long)vertices_.size()) {
+            std::cout << "Local id vertex larger than size!\n";
+        } else if (vertices_[local_id(v.id())].id() != v.id()) {
+            std::cout << "Local id vertex incorrect!\n";
+        }
+        for (auto n : v.nets()) {
+            if (local_id_net(n) >= (long)nets_.size()) {
+                std::cout << "Local id net larger than size!\n";
+            } else if (nets_[local_id_net(n)].id() != n) {
+                std::cout << "Local id net incorrect!\n";
+            }
+        }
+    }
+}
+
 /**
  * Initialize the counts for parts 0,1.
  */

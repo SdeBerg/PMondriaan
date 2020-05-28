@@ -124,6 +124,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                 world.log("After iteration %d, size is %d (par)", nc_par,
                           HC_list[nc_par].global_size());
             }
+            HC_list[nc_par].check_maps();
         }
 
         // we now communicate the entire hypergraph to all processors using a queue containing id, weight and nets
@@ -158,9 +159,10 @@ std::vector<long> bisect_multilevel(bulk::world& world,
             HC_list[nc_par].add_net(net_id, std::vector<long>(), cost);
         }
         for (const auto& [id, weight, nets] : vertex_queue) {
-            HC_list[nc_par].vertices().push_back({id, nets, weight});
+            HC_list[nc_par].add_vertex(id, nets, weight);
             HC_list[nc_par].add_to_nets(HC_list[nc_par].vertices().back());
         }
+        HC_list[nc_par].check_maps();
         if (print_time && (world.rank() == 0)) {
             world.log("s: %d, time in creating new hypergraph: %lf",
                       world.rank(), time.get_change());
@@ -193,6 +195,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
             world.log("After iteration %d, size is %d (seq)", nc_tot - 1,
                       HC_list[nc_tot].global_size());
         }
+        HC_list[nc_tot].check_maps();
     }
 
     time.get();

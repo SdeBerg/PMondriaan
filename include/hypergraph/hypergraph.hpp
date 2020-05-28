@@ -191,6 +191,8 @@ class hypergraph {
     auto& map_nets() { return net_global_to_local; }
 
     void print();
+    // For testing purposes, checks if the maps are correct
+    void check_maps();
 
   private:
     size_t global_size_;

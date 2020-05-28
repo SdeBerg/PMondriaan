@@ -1,4 +1,4 @@
-file="../test/data/matrices/mhd4800b/mhd4800b.mtx"
+file="../test/data/matrices/tbdlinux.mtx"
 processors=4
 parts=2
 eps=0.03
@@ -7,7 +7,7 @@ weights="degree"
 bisect=1
 sampling=0
 metric=1
-sample_size=200
+sample_size=1000
 max_cluster_size=30
 lp_max_iter=25
 coarsening_nrvertices=200

@@ -66,8 +66,7 @@ void recursive_bisect(bulk::world& world,
 
         auto max_global_weights =
         compute_max_global_weight(k_, k_low, k_high, weight_mypart, maxweight);
-        world.log("Sample size %i (before)", opts.sample_size);
-        world.sync();
+
         // part 0 will always have the smallest weight
         auto weight_parts = bisect(*sub_world, H, opts, max_global_weights[0],
                                    max_global_weights[1], start, end, labels, rng);
