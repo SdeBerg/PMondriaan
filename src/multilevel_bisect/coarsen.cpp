@@ -51,16 +51,20 @@ pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
     C.add_samples(H, indices_samples);
     auto accepted_matches = bulk::queue<long, long>(world);
     // after his funtion, accepted matches contains the matches that have been accepted
+    //
     request_matches(H, C, sample_queue, accepted_matches, indices_samples, opts);
 
     // queue to send the information about the accepted samples
     auto info_queue = bulk::queue<long, long, long[], long[]>(world);
     auto matched = std::vector<bool>(H.size(), false);
+
     pmondriaan::send_information_matches(world, H, accepted_matches, info_queue,
                                          matched, opts.sample_size);
 
+
     auto HC =
     pmondriaan::contract_hypergraph(world, H, C, indices_samples, info_queue, matched);
+
     return HC;
 }
 
@@ -74,7 +78,7 @@ void request_matches(pmondriaan::hypergraph& H,
                      bulk::queue<long, long, long[]>& sample_queue,
                      bulk::queue<long, long>& accepted_matches,
                      const std::vector<long>& indices_samples,
-                     pmondriaan::options& opts) {
+                     pmondriaan::options opts) {
 
     auto& world = sample_queue.world();
     auto s = world.rank();
@@ -93,13 +97,18 @@ void request_matches(pmondriaan::hypergraph& H,
         for (auto n_id : sample_nets) {
             double scaled_cost = H.net(n_id).scaled_cost();
             for (auto u_id : H.net(n_id).vertices()) {
+                assert(H.local_id(u_id) >= 0 &&
+                       (size_t)H.local_id(u_id) < current_ip.size());
                 current_ip[H.local_id(u_id)] += scaled_cost;
                 changed_indices.insert(H.local_id(u_id));
             }
         }
         for (auto index : changed_indices) {
-            current_ip[index] *=
-            (1.0 / (double)std::min(H(index).degree(), sample_nets.size()));
+            assert(index >= 0 && (size_t)index < current_ip.size() &&
+                   (size_t)index < best_ip.size());
+            size_t min_degree = std::min(H(index).degree(), sample_nets.size());
+            assert(min_degree > 0);
+            current_ip[index] *= 1.0 / (double)min_degree;
             if (current_ip[index] > best_ip[index].first) {
                 best_ip[index] =
                 std::make_pair(current_ip[index], t * opts.sample_size + number_sample);
@@ -111,6 +120,7 @@ void request_matches(pmondriaan::hypergraph& H,
 
     // we set the ip of all local samples with all samples to 0, so they will not match eachother
     for (auto local_sample : indices_samples) {
+        assert(local_sample >= 0 && (size_t)local_sample < best_ip.size());
         best_ip[local_sample] = std::make_pair(0.0, -1);
     }
 
@@ -120,6 +130,11 @@ void request_matches(pmondriaan::hypergraph& H,
     for (auto& v : H.vertices()) {
         auto local_id = H.local_id(v.id());
         if (best_ip[local_id].second != -1) {
+            assert(best_ip[local_id].second > 0 &&
+                   (size_t)best_ip[local_id].second < requested_matches.size());
+
+            assert(local_id >= 0 && (size_t)local_id < best_ip.size());
+
             requested_matches[best_ip[local_id].second].push_back(
             std::make_pair(v.id(), best_ip[local_id].first));
         }
@@ -127,6 +142,8 @@ void request_matches(pmondriaan::hypergraph& H,
 
     for (auto& match_list : requested_matches) {
         if (match_list.size() > opts.coarsening_max_clustersize) {
+            assert(match_list.begin() + opts.coarsening_max_clustersize <
+                   match_list.end());
             std::nth_element(match_list.begin(), match_list.begin() + opts.coarsening_max_clustersize,
                              match_list.end(),
                              [](const auto& match1, const auto& match2) -> bool {
@@ -138,7 +155,10 @@ void request_matches(pmondriaan::hypergraph& H,
     // queue for the vertex requests with the sender, the vertex to match with, the id of the vertex that wants to match and their ip
     auto request_queue = bulk::queue<long, long, long, double>(world);
     for (long sample = 0; sample < total_samples; sample++) {
+        assert(opts.sample_size > 0);
         long t = sample / opts.sample_size;
+        assert(t >= 0 && t < p);
+        assert(sample >= 0 && (size_t)sample < requested_matches.size());
         long number_to_send =
         std::min(requested_matches[sample].size(), opts.coarsening_max_clustersize);
         for (long i = 0; i < number_to_send; i++) {
@@ -153,11 +173,13 @@ void request_matches(pmondriaan::hypergraph& H,
     auto matches =
     std::vector<std::vector<std::tuple<long, long, double>>>(number_local_samples);
     for (const auto& [sender, sample, proposer, scip] : request_queue) {
+        assert((size_t)sample < number_local_samples);
         matches[sample].push_back(std::make_tuple(sender, proposer, scip));
     }
 
     for (auto i = 0u; i < number_local_samples; i++) {
         auto& match_list = matches[i];
+        assert(match_list.begin() + opts.coarsening_max_clustersize < match_list.end());
         if (match_list.size() > opts.coarsening_max_clustersize) {
             std::nth_element(match_list.begin(), match_list.begin() + opts.coarsening_max_clustersize,
                              match_list.end(),
@@ -170,6 +192,8 @@ void request_matches(pmondriaan::hypergraph& H,
         for (long j = 0; j < number_to_send; j++) {
             auto& match = match_list[j];
             C.add_match(i, std::get<1>(match), std::get<0>(match));
+            auto t = std::get<0>(match);
+            assert(t >= 0 && t < p);
             accepted_matches(std::get<0>(match)).send(i + s * opts.sample_size, std::get<1>(match));
         }
     }
@@ -192,6 +216,7 @@ void send_information_matches(bulk::world& world,
     auto total_nets_sample = std::unordered_set<long>();
     for (auto& [sample, proposer] : accepted_matches) {
         if ((sample != prev_sample) && (prev_sample >= 0)) {
+            assert(sample_size > 0);
             // We send all information about the matches of the previous sample to the correct processor
             long t = prev_sample / sample_size;
             auto nets_vector = std::vector<long>();
@@ -200,11 +225,14 @@ void send_information_matches(bulk::world& world,
                 nets_vector.push_back(n);
                 cost_nets.push_back(H.net(n).cost());
             }
+            assert(t >= 0 && t < world.active_processors());
             info_queue(t).send(prev_sample - t * sample_size,
                                total_weight_sample, nets_vector, cost_nets);
             total_weight_sample = 0;
             total_nets_sample.clear();
         }
+        assert(H.local_id(proposer) >= 0 &&
+               (size_t)H.local_id(proposer) < matched.size());
         matched[H.local_id(proposer)] = true;
         auto v = H(H.local_id(proposer));
         total_weight_sample += v.weight();
@@ -213,6 +241,7 @@ void send_information_matches(bulk::world& world,
     }
 
     // We send all information about the last sample
+    assert(sample_size > 0);
     long t = prev_sample / sample_size;
     auto nets_vector = std::vector<long>();
     auto cost_nets = std::vector<long>();
@@ -220,6 +249,7 @@ void send_information_matches(bulk::world& world,
         nets_vector.push_back(n);
         cost_nets.push_back(H.net(n).cost());
     }
+    assert(t >= 0 && t < world.active_processors());
     info_queue(t).send(prev_sample - t * sample_size, total_weight_sample,
                        nets_vector, cost_nets);
 
