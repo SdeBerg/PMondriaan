@@ -299,8 +299,7 @@ long reduce_surplus(bulk::world& world,
 
             auto nets_to_send = std::unordered_set<long>();
 
-            long max = std::min(surplus[t], surplus_others);
-            max = std::min(max, -1 * surplus[s]);
+            long max = std::min(surplus_others, -1 * surplus[s]);
 
             long total_sent = 0;
             while (total_sent < max) {

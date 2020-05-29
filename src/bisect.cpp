@@ -162,13 +162,12 @@ std::vector<long> bisect_multilevel(bulk::world& world,
             HC_list[nc_par].add_vertex(id, nets, weight);
             HC_list[nc_par].add_to_nets(HC_list[nc_par].vertices().back());
         }
-        HC_list[nc_par].check_maps();
+
         if (print_time && (world.rank() == 0)) {
             world.log("s: %d, time in creating new hypergraph: %lf",
                       world.rank(), time.get_change());
         }
-
-        HC_list[nc_par].update_map();
+        HC_list[nc_par].check_maps();
     }
 
     time.get();
