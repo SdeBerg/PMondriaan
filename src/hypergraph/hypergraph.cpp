@@ -494,9 +494,10 @@ std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph&
 
     auto future_result = std::vector<bulk::future<size_t>>();
     for (auto i = 0u; i < nets.size(); i++) {
-        future_result.push_back(size_nets(net_partition.owner(
-        nets[i].id()))[net_partition.local(nets[i].id())[0]]
-                                .get());
+        auto owner = net_partition.owner(nets[i].id());
+        assert(owner >= 0 && owner < world.active_processors());
+        auto remote_index = net_partition.local(nets[i].id())[0];
+        future_result.push_back(size_nets(owner)[remote_index].get());
     }
     world.sync();
     auto result = std::vector<size_t>(nets.size());

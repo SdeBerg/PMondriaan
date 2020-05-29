@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <iostream>
 #include <random>
 #include <unordered_map>
@@ -157,7 +158,11 @@ class hypergraph {
     // updates the map for the nets
     void update_map_nets();
 
-    long local_id(long global_id) { return global_to_local[global_id]; }
+    long local_id(long global_id) {
+        assert(global_to_local.find(global_id) != global_to_local.end());
+        return global_to_local[global_id];
+    }
+
     long local_id_net(long global_id) const {
         return net_global_to_local.at(global_id);
     }
@@ -176,12 +181,20 @@ class hypergraph {
     const std::vector<pmondriaan::vertex>& vertices() const {
         return vertices_;
     }
-    pmondriaan::vertex& operator()(long index) { return vertices_[index]; }
+    pmondriaan::vertex& operator()(long index) {
+        assert(index >= 0 && (size_t)index < vertices_.size());
+        return vertices_[index];
+    }
 
     std::vector<pmondriaan::net>& nets() { return nets_; }
     const std::vector<pmondriaan::net>& nets() const { return nets_; }
 
-    pmondriaan::net& net(long id) { return nets_[net_global_to_local[id]]; }
+    pmondriaan::net& net(long id) {
+        assert(net_global_to_local.find(id) != net_global_to_local.end());
+        auto local_id = net_global_to_local[id];
+        assert(local_id >= 0 && (size_t)local_id < nets_.size());
+        return nets_[local_id];
+    }
 
     auto size() { return vertices_.size(); }
     auto global_size() const { return global_size_; }

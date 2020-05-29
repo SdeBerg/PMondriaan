@@ -28,7 +28,7 @@ void recursive_bisect(bulk::world& world,
                       long k,
                       double epsilon,
                       double eta,
-                      pmondriaan::options& opts) {
+                      pmondriaan::options opts) {
 
     auto s = world.rank();
     auto p = world.active_processors();
