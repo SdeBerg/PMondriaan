@@ -27,7 +27,6 @@ pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
                                               pmondriaan::contraction& C,
                                               pmondriaan::options& opts,
                                               std::mt19937& rng) {
-
     auto s = world.rank();
     auto p = world.active_processors();
 
@@ -187,7 +186,6 @@ void send_information_matches(bulk::world& world,
                               bulk::queue<long, long, long[], long[]>& info_queue,
                               std::vector<bool>& matched,
                               long sample_size) {
-
     std::sort(accepted_matches.begin(), accepted_matches.end());
     long prev_sample = -1;
     long total_weight_sample = 0;
