@@ -8,8 +8,7 @@ enum class sampling : int { random, label_propagation };
 /**
  *
  */
-class options {
-  public:
+struct options {
     size_t sample_size;
     size_t coarsening_max_clustersize;
     size_t lp_max_iterations;

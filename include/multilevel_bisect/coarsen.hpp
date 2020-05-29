@@ -34,7 +34,7 @@ void request_matches(pmondriaan::hypergraph& H,
                      bulk::queue<long, long, long[]>& sample_queue,
                      bulk::queue<long, long>& accepted_matches,
                      const std::vector<long>& indices_samples,
-                     pmondriaan::options& opts);
+                     pmondriaan::options opts);
 
 /**
  * First merges the nets and weight of all vertices matched to a sample and

@@ -27,6 +27,7 @@ long owner_min(bulk::var<T>& x) {
             best_proc = t;
         }
     }
+
     return best_proc;
 }
 

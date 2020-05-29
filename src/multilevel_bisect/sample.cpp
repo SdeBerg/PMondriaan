@@ -1,3 +1,4 @@
+#include <cassert>
 #include <vector>
 
 #include "hypergraph/hypergraph.hpp"
@@ -13,6 +14,10 @@ namespace pmondriaan {
 std::vector<long> sample_random(pmondriaan::hypergraph& H, long ns, std::mt19937& rng) {
     auto samples = std::vector<long>();
     double size = (double)H.size();
+
+    assert(size > 0);
+    assert(rng.max() > 0);
+
     double s_left = (double)ns;
     long current = 0;
 
@@ -22,6 +27,7 @@ std::vector<long> sample_random(pmondriaan::hypergraph& H, long ns, std::mt19937
             samples.push_back(current);
         }
         size = size - 1.0;
+        assert(size > 0.0);
         current++;
     }
 

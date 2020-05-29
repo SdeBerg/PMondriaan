@@ -40,7 +40,7 @@ class contraction {
         matches_.push_back(std::vector<pmondriaan::match>());
     }
 
-    void add_samples(pmondriaan::hypergraph& H, std::vector<long> indices_samples) {
+    void add_samples(pmondriaan::hypergraph& H, const std::vector<long>& indices_samples) {
         for (auto index : indices_samples) {
             ids_samples_.push_back(H(index).id());
         }
@@ -50,6 +50,7 @@ class contraction {
     }
 
     void add_match(long sample, long match, int proc) {
+        assert(sample >= 0 && (size_t)sample < matches_.size());
         matches_[sample].push_back(pmondriaan::match(match, proc));
     }
 
