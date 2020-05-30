@@ -167,7 +167,6 @@ std::vector<long> bisect_multilevel(bulk::world& world,
             world.log("s: %d, time in creating new hypergraph: %lf",
                       world.rank(), time.get_change());
         }
-        HC_list[nc_par].check_maps();
     }
 
     time.get();
@@ -194,7 +193,6 @@ std::vector<long> bisect_multilevel(bulk::world& world,
             world.log("After iteration %d, size is %d (seq)", nc_tot - 1,
                       HC_list[nc_tot].global_size());
         }
-        HC_list[nc_tot].check_maps();
     }
 
     time.get();

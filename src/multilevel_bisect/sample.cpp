@@ -21,14 +21,22 @@ std::vector<long> sample_random(pmondriaan::hypergraph& H, long ns, std::mt19937
     double s_left = (double)ns;
     long current = 0;
 
-    while (s_left > 0) {
-        assert(size > 0.0);
-        if (((double)rng() / rng.max()) < s_left / size) {
-            s_left = s_left - 1.0;
+    // If we need more samples than our hypergraph size, we select all vertices as samples
+    if (s_left > size) {
+        while (current < size) {
             samples.push_back(current);
+            current++;
         }
-        size = size - 1.0;
-        current++;
+    } else {
+        while (s_left > 0) {
+            assert(size > 0.0);
+            if (((double)rng() / rng.max()) <= s_left / size) {
+                s_left = s_left - 1.0;
+                samples.push_back(current);
+            }
+            size = size - 1.0;
+            current++;
+        }
     }
 
     return samples;
