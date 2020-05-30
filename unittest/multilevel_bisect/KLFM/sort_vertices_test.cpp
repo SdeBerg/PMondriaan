@@ -49,7 +49,7 @@ TEST(KLFMSortVertices, KLFMSortVerticesInit) {
     H2.sort_vertices_on_part(C2);
     for (auto net : H2.nets()) {
         size_t index = 0;
-        while (H2(H2.local_id(net.vertices()[index])).part() == 0 && index < net.size()) {
+        while (index < net.size() && H2(H2.local_id(net.vertices()[index])).part() == 0) {
             index++;
         }
         while (index < net.size()) {
@@ -65,7 +65,7 @@ TEST(KLFMSortVertices, KLFMSortVerticesInit) {
 
     for (auto net : H2.nets()) {
         size_t index = 0;
-        while (H2(H2.local_id(net.vertices()[index])).part() == 0 && index < net.size()) {
+        while (index < net.size() && H2(H2.local_id(net.vertices()[index])).part() == 0) {
             index++;
         }
         while (index < net.size()) {

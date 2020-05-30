@@ -27,6 +27,11 @@ TEST(ReadMTX, ReadingFile) {
     read_hypergraph("../test/data/matrices/cage3/cage3.mtx", "one");
     ASSERT_TRUE(H_exists);
 
+    auto H_maps =
+    pmondriaan::read_hypergraph("../test/data/matrices/dolphins/dolphins.mtx", world, "degree")
+    .value();
+    H_maps.check_maps();
+
     std::stringstream mtx_ss(mtx_three_nonzeros);
     auto H = read_hypergraph_istream(mtx_ss, "degree");
     ASSERT_TRUE(H);

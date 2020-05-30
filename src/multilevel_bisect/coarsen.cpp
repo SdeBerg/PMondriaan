@@ -51,7 +51,7 @@ pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
     C.add_samples(H, indices_samples);
     auto accepted_matches = bulk::queue<long, long>(world);
     // after his funtion, accepted matches contains the matches that have been accepted
-    //
+
     request_matches(H, C, sample_queue, accepted_matches, indices_samples, opts);
 
     // queue to send the information about the accepted samples
@@ -60,7 +60,6 @@ pmondriaan::hypergraph coarsen_hypergraph_par(bulk::world& world,
 
     pmondriaan::send_information_matches(world, H, accepted_matches, info_queue,
                                          matched, opts.sample_size);
-
 
     auto HC =
     pmondriaan::contract_hypergraph(world, H, C, indices_samples, info_queue, matched);
@@ -95,12 +94,14 @@ void request_matches(pmondriaan::hypergraph& H,
 
     for (const auto& [t, number_sample, sample_nets] : sample_queue) {
         for (auto n_id : sample_nets) {
-            double scaled_cost = H.net(n_id).scaled_cost();
-            for (auto u_id : H.net(n_id).vertices()) {
-                assert(H.local_id(u_id) >= 0 &&
-                       (size_t)H.local_id(u_id) < current_ip.size());
-                current_ip[H.local_id(u_id)] += scaled_cost;
-                changed_indices.insert(H.local_id(u_id));
+            if (H.is_local_net(n_id)) {
+                double scaled_cost = H.net(n_id).scaled_cost();
+                for (auto u_id : H.net(n_id).vertices()) {
+                    assert(H.local_id(u_id) >= 0 &&
+                           (size_t)H.local_id(u_id) < current_ip.size());
+                    current_ip[H.local_id(u_id)] += scaled_cost;
+                    changed_indices.insert(H.local_id(u_id));
+                }
             }
         }
         for (auto index : changed_indices) {
@@ -130,7 +131,7 @@ void request_matches(pmondriaan::hypergraph& H,
     for (auto& v : H.vertices()) {
         auto local_id = H.local_id(v.id());
         if (best_ip[local_id].second != -1) {
-            assert(best_ip[local_id].second > 0 &&
+            assert(best_ip[local_id].second >= 0 &&
                    (size_t)best_ip[local_id].second < requested_matches.size());
 
             assert(local_id >= 0 && (size_t)local_id < best_ip.size());
@@ -179,8 +180,9 @@ void request_matches(pmondriaan::hypergraph& H,
 
     for (auto i = 0u; i < number_local_samples; i++) {
         auto& match_list = matches[i];
-        assert(match_list.begin() + opts.coarsening_max_clustersize < match_list.end());
         if (match_list.size() > opts.coarsening_max_clustersize) {
+            assert(match_list.begin() + opts.coarsening_max_clustersize <
+                   match_list.end());
             std::nth_element(match_list.begin(), match_list.begin() + opts.coarsening_max_clustersize,
                              match_list.end(),
                              [](const auto& match1, const auto& match2) -> bool {

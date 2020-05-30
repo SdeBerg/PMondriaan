@@ -230,6 +230,20 @@ void hypergraph::check_maps() {
             }
         }
     }
+    for (auto n : nets_) {
+        for (auto v : n.vertices()) {
+            if (global_to_local.find(v) == global_to_local.end()) {
+                std::cout << "Vertex not found!!\n";
+            } else if (vertices_[local_id(v)].id() != v) {
+                std::cout << "Local id vertex incorrect!\n";
+            }
+        }
+        if (net_global_to_local.find(n.id()) == net_global_to_local.end()) {
+            std::cout << "Net not found!\n";
+        } else if (nets_[local_id_net(n.id())].id() != n.id()) {
+            std::cout << "Local id net incorrect!\n";
+        }
+    }
 }
 
 /**
@@ -407,22 +421,24 @@ long cutsize(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::m metric
     bulk::block_partitioning<1>({H.global_number_nets()},
                                 {(size_t)world.active_processors()});
 
-    // this queue contains all labels present for each net
-    auto labels = bulk::queue<long, long[]>(world);
+    // this queue contains all labels present for each net and its cost
+    auto labels = bulk::queue<long, long[], long>(world);
     for (auto& net : H.nets()) {
         auto labels_net = std::unordered_set<long>();
         for (auto& v : net.vertices()) {
             labels_net.insert(H(H.local_id(v)).part());
         }
         labels(net_partition.owner(net.id()))
-        .send(net.id(), std::vector<long>(labels_net.begin(), labels_net.end()));
+        .send(net.id(), std::vector<long>(labels_net.begin(), labels_net.end()),
+              net.cost());
     }
     world.sync();
 
     auto total_cut =
     std::vector<std::unordered_set<long>>(net_partition.local_size(world.rank())[0]);
-
-    for (const auto& [net, labels_net] : labels) {
+    auto cost_nets = std::vector<long>(net_partition.local_size(world.rank())[0], 0);
+    for (const auto& [net, labels_net, cost] : labels) {
+        cost_nets[net_partition.local({(size_t)net})[0]] = cost;
         for (auto l : labels_net) {
             total_cut[net_partition.local({(size_t)net})[0]].insert(l);
         }
@@ -432,7 +448,7 @@ long cutsize(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::m metric
     case pmondriaan::m::cut_net: {
         for (auto i = 0u; i < total_cut.size(); i++) {
             if (total_cut[i].size() > 1) {
-                result += H.net(i).cost();
+                result += cost_nets[i];
             }
         }
         break;
@@ -440,7 +456,7 @@ long cutsize(bulk::world& world, pmondriaan::hypergraph& H, pmondriaan::m metric
     case pmondriaan::m::lambda_minus_one: {
         for (auto i = 0u; i < total_cut.size(); i++) {
             if (total_cut[i].size() > 1) {
-                result += (total_cut[i].size() - 1) * H.net(i).cost();
+                result += (total_cut[i].size() - 1) * cost_nets[i];
             }
         }
         break;

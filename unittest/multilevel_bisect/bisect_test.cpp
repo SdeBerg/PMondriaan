@@ -48,6 +48,7 @@ TEST(BisectMultilevel, ParBisectMultilevel) {
         auto H = pmondriaan::read_hypergraph(
                  "../test/data/matrices/dolphins/dolphins.mtx", world, "degree")
                  .value();
+        H.check_maps();
         std::mt19937 rng(world.rank() + 1);
         pmondriaan::options opts;
         opts.sample_size = 4;

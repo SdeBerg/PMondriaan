@@ -91,9 +91,9 @@ long KLFM_pass_par(bulk::world& world,
     we have the count of part 0 and the count of part 1 for each net */
     auto previous_C = bulk::coarray<long>(world, net_partition.local_count(s) * 2);
     auto cost_my_nets = bulk::coarray<long>(world, net_partition.local_count(s));
+
     auto cut_size_my_nets =
     init_previous_C(world, H, C, previous_C, cost_my_nets, net_partition);
-
     // Store the previous counts of part 0, so we can easily check for change later
     auto prev_C_0 = std::vector<long>(H.nets().size());
     for (auto i = 0u; i < H.nets().size(); i++) {
@@ -119,7 +119,6 @@ long KLFM_pass_par(bulk::world& world,
                                                   std::make_tuple(-1, 0, 0));
         find_top_moves(H, gain_structure, C_loc, moves, total_weights,
                        max_weight_0, max_weight_1, rng);
-
         // Send moves to processor 0
         long tag = 0;
         for (auto& move : moves) {
@@ -490,9 +489,8 @@ long update_C(bulk::world& world,
     // We make prev_C_0 up-to-date with the new info
     for (const auto& [net, new_C_0] : update_nets) {
         if (H.is_local_net(net)) {
-            if (H.net(net).id() == net) {
-                prev_C_0[H.local_id_net(net)] = new_C_0;
-            }
+            assert(H.net(net).id() == net);
+            prev_C_0[H.local_id_net(net)] = new_C_0;
         }
     }
 
