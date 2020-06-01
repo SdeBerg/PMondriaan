@@ -136,7 +136,7 @@ void contraction::assign_all_vertices_(pmondriaan::hypergraph& H, long part) {
         auto id = free_vertex.first;
         auto weight = free_vertex.second;
         H.add_vertex(id, std::vector<long>(), weight);
-        H(id).set_part(part);
+        H(H.local_id(id)).set_part(part);
     }
 }
 
