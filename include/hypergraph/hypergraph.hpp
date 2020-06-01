@@ -160,6 +160,8 @@ class hypergraph {
 
     long local_id(long global_id) {
         assert(global_to_local.find(global_id) != global_to_local.end());
+        assert(global_to_local[global_id] >= 0 &&
+               (size_t)global_to_local[global_id] < vertices_.size());
         return global_to_local[global_id];
     }
 
