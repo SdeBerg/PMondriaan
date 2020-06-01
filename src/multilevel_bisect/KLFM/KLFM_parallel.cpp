@@ -50,9 +50,20 @@ long KLFM_par(bulk::world& world,
     auto C_loc = init_counts(H);
     H.sort_vertices_on_part(C_loc);
 
+    // Each processor is responsible for keeping track of some nets
+    auto net_partition =
+    bulk::block_partitioning<1>({H.global_number_nets()},
+                                {(size_t)world.active_processors()});
+    auto cost_my_nets =
+    bulk::coarray<long>(world, net_partition.local_count(world.rank()));
+    auto procs_my_nets =
+    std::vector<std::vector<int>>(net_partition.local_count(world.rank()));
+    init_cost_my_nets(world, H, cost_my_nets, procs_my_nets);
+
     while (pass < opts.KLFM_max_passes) {
-        auto result = KLFM_pass_par(world, H, C, C_loc, prev_cut_size, total_weights,
-                                    max_weight_0, max_weight_1, opts, rng);
+        auto result = KLFM_pass_par(world, H, C, C_loc, prev_cut_size,
+                                    total_weights, max_weight_0, max_weight_1,
+                                    cost_my_nets, procs_my_nets, opts, rng);
         if (result < prev_cut_size) {
             prev_cut_size = result;
         } else {
@@ -74,6 +85,8 @@ long KLFM_pass_par(bulk::world& world,
                    std::array<long, 2>& total_weights,
                    long max_weight_0,
                    long max_weight_1,
+                   bulk::coarray<long>& cost_my_nets,
+                   std::vector<std::vector<int>>& procs_my_nets,
                    pmondriaan::options& opts,
                    std::mt19937& rng) {
     auto s = world.rank();
@@ -90,10 +103,9 @@ long KLFM_pass_par(bulk::world& world,
     /*We keep track of the previous counts we are responsible for,
     we have the count of part 0 and the count of part 1 for each net */
     auto previous_C = bulk::coarray<long>(world, net_partition.local_count(s) * 2);
-    auto cost_my_nets = bulk::coarray<long>(world, net_partition.local_count(s));
 
     auto cut_size_my_nets =
-    init_previous_C(world, H, C, previous_C, cost_my_nets, net_partition);
+    init_previous_C(world, H, C, previous_C, net_partition, cost_my_nets);
     // Store the previous counts of part 0, so we can easily check for change later
     auto prev_C_0 = std::vector<long>(H.nets().size());
     for (auto i = 0u; i < H.nets().size(); i++) {
@@ -173,9 +185,9 @@ long KLFM_pass_par(bulk::world& world,
         }
         world.sync();
 
-        cut_size_my_nets =
-        update_C(world, H, C, previous_C, prev_C_0, update_nets, net_partition,
-                 cost_my_nets, cut_size_my_nets, true, gain_structure);
+        cut_size_my_nets = update_C(world, H, C, previous_C, prev_C_0, update_nets,
+                                    net_partition, cost_my_nets, procs_my_nets,
+                                    cut_size_my_nets, true, gain_structure);
 
         // We also send all processors the total cutsize of the nets this p is responsible for
         cut_size = bulk::sum(world, cut_size_my_nets);
@@ -228,14 +240,37 @@ long KLFM_pass_par(bulk::world& world,
     }
     world.sync();
     update_C(world, H, C, previous_C, prev_C_0, update_nets, net_partition,
-             cost_my_nets, cut_size_my_nets, false, gain_structure);
+             cost_my_nets, procs_my_nets, cut_size_my_nets, false, gain_structure);
 
     auto total_change = bulk::sum(world, weight_change);
     total_weights[0] += total_change;
     total_weights[1] -= total_change;
 
     return best_cut_size;
-} // namespace pmondriaan
+}
+
+void init_cost_my_nets(bulk::world& world,
+                       pmondriaan::hypergraph& H,
+                       bulk::coarray<long>& cost_my_nets,
+                       std::vector<std::vector<int>>& procs_my_nets) {
+    auto p = world.active_processors();
+    auto s = world.rank();
+    auto queue_procs = bulk::queue<long, int>(world);
+    auto net_partition =
+    bulk::block_partitioning<1>({H.global_number_nets()}, {(size_t)p});
+    for (auto i = 0u; i < net_partition.local_count(s); i++) {
+        cost_my_nets[i] = 0;
+    }
+    for (auto net : H.nets()) {
+        auto owner = net_partition.owner(net.id());
+        cost_my_nets(owner)[net_partition.local(net.id())[0]] = net.cost();
+        queue_procs(owner).send(net.id(), s);
+    }
+    world.sync();
+    for (const auto& [net_id, proc] : queue_procs) {
+        procs_my_nets[net_partition.local(net_id)[0]].push_back(proc);
+    }
+}
 
 /**
  * Initializes the previous_C counts using communication and return the cutsize
@@ -245,12 +280,9 @@ long init_previous_C(bulk::world& world,
                      pmondriaan::hypergraph& H,
                      std::vector<std::vector<long>>& C,
                      bulk::coarray<long>& previous_C,
-                     bulk::coarray<long>& cost_my_nets,
-                     bulk::block_partitioning<1>& net_partition) {
+                     bulk::block_partitioning<1>& net_partition,
+                     bulk::coarray<long>& cost_my_nets) {
     auto s = world.rank();
-    for (auto i = 0u; i < net_partition.local_count(s); i++) {
-        cost_my_nets[i] = 0;
-    }
     for (auto i = 0u; i < net_partition.local_count(s) * 2; i++) {
         previous_C[i] = 0;
     }
@@ -260,8 +292,6 @@ long init_previous_C(bulk::world& world,
         previous_C(net_partition.owner(net))[2 * net_partition.local(net)[0]] = C[i][0];
         previous_C(net_partition.owner(net))[(2 * net_partition.local(net)[0]) + 1] =
         C[i][1];
-        cost_my_nets(net_partition.owner(net))[net_partition.local(net)[0]] =
-        H.net(net).cost();
     }
     world.sync();
 
@@ -449,6 +479,7 @@ long update_C(bulk::world& world,
               bulk::queue<long, long>& update_nets,
               bulk::partitioning<1>& net_partition,
               bulk::coarray<long>& cost_my_nets,
+              std::vector<std::vector<int>>& procs_my_nets,
               long cut_size_my_nets,
               bool update_g,
               pmondriaan::gain_structure& gain_structure) {
@@ -477,7 +508,7 @@ long update_C(bulk::world& world,
     // We send changed counts to all processors
     for (auto i = 0u; i < net_partition.local_count(s); i++) {
         if (previous_C[2 * i] != C_new[i][0]) {
-            for (int t = 0; t < world.active_processors(); t++) {
+            for (auto t : procs_my_nets[i]) {
                 update_nets(t).send(net_partition.global(i, s)[0], C_new[i][0]);
             }
             previous_C[2 * i] = C_new[i][0];
@@ -488,10 +519,9 @@ long update_C(bulk::world& world,
 
     // We make prev_C_0 up-to-date with the new info
     for (const auto& [net, new_C_0] : update_nets) {
-        if (H.is_local_net(net)) {
-            assert(H.net(net).id() == net);
-            prev_C_0[H.local_id_net(net)] = new_C_0;
-        }
+        assert(H.is_local_net(net));
+        assert(H.net(net).id() == net);
+        prev_C_0[H.local_id_net(net)] = new_C_0;
     }
 
     if (update_g) {

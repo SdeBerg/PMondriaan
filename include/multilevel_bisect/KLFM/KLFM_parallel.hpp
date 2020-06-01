@@ -40,8 +40,19 @@ long KLFM_pass_par(bulk::world& world,
                    std::array<long, 2>& total_weights,
                    long max_weight_0,
                    long max_weight_1,
+                   bulk::coarray<long>& cost_my_nets,
+                   std::vector<std::vector<int>>& procs_my_nets,
                    pmondriaan::options& opts,
                    std::mt19937& rng);
+
+/**
+ * Initializes the cost of the nets a processor is responsible for. Also stores
+ * what processors have vertices in each of these nets.
+ */
+void init_cost_my_nets(bulk::world& world,
+                       pmondriaan::hypergraph& H,
+                       bulk::coarray<long>& cost_my_nets,
+                       std::vector<std::vector<int>>& procs_my_nets);
 
 /**
  * Initializes the previous_C counts using communication and return the cutsize
@@ -51,8 +62,8 @@ long init_previous_C(bulk::world& world,
                      pmondriaan::hypergraph& H,
                      std::vector<std::vector<long>>& C,
                      bulk::coarray<long>& previous_C,
-                     bulk::coarray<long>& cost_my_nets,
-                     bulk::block_partitioning<1>& net_partition);
+                     bulk::block_partitioning<1>& net_partition,
+                     bulk::coarray<long>& cost_my_nets);
 
 /**
  * Updates the gain values that were outdated.
@@ -97,6 +108,7 @@ long update_C(bulk::world& world,
               bulk::queue<long, long>& update_nets,
               bulk::partitioning<1>& net_partition,
               bulk::coarray<long>& cost_my_nets,
+              std::vector<std::vector<int>>& procs_my_nets,
               long cut_size_my_nets,
               bool update_g,
               pmondriaan::gain_structure& gain_structure);

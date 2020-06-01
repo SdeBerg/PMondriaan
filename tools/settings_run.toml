@@ -1,4 +1,4 @@
-file="../test/data/matrices/gemat11/gemat11.mtx"
+file="../test/data/matrices/mhd4800b/mhd4800b.mtx"
 processors=4
 parts=2
 eps=0.03

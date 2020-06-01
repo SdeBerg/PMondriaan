@@ -79,13 +79,39 @@ TEST(KLFMParallel, InitPreviousC) {
         auto net_partition = bulk::block_partitioning<1>({H.global_number_nets()}, 2);
         auto previous_C = bulk::coarray<long>(world, net_partition.local_count(s) * 2);
         auto cost_my_nets = bulk::coarray<long>(world, net_partition.local_count(s));
+        auto procs_my_nets =
+        std::vector<std::vector<int>>(net_partition.local_count(s));
+        init_cost_my_nets(world, H, cost_my_nets, procs_my_nets);
         auto cut_size_my_nets =
-        init_previous_C(world, H, C, previous_C, cost_my_nets, net_partition);
+        init_previous_C(world, H, C, previous_C, net_partition, cost_my_nets);
         if (s == 0) {
             ASSERT_EQ(cut_size_my_nets, 2);
         }
         if (s == 1) {
             ASSERT_EQ(cut_size_my_nets, 0);
+        }
+    });
+}
+
+TEST(KLFMParallel, InitCostNets) {
+    environment env;
+    env.spawn(2, [](bulk::world& world) {
+        auto s = world.rank();
+        std::stringstream mtx_ss(mtx_three_nonzeros);
+        auto hypergraph = read_hypergraph_istream(mtx_ss, world, "degree");
+        auto H = hypergraph.value();
+        auto net_partition = bulk::block_partitioning<1>({H.global_number_nets()}, 2);
+        auto cost_my_nets = bulk::coarray<long>(world, net_partition.local_count(s));
+        auto procs_my_nets =
+        std::vector<std::vector<int>>(net_partition.local_count(s));
+        init_cost_my_nets(world, H, cost_my_nets, procs_my_nets);
+
+        if (s == 0) {
+            ASSERT_EQ(cost_my_nets[0], 1);
+            ASSERT_EQ(cost_my_nets[1], 1);
+            ASSERT_EQ(procs_my_nets[0].size(), 2);
+            ASSERT_EQ(procs_my_nets[1].size(), 1);
+            ASSERT_EQ(procs_my_nets[1][0], 0);
         }
     });
 }
