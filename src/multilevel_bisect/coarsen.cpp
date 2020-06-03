@@ -230,6 +230,7 @@ void send_information_matches(bulk::world& world,
             assert(t >= 0 && t < world.active_processors());
             info_queue(t).send(prev_sample - t * sample_size,
                                total_weight_sample, nets_vector, cost_nets);
+            assert(prev_sample - t * sample_size >= 0);
             total_weight_sample = 0;
             total_nets_sample.clear();
         }
@@ -243,17 +244,19 @@ void send_information_matches(bulk::world& world,
     }
 
     // We send all information about the last sample
-    assert(sample_size > 0);
-    long t = prev_sample / sample_size;
-    auto nets_vector = std::vector<long>();
-    auto cost_nets = std::vector<long>();
-    for (auto n : total_nets_sample) {
-        nets_vector.push_back(n);
-        cost_nets.push_back(H.net(n).cost());
+    if (prev_sample != -1) {
+        assert(sample_size > 0);
+        long t = prev_sample / sample_size;
+        auto nets_vector = std::vector<long>();
+        auto cost_nets = std::vector<long>();
+        for (auto n : total_nets_sample) {
+            nets_vector.push_back(n);
+            cost_nets.push_back(H.net(n).cost());
+        }
+        assert(t >= 0 && t < world.active_processors());
+        info_queue(t).send(prev_sample - t * sample_size, total_weight_sample,
+                           nets_vector, cost_nets);
     }
-    assert(t >= 0 && t < world.active_processors());
-    info_queue(t).send(prev_sample - t * sample_size, total_weight_sample,
-                       nets_vector, cost_nets);
 
     world.sync();
 }
@@ -297,6 +300,8 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
     auto sample_total_weight = std::vector<long>(samples.size(), 0);
     auto sample_net_lists = std::vector<std::unordered_set<long>>(samples.size());
     for (const auto& [sample, weight, nets, cost_nets] : matches) {
+        assert(sample >= 0 && (size_t)sample < sample_total_weight.size() &&
+               (size_t)sample < sample_net_lists.size());
         sample_total_weight[sample] += weight;
         sample_net_lists[sample].insert(nets.begin(), nets.end());
         for (auto i = 0u; i < nets.size(); i++) {
