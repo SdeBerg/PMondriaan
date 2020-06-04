@@ -499,26 +499,28 @@ std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph&
     }
     world.sync();
 
-    auto size_nets =
-    bulk::coarray<size_t>(world, net_partition.local_count(world.rank()));
-    for (auto i = 0u; i < net_partition.local_count(world.rank()); i++) {
-        size_nets[i] = 0;
-    }
+    auto size_nets = std::vector<size_t>(net_partition.local_count(world.rank()), 0);
+
     for (const auto& [id, size] : net_size_queue) {
-        size_nets[net_partition.local({(size_t)id})[0]] += size;
+        auto local_id = net_partition.local({(size_t)id})[0];
+        assert(local_id >= 0 && local_id < size_nets.size());
+        size_nets[local_id] += size;
     }
 
-    auto future_result = std::vector<bulk::future<size_t>>();
-    for (auto i = 0u; i < nets.size(); i++) {
-        auto owner = net_partition.owner(nets[i].id());
-        assert(owner >= 0 && owner < world.active_processors());
-        auto remote_index = net_partition.local(nets[i].id())[0];
-        future_result.push_back(size_nets(owner)[remote_index].get());
+    for (auto i = 0u; i < size_nets.size(); i++) {
+        if (size_nets[i] > 0) {
+            for (int t = 0; t < world.active_processors(); t++) {
+                net_size_queue(t).send(net_partition.global(i, world.rank())[0],
+                                       size_nets[i]);
+            }
+        }
     }
     world.sync();
-    auto result = std::vector<size_t>(nets.size());
-    for (auto i = 0u; i < nets.size(); i++) {
-        result[i] = future_result[i].value();
+    auto result = std::vector<size_t>(nets.size(), 0);
+    for (const auto& [id, size] : net_size_queue) {
+        if (H.is_local_net(id)) {
+            result[H.local_id_net(id)] = size;
+        }
     }
     H.set_global_net_sizes(result);
     return result;
