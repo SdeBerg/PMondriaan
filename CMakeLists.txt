@@ -26,8 +26,8 @@ set(LIB_SOURCES
 add_library(PMondriaan ${LIB_SOURCES})
 
 set(EXTERNAL_LIBS
-  "bulk_thread"
   "CLI11::CLI11"
+  "bulk"
 )
 
 target_link_libraries(PMondriaan PUBLIC ${EXTERNAL_LIBS})
@@ -66,8 +66,13 @@ foreach(source_file ${TEST_SOURCES})
 	target_link_libraries(${source_name} PMondriaan)
 endforeach(source_file)
 
-add_executable(Run_PMondriaan "tools/PMondriaan.cpp")
-target_link_libraries(Run_PMondriaan PMondriaan)
+add_executable(Run_PMondriaan_thread "tools/PMondriaan.cpp")
+target_link_libraries(Run_PMondriaan_thread PMondriaan "bulk_thread")
+
+if(TARGET bulk_mpi)
+  add_executable(Run_PMondriaan_mpi "tools/PMondriaan.cpp")
+  target_link_libraries(Run_PMondriaan_mpi PMondriaan "bulk_mpi")
+endif()
 
 set(
 	UNIT_TEST_SOURCES
