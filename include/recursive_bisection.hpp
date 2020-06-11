@@ -55,4 +55,20 @@ long reduce_surplus(bulk::world& world,
  */
 void reorder_hypergraph(pmondriaan::hypergraph& H, long start, long& end, long label_low, long label_high);
 
+/**
+ * Removes all cut nets from the hypergraph when the cut net metric is used.
+ * The nets are stored in the cut_nets vector, to later add them to the hypergraph again.
+ */
+void remove_cut_nets(bulk::world& world,
+                     bulk::world& sub_world,
+                     pmondriaan::hypergraph& H,
+                     std::vector<pmondriaan::net>& cut_nets);
+
+/**
+ * Adds all cut nets to the hypergraph again when the cut net metric is used.
+ */
+void add_cut_nets(bulk::world& world,
+                  pmondriaan::hypergraph& H,
+                  std::vector<pmondriaan::net>& cut_nets);
+
 } // namespace pmondriaan

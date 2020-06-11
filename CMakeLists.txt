@@ -77,6 +77,7 @@ endif()
 set(
 	UNIT_TEST_SOURCES
 	"unittest/test_main.cpp"
+	"unittest/recursive_test.cpp"
 	"unittest/hypergraph/readhypergraph_test.cpp"
 	"unittest/hypergraph/hypergraph_test.cpp"
 	"unittest/hypergraph/contraction_test.cpp"

@@ -38,7 +38,6 @@ TEST(BisectMultilevel, SeqBisectMultilevel) {
             ASSERT_NE(v.part(), -1);
         }
         ASSERT_GE(pmondriaan::cutsize(H, opts.metric), 18);
-        world.log("Cut %d", pmondriaan::cutsize(H, opts.metric));
     });
 }
 
@@ -69,7 +68,6 @@ TEST(BisectMultilevel, ParBisectMultilevel) {
             ASSERT_NE(v.part(), -1);
         }
         ASSERT_GE(pmondriaan::cutsize(world, H, opts.metric), 18);
-        world.log("Cut %d", pmondriaan::cutsize(world, H, opts.metric));
     });
 }
 

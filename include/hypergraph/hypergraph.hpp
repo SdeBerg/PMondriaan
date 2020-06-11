@@ -137,6 +137,8 @@ class hypergraph {
     // removes a free vertex from the vertex list
     void remove_free_vertex(long id);
 
+    void remove_net(long id) { remove_net_by_index(local_id_net(id)); }
+
     // removes a net and the net from all net lists of vertices
     void remove_net_by_index(long index);
 

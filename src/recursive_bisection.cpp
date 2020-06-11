@@ -54,11 +54,15 @@ void recursive_bisect(bulk::world& world,
         jobs.push(pmondriaan::work_item(start, end, labels.low, labels.high, weight_mypart));
     }
 
+    // When using the cutnet metric, we store the cut nets in this vector and remove them from the graph
+    auto cut_nets = std::vector<pmondriaan::net>();
+    long splits = 0; // the number of splits done by this processor
+
     opts.sample_size = opts.sample_size / p;
 
     // while we need to give more than one label and need to use more than one processor, we bisect the hypergraph in parallel
     while ((labels.length() > 0) && (p > 1)) {
-
+        splits++;
         long k_ = labels.length() + 1;
 
         long k_low = k_ / 2;
@@ -97,6 +101,10 @@ void recursive_bisect(bulk::world& world,
                                labels.high - (1 - my_part) * k_high};
 
         if (new_labels.length() > 0) {
+
+            if (opts.metric == pmondriaan::m::cut_net) {
+                remove_cut_nets(world, *sub_world, H, cut_nets);
+            }
 
             long new_max_local_weight;
             if (my_part == 0) {
@@ -149,6 +157,7 @@ void recursive_bisect(bulk::world& world,
         weight_mypart = job.weight();
 
         while (labels.length() > 0) {
+            splits++;
             long k_ = labels.length() + 1;
 
             long k_low = k_ / 2;
@@ -172,7 +181,18 @@ void recursive_bisect(bulk::world& world,
             }
             weight_mypart = weight_parts[0];
             labels = labels_0;
+
+            if (opts.metric == pmondriaan::m::cut_net && !jobs.empty()) {
+                remove_cut_nets(world, *sub_world, H, cut_nets);
+            }
         }
+    }
+
+    if (opts.metric == pmondriaan::m::cut_net) {
+        if (splits * 2 < k) {
+            remove_cut_nets(world, *sub_world, H, cut_nets);
+        }
+        add_cut_nets(world, H, cut_nets);
     }
 
     world.sync();
@@ -231,7 +251,7 @@ long redistribute_hypergraph(bulk::world& world,
     if (p_low > 0) {
         reduce_surplus(world, H, label_low, all_surplus_0, q, cost_queue);
     } else {
-        long i = H.size();
+        long i = H.size() - 1;
         while (i >= 0) {
             if (H(i).part() == label_low) {
                 std::move(H.vertices().begin() + i, H.vertices().begin() + i + 1,
@@ -349,6 +369,115 @@ void reorder_hypergraph(pmondriaan::hypergraph& H, long start, long& end, long l
     }
     end--;
     H.update_map();
+}
+
+/**
+ * Removes all cut nets from the hypergraph when the cut net metric is used.
+ * The nets are stored in the cut_nets vector, to later add them to the hypergraph again.
+ */
+void remove_cut_nets(bulk::world& world,
+                     bulk::world& sub_world,
+                     pmondriaan::hypergraph& H,
+                     std::vector<pmondriaan::net>& cut_nets) {
+    auto queue = bulk::queue<long>(world);
+    if (sub_world.active_processors() == 1) {
+        for (auto& net : H.nets()) {
+            auto vertices = net.vertices();
+            auto label = H(H.local_id(vertices[0])).id();
+            for (auto v : vertices) {
+                if (label != H(H.local_id(v)).id()) {
+                    for (auto t = 0; t < world.active_processors(); t++) {
+                        queue(t).send(net.id());
+                    }
+                    break;
+                }
+            }
+        }
+    } else {
+        auto net_partition =
+        bulk::block_partitioning<1>({H.global_number_nets()},
+                                    {(size_t)sub_world.active_processors()});
+
+        // this queue contains the label of a net
+        auto labels = bulk::queue<long, long>(sub_world);
+        for (auto& net : H.nets()) {
+            auto label_net = H(H.local_id(net.vertices()[0])).part();
+            for (auto& v : net.vertices()) {
+                if (label_net != H(H.local_id(v)).id()) {
+                    label_net = -1;
+                    break;
+                }
+            }
+            labels(net_partition.owner(net.id())).send(net.id(), label_net);
+        }
+        sub_world.sync();
+
+        auto total_cut =
+        std::vector<int>(net_partition.local_size(world.rank())[0], -2);
+        for (const auto& [net, label_net] : labels) {
+            if (total_cut[net_partition.local(net)[0]] == -2) {
+                total_cut[net_partition.local(net)[0]] = label_net;
+                if (label_net == -1) {
+                    for (auto t = 0; t < world.active_processors(); t++) {
+                        queue(t).send(net);
+                    }
+                }
+            } else if (total_cut[net_partition.local(net)[0]] >= 0 &&
+                       total_cut[net_partition.local(net)[0]] != label_net) {
+                total_cut[net_partition.local(net)[0]] = -1;
+                for (auto t = 0; t < world.active_processors(); t++) {
+                    queue(t).send(net);
+                }
+            }
+        }
+    }
+
+    world.sync();
+    for (const auto& net_id : queue) {
+        if (H.is_local_net(net_id)) {
+            auto& net = H.net(net_id);
+            cut_nets.push_back(pmondriaan::net(net.id(), net.vertices(), net.cost()));
+            H.remove_net(net_id);
+        }
+    }
+}
+
+/**
+ * Adds all cut nets to the hypergraph again when the cut net metric is used.
+ */
+void add_cut_nets(bulk::world& world,
+                  pmondriaan::hypergraph& H,
+                  std::vector<pmondriaan::net>& cut_nets) {
+    // We use this queue to send the net id, vertex, and net cost of non local vertices
+    auto queue = bulk::queue<long, long, long>(world);
+    for (auto& net : cut_nets) {
+        auto new_v = std::vector<long>();
+        for (auto v : net.vertices()) {
+            if (!H.is_local(v)) {
+                for (auto t = 0; t < world.active_processors(); t++) {
+                    queue(t).send(net.id(), v, net.cost());
+                }
+            } else {
+                new_v.push_back(v);
+            }
+        }
+        if (net.vertices().size() > 0) {
+            H.add_net(net.id(), new_v, net.cost());
+        }
+    }
+    world.sync();
+
+    // We now add the received nets
+    for (const auto& [net, v, cost] : queue) {
+        if (H.is_local(v)) {
+            if (!H.is_local_net(net)) {
+                H.add_net(net, {v}, cost);
+            } else {
+                H.net(net).vertices().push_back(v);
+            }
+            H(H.local_id(v)).nets().push_back(net);
+        }
+    }
 }
 
 } // namespace pmondriaan

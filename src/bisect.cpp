@@ -204,8 +204,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
             world.log("s: %d, time in initial partitioning: %lf", world.rank(),
                       time.get_change());
         }
-        world.log("s %d: cut after initial partitioning: %d, epsilon: %lf",
-                  world.rank(), cut, load_balance(HC_list[nc_tot], 2));
+        world.log("s %d: cut after initial partitioning: %d", world.rank(), cut);
     }
 
     while (nc_tot > nc_par) {

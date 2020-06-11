@@ -1,12 +1,12 @@
-file="../test/data/matrices/mhd4800b/mhd4800b.mtx"
+file="../test/data/matrices/west0381/west0381.mtx"
 processors=4
-parts=2
+parts=7
 eps=0.03
 eta=0.03
 weights="degree"
 bisect=1
 sampling=0
-metric=1
+metric=0
 sample_size=300
 max_cluster_size=30
 lp_max_iter=25
