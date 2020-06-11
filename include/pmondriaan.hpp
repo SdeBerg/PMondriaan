@@ -16,5 +16,6 @@
 #include <options.hpp>
 #include <recursive_bisection.hpp>
 #include <util/interval.hpp>
+#include <util/random_hypergraph.hpp>
 #include <util/write_partitioning.hpp>
 #include <work_item.hpp>

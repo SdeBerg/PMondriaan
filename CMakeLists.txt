@@ -22,6 +22,7 @@ set(LIB_SOURCES
   "src/multilevel_bisect/KLFM/KLFM_parallel.cpp"
   "src/multilevel_bisect/KLFM/gain_buckets.cpp"
   "src/util/write_partitioning.cpp"
+  "src/util/random_hypergraph.cpp"
 )
 add_library(PMondriaan ${LIB_SOURCES})
 
@@ -58,6 +59,7 @@ set(
 	#"coarsening.cpp"
 	#"bipartition.cpp"
 	#"lp_bisect.cpp"
+	"create_random_hypergraph.cpp"
 )
 
 foreach(source_file ${TEST_SOURCES})
