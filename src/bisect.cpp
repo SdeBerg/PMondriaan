@@ -1,3 +1,4 @@
+#include <limits>
 #include <math.h>
 #include <random>
 #include <stdlib.h>
@@ -13,7 +14,7 @@
 #include "util/interval.hpp"
 
 namespace parameters {
-constexpr long stopping_time_par = 5;
+constexpr long stopping_time_par = 3;
 }
 constexpr bool print_time = true;
 
@@ -228,6 +229,10 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         // we find the best solution of all partitioners
         bulk::var<long> cut_size(world);
         cut_size = cut;
+        if (HC_list[nc_par].weight_part(0) > max_weight_0 ||
+            HC_list[nc_par].weight_part(1) > max_weight_1) {
+            cut_size = std::numeric_limits<long>::max();
+        }
         auto best_proc = pmondriaan::owner_min(cut_size);
 
         // the processor that has found the best solution now sends the labels to all others
