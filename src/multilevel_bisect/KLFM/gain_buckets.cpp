@@ -63,8 +63,11 @@ void gain_buckets::print() {
 
 long gain_buckets::find_next_index() {
     auto index = max_index_present;
+    if (index == -1) {
+        return -1;
+    }
     long min_index = gain_to_index(min_value_present);
-    while (buckets[index].empty() && (index >= min_index)) {
+    while ((index >= min_index) && buckets[index].empty()) {
         index--;
     }
     max_index_present = index;
