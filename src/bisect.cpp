@@ -110,13 +110,16 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         size_t coarsening_nrvertices_par =
         std::max(opts.coarsening_nrvertices, world.active_processors() * opts.sample_size *
                                              parameters::stopping_time_par);
-
+        double ratio = 1.0;
         while ((HC_list[nc_par].global_size() > coarsening_nrvertices_par) &&
-               (nc_par < opts.coarsening_maxrounds)) {
+               (nc_par < opts.coarsening_maxrounds) && ratio > 0.05) {
             C_list.push_back({});
             HC_list.push_back(coarsen_hypergraph_par(world, HC_list[nc_par],
                                                      C_list[nc_par + 1], opts, rng));
             nc_par++;
+            ratio =
+            (double)(HC_list[nc_par - 1].global_size() - HC_list[nc_par].global_size()) /
+            (double)HC_list[nc_par - 1].global_size();
             if (world.rank() == 0) {
                 if (print_time) {
                     world.log("s: %d, time in iteration par coarsening: %lf",
