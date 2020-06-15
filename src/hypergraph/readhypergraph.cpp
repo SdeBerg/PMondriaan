@@ -27,7 +27,7 @@ read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
 
     size_t E, V;
     uint64_t L;
-
+    uint64_t nz = 0;
     std::string line;
     std::getline(fin, line);
     std::string object, format, field, symmetry;
@@ -51,6 +51,7 @@ read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
     std::getline(fin, line);
 
     if (symmetry == "general") {
+        nz = L;
         while (std::getline(fin, line)) {
             size_t e, v;
             std::istringstream iss(line);
@@ -64,6 +65,7 @@ read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
         if (symmetry == "symmetric") {
             while (std::getline(fin, line)) {
                 size_t e, v;
+                nz++;
                 std::istringstream iss(line);
                 if (!(iss >> e >> v)) {
                     return std::nullopt;
@@ -71,6 +73,7 @@ read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
                 nets_list[v - 1].push_back(e - 1);
                 vertex_list[e - 1].push_back(v - 1);
                 if (v != e) {
+                    nz++;
                     nets_list[e - 1].push_back(v - 1);
                     vertex_list[v - 1].push_back(e - 1);
                 }
@@ -102,7 +105,7 @@ read_hypergraph_istream(std::istream& fin, std::string mode_weight) {
         }
     }
 
-    auto H = pmondriaan::hypergraph(V, E, vertices, nets, L);
+    auto H = pmondriaan::hypergraph(V, E, vertices, nets, nz);
     remove_free_nets(H, 0);
     return std::move(H);
 }
@@ -118,6 +121,7 @@ read_hypergraph_istream(std::istream& fin, bulk::world& world, std::string mode_
 
     size_t E, V;
     uint64_t L;
+    uint64_t nz = 0;
 
     std::string line;
     std::getline(fin, line);
@@ -145,6 +149,7 @@ read_hypergraph_istream(std::istream& fin, bulk::world& world, std::string mode_
     std::getline(fin, line);
     if (symmetry == "general") {
         for (auto i = 0u; i < L; i++) {
+            nz = L;
             std::getline(fin, line);
             size_t e, v;
             std::istringstream iss(line);
@@ -160,6 +165,7 @@ read_hypergraph_istream(std::istream& fin, bulk::world& world, std::string mode_
     } else {
         if (symmetry == "symmetric") {
             for (auto i = 0u; i < L; i++) {
+                nz++;
                 std::getline(fin, line);
                 size_t e, v;
                 std::istringstream iss(line);
@@ -175,6 +181,9 @@ read_hypergraph_istream(std::istream& fin, bulk::world& world, std::string mode_
                     long v_loc = partitioning.local({e - 1})[0];
                     nets_list[v_loc].push_back(v - 1);
                     vertex_list[v - 1].push_back(e - 1);
+                }
+                if (v != e) {
+                    nz++;
                 }
             }
         } else {
@@ -206,7 +215,7 @@ read_hypergraph_istream(std::istream& fin, bulk::world& world, std::string mode_
         }
     }
 
-    auto H = pmondriaan::hypergraph(V, E, vertices, nets, L);
+    auto H = pmondriaan::hypergraph(V, E, vertices, nets, nz);
 
     pmondriaan::remove_free_nets(world, H, 0);
     return std::move(H);
