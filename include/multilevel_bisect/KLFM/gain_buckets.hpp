@@ -20,7 +20,7 @@ class gain_buckets {
     gain_buckets(long size) {
         buckets = std::vector<std::unordered_set<long>>(size);
         max_index_present = size;
-        min_value_present = index_to_gain(size);
+        min_value_present = index_to_gain(size - 1);
     }
 
     void insert(long id, long gain);
