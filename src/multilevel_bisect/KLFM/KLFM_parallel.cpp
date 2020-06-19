@@ -519,8 +519,6 @@ long update_C(bulk::world& world,
 
     // We make prev_C_0 up-to-date with the new info
     for (const auto& [net, new_C_0] : update_nets) {
-        assert(H.is_local_net(net));
-        assert(H.net(net).id() == net);
         prev_C_0[H.local_id_net(net)] = new_C_0;
     }
 

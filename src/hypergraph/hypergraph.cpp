@@ -503,7 +503,6 @@ std::vector<size_t> global_net_sizes(bulk::world& world, pmondriaan::hypergraph&
 
     for (const auto& [id, size] : net_size_queue) {
         auto local_id = net_partition.local({(size_t)id})[0];
-        assert(local_id >= 0 && local_id < size_nets.size());
         size_nets[local_id] += size;
     }
 

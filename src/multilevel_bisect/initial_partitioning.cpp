@@ -31,13 +31,15 @@ long initial_partitioning(pmondriaan::hypergraph& H,
     long best_cut = std::numeric_limits<long>::max();
     long best_imbalance = std::numeric_limits<long>::max();
     auto time = bulk::util::timer();
+    std::cout << "Nets size " << H.nets().size();
     for (long i = 0; i < 10; i++) {
         time.get();
         // counts of all labels for each net
         auto C =
         std::vector<std::vector<long>>(H.nets().size(), std::vector<long>(2, 0));
 
-        auto L = label_propagation_bisect(H, C, 100, max_weight_0, max_weight_1, rng);
+        auto L = label_propagation_bisect(H, C, opts.lp_max_iterations,
+                                          max_weight_0, max_weight_1, rng);
         for (auto i = 0u; i < H.size(); i++) {
             H(i).set_part(L[i]);
         }
