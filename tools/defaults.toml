@@ -1,5 +1,5 @@
 p=4
-k=4
+k=2
 file="../test/data/matrices/mhd4800b/mhd4800b.mtx"
 eps=0.03
 eta=0.03
