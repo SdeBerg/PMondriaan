@@ -174,9 +174,9 @@ void request_matches(pmondriaan::hypergraph& H,
         long number_to_send = std::min(match_list.size(), opts.coarsening_max_clustersize);
         for (long j = 0; j < number_to_send; j++) {
             auto& match = match_list[j];
-            C.add_match(i, std::get<1>(match), std::get<0>(match));
             auto t = std::get<0>(match);
-            accepted_matches(std::get<0>(match)).send(i + s * opts.sample_size, std::get<1>(match));
+            C.add_match(i, std::get<1>(match), t);
+            accepted_matches(t).send(i + s * opts.sample_size, std::get<1>(match));
         }
     }
     world.sync();
