@@ -26,7 +26,7 @@ PMondriaan can run on distributed-memory, shared-memory, and hybrid systems. Bui
 
 ## Output
 
-The distributed hypergraph graph is stored using an adapted Matrix Market format, similar to the one used in [Mondriaan](https://webspace.science.uu.nl/~bisse101/Mondriaan/Docs/USERS_GUIDE.html) (again using the row-net model). The structure of the format is as follows:
+The distributed hypergraph graph is stored using an adapted Matrix Market format, similar to the one used in [Mondriaan](https://webspace.science.uu.nl/~bisse101/Mondriaan/Docs/USERS_GUIDE.html) (using the row-net model to translate the hypergraph into a sparse matrix). The structure of the format is as follows:
 
 ```
 %%MatrixMarket distributed-matrix coordinate pattern general
@@ -66,10 +66,10 @@ The numerical options are often used to optimise given partitioning methods. Som
 
 Parameter | Default | Description
 ------------ | ------------- | ------------- 
-`p` | 4 | Integer. Range >= 1. Number of processors to be used.
 `k` | 2 | Integer. Range >= 2. Number of parts to partition the hypergraph into.
-`eps` | 0.03 | Double. Range = [0,1]. Balance constraint the partitioning should adhere to.
-`eta` | 0.03 | Double. Range = [0,1]. Balance constraint of the division of the hypergraph over the processors that is used during the computation.
+`p` | 4 | Integer. Range >= 1. Number of processors to be used.
+`eps` | 0.03 | Double. Range = [0,1]. Balance constraint the that the output partitioning into k parts should adhere to.
+`eta` | 0.03 | Double. Range = [0,1]. Balance constraint of the division of the hypergraph over the p processors that is used during the computation.
 `sample_size` | 10000 | Integer. Range >= 1. Global sample size. Should be adjusted to the problem at hand. Usually 1-2% of the vertices should be selected as a sample.
 `max_cluster_size` | 50 | Integer. Range >= 2. Recommended range: 20-50. The maximum size of a cluster in the coarsening phase. Should be adjusted for the problem at hand.
 `lp_max_iter` | 25 | Integer. Range >= 1. Maximum number of iterations in label propagation step used in the initial partitioning (and in sampling if the label propagation mode is selected).
