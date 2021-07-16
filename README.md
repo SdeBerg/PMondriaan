@@ -8,7 +8,7 @@ PMondriaan was created in the C++ programming language, using the Bulk software 
 
 The easiest way to get started is to download the source code from this Github page. PMondriaan uses three submodules: Bulk, CLI11, and googletest. To clone the directory including all submodules you can use `git clone --recurse-submodules`. Otherwise, you can initiate the submodules separately using `git submodule update --init --recursive` from your PMondriaan directory.
 
-PMondriaan requires an up-to-date compiler that supports C++17, e.g. GCC >= 7.0, or Clang >= 4.0. To build PMondriaan do:
+PMondriaan requires an up-to-date compiler that supports C++17, e.g. GCC >= 7.0, or Clang >= 4.0. To build PMondriaan using CMake do:
 
     mkdir build
     cd build
