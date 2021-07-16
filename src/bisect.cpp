@@ -90,8 +90,10 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                                     interval labels,
                                     std::mt19937& rng) {
 
+    // a hypergraph containing only vertices with indices between start and end is created
     auto H_reduced = pmondriaan::create_new_hypergraph(world, H, start, end);
 
+    // the number of parallel coursenings performed
     size_t nc_par = 0;
 
     auto HC_list = std::vector<pmondriaan::hypergraph>{H_reduced};
@@ -106,20 +108,26 @@ std::vector<long> bisect_multilevel(bulk::world& world,
 
     auto time = bulk::util::timer();
 
+    // PARALLEL COARSENING PHASE
     if (world.active_processors() > 1) {
+        // size of the hypergraph at which we stop the pararallel coarsening process
         size_t coarsening_nrvertices_par =
         std::max(opts.coarsening_nrvertices, world.active_processors() * opts.sample_size *
                                              parameters::stopping_time_par);
+
         double ratio = 1.0;
         while ((HC_list[nc_par].global_size() > coarsening_nrvertices_par) &&
                (nc_par < opts.coarsening_maxrounds) && ratio > 0.05) {
+
             C_list.push_back({});
             HC_list.push_back(coarsen_hypergraph_par(world, HC_list[nc_par],
                                                      C_list[nc_par + 1], opts, rng));
+
             nc_par++;
             ratio =
             (double)(HC_list[nc_par - 1].global_size() - HC_list[nc_par].global_size()) /
             (double)HC_list[nc_par - 1].global_size();
+
             if (world.rank() == 0) {
                 if (print_time) {
                     world.log("s: %d, time in iteration par coarsening: %lf",
@@ -140,6 +148,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                 vertex_queue(t).send(v.id(), v.weight(), v.nets());
             }
         }
+        // we also communicate the cost of all local nets
         auto net_cost_queue = bulk::queue<long, long>(world);
         for (auto& n : HC_list[nc_par].nets()) {
             for (long t = 0; t < world.rank(); t++) {
@@ -159,6 +168,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                       world.rank(), time.get_change());
         }
 
+        // the received nets and vertices are added to the coarsened hypergraph
         for (const auto& [net_id, cost] : net_cost_queue) {
             HC_list[nc_par].add_net(net_id, std::vector<long>(), cost);
         }
@@ -180,6 +190,8 @@ std::vector<long> bisect_multilevel(bulk::world& world,
     if (world.active_processors() > 1) {
         max_rounds++;
     }
+
+    // SEQUENTIAL COARSENING PHASE
     while ((HC_list[nc_tot].global_size() > opts.coarsening_nrvertices) &&
            (nc_tot < max_rounds)) {
         C_list.push_back({});
@@ -200,6 +212,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
     }
 
     time.get();
+    // INITIAL PARTITIONING PHASE
     auto cut = pmondriaan::initial_partitioning(HC_list[nc_tot], max_weight_0,
                                                 max_weight_1, opts, rng);
 
@@ -211,6 +224,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         world.log("s %d: cut after initial partitioning: %d", world.rank(), cut);
     }
 
+    // SEQUENTIAL UNCOARSENING PHASE
     while (nc_tot > nc_par) {
         nc_tot--;
         cut = pmondriaan::uncoarsen_hypergraph_seq(HC_list[nc_tot + 1], HC_list[nc_tot],
@@ -228,8 +242,9 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         }
     }
 
+    // PARALLEL UNCOARSENING PHASE
     if (world.active_processors() > 1) {
-        // we find the best solution of all partitioners
+        // we find the best solution so far of all partitioners
         bulk::var<long> cut_size(world);
         cut_size = cut;
         if (HC_list[nc_par].weight_part(0) > max_weight_0 ||
@@ -250,6 +265,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         }
         world.sync();
 
+        // the local coarsened hypergraph is given the received labels
         nc_par--;
         for (const auto& [id, part] : label_queue) {
             if (HC_list[nc_par].is_local(id)) {
@@ -288,6 +304,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         C_list[0].assign_free_vertices(HC_list[0], max_weight_0, max_weight_1, rng);
     }
 
+    // the vertices of the original hypergraph are labelled using the labeling of the reduced hypergraph
     for (auto& v : HC_list[0].vertices()) {
         H(H.local_id(v.id())).set_part(labels(v.part()));
     }
