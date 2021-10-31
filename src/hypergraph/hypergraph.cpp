@@ -27,6 +27,10 @@ void vertex::remove_net(long n) {
     }
 }
 
+void vertex::add_net(long n) {
+    nets_.push_back(n);
+}
+
 long hypergraph::total_weight() {
     long total = 0;
     for (auto v : vertices_) {
@@ -66,6 +70,9 @@ void hypergraph::add_net(long id, std::vector<long> vertices, long cost) {
     if (net_global_to_local.count(id) == 0) {
         nets_.push_back(pmondriaan::net(id, vertices, cost));
         net_global_to_local[id] = (long)nets_.size() - 1;
+        for (auto v : vertices) {
+            vertices_[global_to_local[v]].add_net(id);
+        }
     }
 }
 
@@ -557,6 +564,86 @@ void remove_free_nets(pmondriaan::hypergraph& H, size_t max_size) {
     for (auto n : remove_nets) {
         H.remove_net_by_index(H.local_id_net(n));
     }
+}
+
+/**
+ * Simplifies all duplicate nets.
+ */
+void simplify_duplicate_nets(pmondriaan::hypergraph& H) {
+    std::map<std::vector<long>, int> edge_counts;
+    std::map<std::vector<long>, long> ids;
+
+    for (auto n : H.nets()) {
+        edge_counts[n.vertices()] += n.cost();
+        ids[n.vertices()] = n.id();
+    }
+
+    std::unordered_set<long> remove_nets;
+
+    for (auto n = 0u; n < H.nets().size(); n++) {
+        if(ids[H.nets()[n].vertices()] != H.nets()[n].id()) {
+            remove_nets.insert(H.nets()[n].id());
+        }
+        else {
+            H.nets()[n].set_cost(edge_counts[H.nets()[n].vertices()]);
+        }
+    }
+
+    for (auto n : remove_nets) {
+        H.remove_net_by_index(H.local_id_net(n));
+    }
+}
+
+/**
+ * Break triples.
+ */
+void break_triples(pmondriaan::hypergraph& H) {
+    std::unordered_set<long> remove_nets;
+
+    long cid = 1;
+
+    for (auto n = 0u; n < H.nets().size(); n++) {
+        if (H.nets()[n].id() >= cid) {
+            cid = H.nets()[n].id() + 1;
+        }
+    }
+
+    for (auto n = 0u; n < H.nets().size(); n++) {
+        long cost = H.nets()[n].cost();
+        if(H.nets()[n].size() != 3) {
+            H.nets()[n].set_cost(cost * 2);
+        }
+        else {
+            remove_nets.insert(H.nets()[n].id());
+            std::vector<long> verts1;
+            std::vector<long> verts2;
+            std::vector<long> verts3;
+            verts1.push_back(H.nets()[n].vertices()[0]);
+            verts1.push_back(H.nets()[n].vertices()[1]);
+            verts2.push_back(H.nets()[n].vertices()[1]);
+            verts2.push_back(H.nets()[n].vertices()[2]);
+            verts3.push_back(H.nets()[n].vertices()[0]);
+            verts3.push_back(H.nets()[n].vertices()[2]);
+            H.add_net(cid + 0, verts1, cost);
+            H.add_net(cid + 1, verts2, cost);
+            H.add_net(cid + 2, verts3, cost);
+            cid += 3;
+        }
+        
+    }
+
+    for (auto n : remove_nets) {
+        H.remove_net_by_index(H.local_id_net(n));
+    }
+
+    simplify_duplicate_nets(H);
+}
+
+/**
+ * Sorts vertices.
+ */
+void sort_verts(pmondriaan::hypergraph& H) {
+    std::sort(H.vertices().begin(), H.vertices().end());
 }
 
 /**

@@ -45,7 +45,7 @@ label_propagation(pmondriaan::hypergraph& H, long l, long max_iter, long min_siz
                 for (auto n : H(i).nets()) {
                     C[H.local_id_net(n)][L[i]]--;
                     for (long j = 0; j < l; j++) {
-                        T[j] += C[H.local_id_net(n)][j];
+                        T[j] += C[H.local_id_net(n)][j] * H.net(n).cost();;
                     }
                 }
 
@@ -126,7 +126,7 @@ std::vector<long> label_propagation_bisect(pmondriaan::hypergraph& H,
             for (auto n : H(i).nets()) {
                 C[H.local_id_net(n)][L[i]]--;
                 for (long j = 0; j < 2; j++) {
-                    T[j] += C[H.local_id_net(n)][j];
+                    T[j] += C[H.local_id_net(n)][j] * H.net(n).cost();;
                 }
             }
 

@@ -27,6 +27,9 @@ long initial_partitioning(pmondriaan::hypergraph& H,
     // pmondriaan::interval labels = {0,1};
     // bisect_random(H, max_weight_0, max_weight_1, 0, H.size(), labels, rng);
 
+    break_triples(H);
+
+
     auto L_best = std::vector<long>(H.size());
     long best_cut = std::numeric_limits<long>::max();
     long best_imbalance = std::numeric_limits<long>::max();
@@ -68,7 +71,7 @@ long initial_partitioning(pmondriaan::hypergraph& H,
         H(i).set_part(L_best[i]);
     }
 
-    return best_cut;
+    return best_cut / 2;
 }
 
 
