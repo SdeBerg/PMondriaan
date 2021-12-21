@@ -27,14 +27,27 @@ long initial_partitioning(pmondriaan::hypergraph& H,
     // pmondriaan::interval labels = {0,1};
     // bisect_random(H, max_weight_0, max_weight_1, 0, H.size(), labels, rng);
 
-    break_triples(H);
+    simplify_duplicate_nets(H);
 
+    bool broken = false;
+
+    unsigned int c = 0;
+    for (auto n = 0u; n < H.nets().size() && broken == false; n++) {
+        if(H.nets()[n].size() == 3) {
+            c++;
+        }
+    }
+
+    if(4 * c > H.nets().size()) {
+        break_triples(H);
+        broken = true;
+    }
 
     auto L_best = std::vector<long>(H.size());
     long best_cut = std::numeric_limits<long>::max();
     long best_imbalance = std::numeric_limits<long>::max();
     auto time = bulk::util::timer();
-    std::cout << "Nets size " << H.nets().size();
+    //std::cout << "Nets size " << H.nets().size();
     for (long i = 0; i < 10; i++) {
         time.get();
         // counts of all labels for each net
@@ -71,7 +84,16 @@ long initial_partitioning(pmondriaan::hypergraph& H,
         H(i).set_part(L_best[i]);
     }
 
-    return best_cut / 2;
+    if(broken && c != 0) {
+        for (auto n = 0u; n < H.nets().size(); n++) {
+            long cost = H.nets()[n].cost();
+            H.nets()[n].set_cost(cost / 2);
+        }
+
+        return best_cut / 2; 
+    }
+
+    return best_cut;
 }
 
 

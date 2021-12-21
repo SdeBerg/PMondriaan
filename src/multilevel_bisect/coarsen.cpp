@@ -356,7 +356,7 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
             float max_ip = 0.0;
             long best_match = -1;
             for (auto u : visited) {
-                ip[u] *= (1.0 / (float)std::min(v.degree(), H(u).degree()));
+                ip[u] *= (1.0 / (float)std::min(v.weight(), H(u).weight()));
                 if ((ip[u] > max_ip) && (matches[u].size() < opts.coarsening_max_clustersize)) {
                     max_ip = ip[u];
                     best_match = u;

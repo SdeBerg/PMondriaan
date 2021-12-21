@@ -81,6 +81,10 @@ class net {
         return (double)cost_ / ((double)global_size_ - 1.0);;
     }
 
+    double label_prop_cost() {
+        return (double)cost_ / ((double) vertices_.size() - 1.0);
+    }
+
     bool operator <(const net& rhs) {
         return scaled_cost() > rhs.scaled_cost();
     }

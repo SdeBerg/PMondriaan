@@ -609,11 +609,16 @@ void break_triples(pmondriaan::hypergraph& H) {
     }
 
     for (auto n = 0u; n < H.nets().size(); n++) {
-        long cost = H.nets()[n].cost();
         if(H.nets()[n].size() != 3) {
+            long cost = H.nets()[n].cost();
             H.nets()[n].set_cost(cost * 2);
         }
-        else {
+    }
+
+    for (auto n = 0u; n < H.nets().size(); n++) {
+        if(H.nets()[n].size() == 3) {
+            auto gs = H.nets()[n].global_size();
+            long cost = H.nets()[n].cost();
             remove_nets.insert(H.nets()[n].id());
             std::vector<long> verts1;
             std::vector<long> verts2;
@@ -627,6 +632,9 @@ void break_triples(pmondriaan::hypergraph& H) {
             H.add_net(cid + 0, verts1, cost);
             H.add_net(cid + 1, verts2, cost);
             H.add_net(cid + 2, verts3, cost);
+            H.net(cid + 0).set_global_size(gs);
+            H.net(cid + 1).set_global_size(gs);
+            H.net(cid + 2).set_global_size(gs);
             cid += 3;
         }
         
