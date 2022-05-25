@@ -17,6 +17,8 @@
 #include "multilevel_bisect/coarsen.hpp"
 #include "multilevel_bisect/sample.hpp"
 
+#include <boost/container/vector.hpp>
+
 namespace pmondriaan {
 
 /**
@@ -322,11 +324,11 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
                                               pmondriaan::hypergraph& H,
                                               pmondriaan::contraction& C,
                                               pmondriaan::options& opts,
-                                              std::mt19937& rng) {
-    simplify_duplicate_nets(H);
-    
-    auto matches = std::vector<std::vector<long>>(H.size(), std::vector<long>());
-    auto matched = std::vector<bool>(H.size(), false);
+                                              std::mt19937& rng,
+                                              std::string limit_edge_size,
+                                              std::string simplify_mode) {
+    auto matches = boost::container::vector<std::vector<long>>(H.size(), std::vector<long>());
+    bool matched[H.size()]{};
     // contains the vertices of the contracted hypergraph
     auto new_v = std::vector<pmondriaan::vertex>();
 
@@ -336,13 +338,18 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
     std::iota(indices.begin(), indices.end(), 0);
     std::shuffle(indices.begin(), indices.end(), rng);
 
+    auto max_size = H.size();
+    if (limit_edge_size == "true") {
+        max_size = opts.coarsening_max_edge_size;
+    }
     for (auto i : indices) {
         auto& v = H(i);
         if (matches[i].empty()) {
             auto visited = std::vector<long>();
             for (auto n_id : v.nets()) {
                 float scaled_cost = H.net(n_id).scaled_cost();
-                for (auto u_id : H.net(n_id).vertices()) {
+                for (auto j = 0u; j < H.net(n_id).vertices().size() && (j < max_size || limit_edge_size != "true"); j++) {
+                    auto u_id = H.net(n_id).vertices()[j];
                     auto u_local = H.local_id(u_id);
                     if ((!matched[u_local]) && (u_local != i)) {
                         if (ip[u_local] == 0.0) {
@@ -357,6 +364,7 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
             long best_match = -1;
             for (auto u : visited) {
                 ip[u] *= (1.0 / (float)std::min(v.weight(), H(u).weight()));
+
                 if ((ip[u] > max_ip) && (matches[u].size() < opts.coarsening_max_clustersize)) {
                     max_ip = ip[u];
                     best_match = u;
@@ -389,7 +397,7 @@ void add_v_to_list(std::vector<pmondriaan::vertex>& v_list, pmondriaan::vertex& 
 pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
                                            pmondriaan::hypergraph& H,
                                            pmondriaan::contraction& C,
-                                           std::vector<std::vector<long>>& matches,
+                                           boost::container::vector<std::vector<long>>& matches,
                                            std::vector<pmondriaan::vertex>& new_vertices) {
     // we new nets to which we will later add the vertices
     auto new_nets = std::vector<pmondriaan::net>();
@@ -434,3 +442,4 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
 }
 
 } // namespace pmondriaan
+

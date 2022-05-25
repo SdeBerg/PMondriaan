@@ -38,7 +38,7 @@ TEST(GainBucket, GainBucketInit) {
     opts.KLFM_max_passes = 1;
     opts.metric = pmondriaan::m::cut_net;
     ASSERT_EQ(pmondriaan::cutsize(H, C), pmondriaan::cutsize(H, opts.metric));
-    auto sol = pmondriaan::initial_partitioning(H, 3, 3, opts, rng);
+    auto sol = pmondriaan::initial_partitioning(H, 3, 3, opts, rng, "none");
     ASSERT_EQ(sol, 0);
 }
 
@@ -50,7 +50,7 @@ TEST(GainBucket, KLFMpass) {
     pmondriaan::options opts;
     opts.KLFM_max_passes = 1;
     opts.metric = pmondriaan::m::cut_net;
-    auto sol = pmondriaan::initial_partitioning(H, 163, 163, opts, rng);
+    auto sol = pmondriaan::initial_partitioning(H, 163, 163, opts, rng, "none");
     ASSERT_LE(H.weight_part(0), 163);
     ASSERT_LE(H.weight_part(1), 163);
     ASSERT_GE(sol, 18);

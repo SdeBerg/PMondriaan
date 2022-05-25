@@ -28,6 +28,9 @@ int main(int argc, char** argv) {
         double eta = 0.10;
         std::string matrix_file;
         std::string hypergraph_weights;
+        std::string breaking_mode;
+        std::string limit_edge_size;
+        std::string simplify_mode;
     };
 
     cli_settings settings;
@@ -53,6 +56,18 @@ int main(int argc, char** argv) {
     app.add_option("--weights", settings.hypergraph_weights,
                    "How the weights of the vertices should be computed");
 
+    CLI::Option* bopt =
+    app.add_option("--breaking_mode", settings.breaking_mode,
+                   "If and how hyperedges are broken up, none value will skip breaking triples, break_triples_in_initial_partitioning will use triple breaking right before initial partitioning only");
+
+    CLI::Option* lopt =
+    app.add_option("--limit_edge_size", settings.limit_edge_size,
+                   "If edge sizes are limited in coarsening, this will ignore any vertices beyond the limit in sequential match finding for vertices");
+
+    CLI::Option* sopt =
+    app.add_option("--simplify_mode", settings.simplify_mode,
+                   "Where to deploy simplification, complete will utilize every method available, parinit will do parallel simplification and initial partitioning but not sequential simplification, sequential only does sequential simplification and initial will only do initial partitioning simplification.");
+
     std::map<std::string, pmondriaan::bisection> bisection_map{
     {"random", pmondriaan::bisection::random},
     {"multilevel", pmondriaan::bisection::multilevel}};
@@ -77,7 +92,14 @@ int main(int argc, char** argv) {
 
     wopt->check(CLI::IsMember({"one", "degree"}));
 
+    bopt->check(CLI::IsMember({"none", "break_triples_in_initial_partitioning"}));
+
+    lopt->check(CLI::IsMember({"true", "false"}));
+
+    sopt->check(CLI::IsMember({"complete", "parinit", "sequential", "initial"}));
+
     app.add_option("--sample_size", options.sample_size, "The sample size used in the coarsening");
+    app.add_option("--coarsening_max_edge_size", options.coarsening_max_edge_size, "The max edge size used in the coarsening");
     app.add_option("--max_cluster_size", options.coarsening_max_clustersize,
                    "The maximum clustersize during coarsening");
     app.add_option("--lp_max_iter", options.lp_max_iterations,
@@ -99,9 +121,12 @@ int main(int argc, char** argv) {
     CLI11_PARSE(app, argc, argv);
 
     environment env;
+    //auto timert = bulk::util::timer();
     /* Start parallel part */
     env.spawn(settings.p, [&settings, &options, &app](bulk::world& world) {
         auto s = world.rank();
+
+        //auto time = bulk::util::timer();
 
         if (s == 0) {
             // write the settings to the defaults file
@@ -110,7 +135,7 @@ int main(int argc, char** argv) {
             out << conf;
             out.close();
         }
-
+        //world.log(settings.matrix_file);
         auto hypergraph = pmondriaan::read_hypergraph(settings.matrix_file, world,
                                                       settings.hypergraph_weights);
 
@@ -121,7 +146,7 @@ int main(int argc, char** argv) {
         auto H = hypergraph.value();
 
         auto time = bulk::util::timer();
-        recursive_bisect(world, H, settings.k, settings.eps, settings.eta, options);
+        recursive_bisect(world, H, settings.k, settings.eps, settings.eta, options, settings.breaking_mode, settings.limit_edge_size, settings.simplify_mode);
         auto time_used = time.get();
 
         auto lb = pmondriaan::load_balance(world, H, settings.k);
@@ -152,7 +177,8 @@ int main(int argc, char** argv) {
         }
 
         world.sync();
+	//world.log("Total main time: %lf", time.get_change());
     });
-
+    //std::cout << "Total main time: " << timert.get_change() << "\n";
     return 0;
 }

@@ -46,7 +46,7 @@ class vertex {
     }
 
     bool operator >(const vertex& rhs) {
-        return deg() < rhs.deg();
+        return deg() > rhs.deg();
     }
 
   private:
@@ -62,7 +62,7 @@ class vertex {
 class net {
   public:
     net(long id, std::vector<long> vertices, long cost = 1)
-    : id_(id), vertices_(vertices), cost_(cost) { }
+    : id_(id), vertices_(vertices), cost_(cost) {}
 
     long id() const { return id_; }
 
@@ -76,13 +76,11 @@ class net {
     void set_global_size(size_t size) { global_size_ = size; }
     void set_cost(long cost) { cost_ = cost; }
     void add_vertex(long v) { vertices_.push_back(v); }
+    void remove_vertex(long v);
+    void pop_back() { vertices_.pop_back(); }
 
     double scaled_cost() const {
-        return (double)cost_ / ((double)global_size_ - 1.0);;
-    }
-
-    double label_prop_cost() {
-        return (double)cost_ / ((double) vertices_.size() - 1.0);
+        return (double)cost_ / ((double)global_size_ - 1.0);
     }
 
     bool operator <(const net& rhs) {
@@ -314,6 +312,11 @@ void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H, size_t max_
  * Removes all free nets.
  */
 void remove_free_nets(pmondriaan::hypergraph& H, size_t max_size);
+
+/**
+ * Simplifies all duplicate nets.
+ */
+void simplify_duplicate_nets(pmondriaan::hypergraph& H);
 
 /**
  * Simplifies all duplicate nets.

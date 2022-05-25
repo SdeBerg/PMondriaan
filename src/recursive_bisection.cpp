@@ -28,7 +28,10 @@ void recursive_bisect(bulk::world& world,
                       long k,
                       double epsilon,
                       double eta,
-                      pmondriaan::options opts) {
+                      pmondriaan::options opts,
+                      std::string breaking_mode,
+                      std::string limit_edge_size,
+                      std::string simplify_mode) {
 
     auto s = world.rank();
     auto p = world.active_processors();
@@ -73,7 +76,7 @@ void recursive_bisect(bulk::world& world,
 
         // part 0 will always have the smallest weight
         auto weight_parts = bisect(*sub_world, H, opts, max_global_weights[0],
-                                   max_global_weights[1], start, end, labels, rng);
+                                   max_global_weights[1], start, end, labels, rng, breaking_mode, limit_edge_size);
 
         auto total_weight_0 = bulk::sum(*sub_world, weight_parts[0]);
         auto total_weight_1 = bulk::sum(*sub_world, weight_parts[1]);
@@ -167,7 +170,7 @@ void recursive_bisect(bulk::world& world,
             compute_max_global_weight(k_, k_low, k_high, weight_mypart, maxweight);
 
             auto weight_parts = bisect(*sub_world, H, opts, max_global_weights[0],
-                                       max_global_weights[1], start, end, labels, rng);
+                                       max_global_weights[1], start, end, labels, rng, breaking_mode, limit_edge_size, simplify_mode);
 
             interval labels_0 = {labels.low, labels.high - k_high};
             interval labels_1 = {labels.low + k_low, labels.high};
@@ -194,6 +197,11 @@ void recursive_bisect(bulk::world& world,
         }
         add_cut_nets(world, H, cut_nets);
     }
+
+    //for (auto& v : H.vertices()) {
+    //    world.log("s: %d, vert: %d, par: %d", world.rank(),
+    //                   v.id() + 1, v.part());
+    //}
 
     world.sync();
 }

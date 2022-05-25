@@ -30,7 +30,7 @@ label_propagation(pmondriaan::hypergraph& H, long l, long max_iter, long min_siz
     std::vector<long> indices(H.size());
     std::iota(indices.begin(), indices.end(), 0);
 
-    auto T = std::vector<long>(l);
+    auto T = std::vector<double>(l);
     bool change = true;
     long iterations = 0;
 
@@ -45,12 +45,12 @@ label_propagation(pmondriaan::hypergraph& H, long l, long max_iter, long min_siz
                 for (auto n : H(i).nets()) {
                     C[H.local_id_net(n)][L[i]]--;
                     for (long j = 0; j < l; j++) {
-                        T[j] += C[H.local_id_net(n)][j] * H.net(n).scaled_cost();
+                        T[j] += ((long)C[H.local_id_net(n)][j]) * H.net(n).scaled_cost();;
                     }
                 }
 
                 // Now compute argmax(T), where we break ties randomly
-                long max = -1;
+                double max = -1;
                 auto label_max = std::vector<long>();
                 for (long j = 0; j < l; j++) {
                     if (T[j] == max) {
@@ -113,7 +113,7 @@ std::vector<long> label_propagation_bisect(pmondriaan::hypergraph& H,
     std::vector<long> indices(H.size());
     std::iota(indices.begin(), indices.end(), 0);
 
-    auto T = std::vector<long>(2);
+    auto T = std::vector<double>(2);
     bool change = true;
     long iterations = 0;
     while (change && (iterations < max_iter)) {
@@ -126,12 +126,12 @@ std::vector<long> label_propagation_bisect(pmondriaan::hypergraph& H,
             for (auto n : H(i).nets()) {
                 C[H.local_id_net(n)][L[i]]--;
                 for (long j = 0; j < 2; j++) {
-                    T[j] += C[H.local_id_net(n)][j]  * H.net(n).scaled_cost();
+                    T[j] += ((double)C[H.local_id_net(n)][j]) * H.net(n).scaled_cost();;
                 }
             }
 
             // Now compute argmax(T), where we break ties randomly
-            long max = -1;
+            double max = -1;
             auto label_max = std::vector<long>();
             for (long j = 0; j < 2; j++) {
                 if (T[j] == max) {

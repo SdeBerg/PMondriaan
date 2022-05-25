@@ -13,6 +13,8 @@
 #include "hypergraph/contraction.hpp"
 #include "hypergraph/hypergraph.hpp"
 
+#include <boost/container/vector.hpp>
+
 namespace pmondriaan {
 
 /**
@@ -61,7 +63,9 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
                                               pmondriaan::hypergraph& H,
                                               pmondriaan::contraction& C,
                                               pmondriaan::options& opts,
-                                              std::mt19937& rng);
+                                              std::mt19937& rng,
+                                              std::string limit_edge_size = "false",
+                                              std::string simplify_mode = "complete");
 
 /**
  * Add a copy of a vertex v to a list of vertices.
@@ -71,7 +75,7 @@ void add_v_to_list(std::vector<pmondriaan::vertex>& v_list, pmondriaan::vertex& 
 pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
                                            pmondriaan::hypergraph& H,
                                            pmondriaan::contraction& C,
-                                           std::vector<std::vector<long>>& matches,
+                                           boost::container::vector<std::vector<long>>& matches,
                                            std::vector<pmondriaan::vertex>& new_vertices);
 
 } // namespace pmondriaan

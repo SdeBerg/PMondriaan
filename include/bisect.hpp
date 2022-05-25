@@ -21,7 +21,10 @@ std::vector<long> bisect(bulk::world& world,
                          long start,
                          long end,
                          interval labels,
-                         std::mt19937& rng);
+                         std::mt19937& rng,
+                         std::string breaking_mode,
+                         std::string limit_edge_size = "false",
+                         std::string simplify_mode = "complete");
 
 /**
  * Randomly bisects a hypergraph under the balance constraint and returns the weights of the two parts.
@@ -45,6 +48,9 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                                     long start,
                                     long end,
                                     interval labels,
-                                    std::mt19937& rng);
+                                    std::mt19937& rng,
+                                    std::string breaking_mode,
+                                    std::string limit_edge_size = "false",
+                                    std::string simplify_mode = "complete");
 
 } // namespace pmondriaan

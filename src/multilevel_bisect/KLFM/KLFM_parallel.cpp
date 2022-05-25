@@ -38,11 +38,15 @@ long KLFM_par(bulk::world& world,
     long prev_cut_size;
 
     // TODO: use C to compute cutsize without communication
+    //auto time = bulk::util::timer();
     if (cut_size == std::numeric_limits<decltype(cut_size)>::max()) {
         prev_cut_size = pmondriaan::cutsize(world, H, opts.metric);
     } else {
         prev_cut_size = cut_size;
     }
+    //if (world.rank() == 0) {
+    //    world.log("s: %d, cutsize computation in klfm par: %lf", world.rank(), time.get_change());
+    //}
     auto total_weights = std::array<long, 2>();
     total_weights[0] = weight_0;
     total_weights[1] = weight_1;
@@ -64,6 +68,9 @@ long KLFM_par(bulk::world& world,
         auto result = KLFM_pass_par(world, H, C, C_loc, prev_cut_size,
                                     total_weights, max_weight_0, max_weight_1,
                                     cost_my_nets, procs_my_nets, opts, rng);
+        //if (world.rank() == 0) {
+        //    world.log("s: %d, prev: %d, new: %d", world.rank(), prev_cut_size, result);
+        //}
         if (result < prev_cut_size) {
             prev_cut_size = result;
         } else {
@@ -119,7 +126,7 @@ long KLFM_pass_par(bulk::world& world,
     bulk::var<long> new_weight_1(world);
     bulk::var<int> done(world);
     done = 0;
-
+    //auto time = bulk::util::timer();
     bool all_done = false;
     while (!all_done) {
         auto prev_total_weights = total_weights;
@@ -131,6 +138,7 @@ long KLFM_pass_par(bulk::world& world,
                                                   std::make_tuple(-1, 0, 0));
         find_top_moves(H, gain_structure, C_loc, moves, total_weights,
                        max_weight_0, max_weight_1, rng);
+
         // Send moves to processor 0
         long tag = 0;
         for (auto& move : moves) {
@@ -184,10 +192,13 @@ long KLFM_pass_par(bulk::world& world,
             }
         }
         world.sync();
-
+        //if (world.rank() == 0) {
+        //    world.log("s: %d, up to update c: %lf", world.rank(), time.get_change());
+        //}
         cut_size_my_nets = update_C(world, H, C, previous_C, prev_C_0, update_nets,
                                     net_partition, cost_my_nets, procs_my_nets,
                                     cut_size_my_nets, true, gain_structure);
+
 
         // We also send all processors the total cutsize of the nets this p is responsible for
         cut_size = bulk::sum(world, cut_size_my_nets);
@@ -431,6 +442,7 @@ long reject_unbalanced_moves(bulk::world& world,
     total_weights[0] += total_balance;
     total_weights[1] -= total_balance;
     while (total_weights[0] > max_weight_0) {
+        //world.log("Unbalanced move rejected, s: %d", world.rank());
         if (received_moves.empty()) {
             break;
         }
@@ -486,6 +498,7 @@ long update_C(bulk::world& world,
     auto s = world.rank();
     auto C_new = std::vector<std::vector<long>>(net_partition.local_count(s),
                                                 std::vector<long>(2, 0));
+
     for (auto i = 0u; i < net_partition.local_count(s); i++) {
         C_new[i][0] = previous_C[2 * i];
         C_new[i][1] = previous_C[(2 * i) + 1];
@@ -505,6 +518,7 @@ long update_C(bulk::world& world,
             }
         }
     }
+
     // We send changed counts to all processors
     for (auto i = 0u; i < net_partition.local_count(s); i++) {
         if (previous_C[2 * i] != C_new[i][0]) {
@@ -521,7 +535,6 @@ long update_C(bulk::world& world,
     for (const auto& [net, new_C_0] : update_nets) {
         prev_C_0[H.local_id_net(net)] = new_C_0;
     }
-
     if (update_g) {
         for (auto i = 0u; i < H.nets().size(); i++) {
             if (prev_C_0[i] != C[i][0]) {

@@ -17,6 +17,7 @@ struct options {
     size_t KLFM_max_passes;
     size_t KLFM_max_no_gain_moves;
     size_t KLFM_par_number_send_moves;
+    size_t coarsening_max_edge_size;
 
     m metric;
     bisection bisection_mode;
@@ -24,3 +25,4 @@ struct options {
 };
 
 } // namespace pmondriaan
+

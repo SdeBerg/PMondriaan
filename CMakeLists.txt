@@ -83,6 +83,7 @@ set(
 	"unittest/hypergraph/readhypergraph_test.cpp"
 	"unittest/hypergraph/hypergraph_test.cpp"
 	"unittest/hypergraph/contraction_test.cpp"
+        "unittest/hypergraph/simplification_test.cpp"
 	"unittest/multilevel_bisect/KLFM/gain_buckets_test.cpp"
 	"unittest/multilevel_bisect/KLFM/KLFM_par_test.cpp"
 	"unittest/multilevel_bisect/KLFM/sort_vertices_test.cpp"

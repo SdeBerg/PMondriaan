@@ -18,7 +18,10 @@ void recursive_bisect(bulk::world& world,
                       long k,
                       double epsilon,
                       double eta,
-                      pmondriaan::options opts);
+                      pmondriaan::options opts,
+                      std::string breaking_mode = "none",
+                      std::string limit_edge_size = "false",
+                      std::string simplify_mode = "complete");
 
 std::vector<long>
 compute_max_global_weight(long k_, long k_low, long k_high, long weight_mypart, long maxweight);

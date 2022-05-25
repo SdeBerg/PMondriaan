@@ -1,4 +1,5 @@
 #include <limits>
+#include <string>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
@@ -22,25 +23,31 @@ long initial_partitioning(pmondriaan::hypergraph& H,
                           long max_weight_0,
                           long max_weight_1,
                           pmondriaan::options& opts,
-                          std::mt19937& rng) {
-
-    // pmondriaan::interval labels = {0,1};
-    // bisect_random(H, max_weight_0, max_weight_1, 0, H.size(), labels, rng);
-
-    simplify_duplicate_nets(H);
-
-    bool broken = false;
-
-    unsigned int c = 0;
-    for (auto n = 0u; n < H.nets().size() && broken == false; n++) {
-        if(H.nets()[n].size() == 3) {
-            c++;
+                          std::mt19937& rng,
+                          std::string breaking_mode) {
+    // Breaking up edges of size 3 if required and the majority of hyperedges are size 2 or 3.
+    int e23count = -1;
+    if (breaking_mode == "break_triples_in_initial_partitioning") {
+        //pmondriaan::interval labels = {0,1};
+        //bisect_random(H, max_weight_0, max_weight_1, 0, H.size(), labels, rng);
+        e23count = 0;
+        for (auto n = 0u; n < H.nets().size(); n++) {
+            if(H.nets()[n].size() < 4) {
+                e23count += 1;
+            }
+            else {
+                e23count -= 2;
+            }
         }
+
+        if(e23count < 0)
+            simplify_duplicate_nets(H);
+        else
+            break_triples(H);
     }
 
-    if(4 * c > H.nets().size()) {
-        break_triples(H);
-        broken = true;
+    if (breaking_mode == "none") {
+        simplify_duplicate_nets(H);
     }
 
     auto L_best = std::vector<long>(H.size());
@@ -65,6 +72,9 @@ long initial_partitioning(pmondriaan::hypergraph& H,
         auto cut = pmondriaan::KLFM(H, C, H.weight_part(0), H.weight_part(1),
                                     max_weight_0, max_weight_1, opts, rng);
 
+        cut = pmondriaan::KLFM(H, C, H.weight_part(0), H.weight_part(1),
+                                    max_weight_0, max_weight_1, opts, rng);
+
         // std::cout << "time KLFM: " << time.get_change() << "(round " << i << ")\n";
 
         long imbalance =
@@ -84,13 +94,8 @@ long initial_partitioning(pmondriaan::hypergraph& H,
         H(i).set_part(L_best[i]);
     }
 
-    if(broken && c != 0) {
-        for (auto n = 0u; n < H.nets().size(); n++) {
-            long cost = H.nets()[n].cost();
-            H.nets()[n].set_cost(cost / 2);
-        }
-
-        return best_cut / 2; 
+    if (breaking_mode == "break_triples_in_initial_partitioning" && e23count >= 0) {
+        return best_cut / 2;
     }
 
     return best_cut;

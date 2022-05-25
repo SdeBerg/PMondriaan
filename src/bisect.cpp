@@ -1,9 +1,10 @@
+
 #include <limits>
 #include <math.h>
 #include <random>
 #include <stdlib.h>
-#include <unordered_set>
 #include <vector>
+#include <unordered_set>
 
 #include "algorithm.hpp"
 #include "bisect.hpp"
@@ -14,12 +15,22 @@
 #include "options.hpp"
 #include "util/interval.hpp"
 
+#include <boost/functional/hash.hpp>
+#include <boost/unordered_map.hpp>
+
 namespace parameters {
 constexpr long stopping_time_par = 3;
 }
 constexpr bool print_time = true;
 
 namespace pmondriaan {
+
+// This is the function used for hashing the vectors, may be very inefficient.
+struct VectorHasher {
+    std::size_t operator()(const std::vector<long> &V) const {
+        return boost::hash_range(V.begin(), V.end());
+    }
+};
 
 /**
  * Bisect a hypergraph using the given bisection method and returns the weights of the two parts.
@@ -32,7 +43,10 @@ std::vector<long> bisect(bulk::world& world,
                          long start,
                          long end,
                          interval labels,
-                         std::mt19937& rng) {
+                         std::mt19937& rng,
+                         std::string breaking_mode,
+                         std::string limit_edge_size,
+                         std::string simplify_mode) {
 
     auto weight_parts = std::vector<long>(2);
     auto p = world.active_processors();
@@ -43,7 +57,7 @@ std::vector<long> bisect(bulk::world& world,
 
     if (opts.bisection_mode == pmondriaan::bisection::multilevel) {
         weight_parts = bisect_multilevel(world, H, opts, max_weight_0,
-                                         max_weight_1, start, end, labels, rng);
+                                         max_weight_1, start, end, labels, rng, breaking_mode, limit_edge_size, simplify_mode);
     }
 
     return weight_parts;
@@ -89,10 +103,17 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                                     long start,
                                     long end,
                                     interval labels,
-                                    std::mt19937& rng) {
+                                    std::mt19937& rng,
+                                    std::string breaking_mode,
+                                    std::string limit_edge_size,
+                                    std::string simplify_mode) {
 
+    auto time = bulk::util::timer();
     auto H_reduced = pmondriaan::create_new_hypergraph(world, H, start, end);
-
+    //auto w_p = std::vector<long>(2);
+    //w_p[0] = 2;
+    //w_p[1] = 2;
+    //return w_p;
     size_t nc_par = 0;
 
     auto HC_list = std::vector<pmondriaan::hypergraph>{H_reduced};
@@ -105,7 +126,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         C_list[0].merge_free_vertices(HC_list[0]);
     }
 
-    auto time = bulk::util::timer();
+    //auto time = bulk::util::timer();
 
     if (world.active_processors() > 1) {
         size_t coarsening_nrvertices_par =
@@ -132,23 +153,104 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         }
 
 
-        std::map<std::vector<long>, int> edge_counts;
-        std::map<std::vector<long>, long> ids;
-        std::unordered_set<long> remove_nets;
+        if (simplify_mode == "complete") {
+            if (world.rank() == 0) {
+                world.log("Size before par simplify: %d", HC_list[nc_par].global_number_nets());
+            }
 
-        for (auto n : HC_list[nc_par].nets()) {
-            edge_counts[n.vertices()] += n.cost();
-            ids[n.vertices()] = n.id();
+            // Communicate globally which net ids belong to the local hypergraphs
+            auto netidowner_queue = bulk::queue<int, long>(world);
+            for (auto n : HC_list[nc_par].nets()) {
+                if (n.size() != n.global_size()) {
+                    for (int t = 0u; t < world.active_processors(); t++) {
+                        if (world.rank() != t) {
+                            netidowner_queue(t).send(world.rank(), n.id());
+                        }
+                    }
+                }
+            }
+            world.sync();
+
+            // Communicate pins targeted only to relevant processors
+            auto addvertex_queue = bulk::queue<int, long, long>(world);
+            for (const auto& [sender, netid] : netidowner_queue) {
+                if (HC_list[nc_par].is_local_net(netid)) {
+                    for(auto v : HC_list[nc_par].net(netid).vertices()) {
+                        addvertex_queue(sender).send(world.rank(), v, netid);
+                    }
+                }
+            }
+            world.sync();
+
+            // Add pins locally from the queues
+            for (const auto& [sender, vtoadd, targetnet] : addvertex_queue) {
+                if (HC_list[nc_par].is_local_net(targetnet)) {
+                    HC_list[nc_par].net(targetnet).add_vertex(vtoadd);
+                }
+            }
+
+            // Initizalize maps for consensus building around hyperedge deletion
+            boost::unordered_map<std::vector<long>, long, VectorHasher> edge_counts;
+            std::unordered_map<long, long> comm_costs;
+            std::unordered_map<long, int> lowest_proc;
+
+            // Inefficient communication where costs are synchronized and 0 cost signifies deletion
+            // This passes tests and is sure to give correct results, more work is needed to get efficient
+            for (auto& n : HC_list[nc_par].nets()) {
+                if(edge_counts.find(n.vertices()) == edge_counts.end()) {
+                    edge_counts[n.vertices()] = n.id();
+                    comm_costs[n.id()] = n.cost();
+                }
+                else {
+                    comm_costs[edge_counts[n.vertices()]] += n.cost();
+                    comm_costs[n.id()] = 0;
+                }
+                lowest_proc[n.id()] = world.rank();
+            }
+
+            // Send costs from previous step
+            auto costsync_queue = bulk::queue<int, long, long>(world);
+            for (const auto& [sender, vtoremove, targetnet] : addvertex_queue) {
+                if (HC_list[nc_par].is_local_net(targetnet)) {
+                    HC_list[nc_par].net(targetnet).remove_vertex(vtoremove);
+                    costsync_queue(sender).send(world.rank(), targetnet, comm_costs[targetnet]);
+                }
+            }
+            world.sync();
+
+            // Set local costs to the cost received from the lowest processor id
+            for (const auto& [sender, commid, commcost] : costsync_queue) {
+                if (lowest_proc[commid] > sender) {
+                    lowest_proc[commid] = sender;
+                    comm_costs[commid] = commcost;
+                }
+            }
+
+            //auto w_p = std::vector<long>(2);
+            //w_p[0] = 2;
+            //w_p[1] = 2;
+            //return w_p;
+
+            HC_list.push_back(HC_list[nc_par]);
+            C_list.push_back({});
+            nc_par++;
+            world.sync();
+
+            // Delete zero cost hyperedges
+            std::unordered_set<long> remove_nets;
+            for (auto& n : HC_list[nc_par].nets()) {
+                if (comm_costs[n.id()] == 0) {
+                    remove_nets.insert(n.id());
+                } else {
+                    n.set_cost(comm_costs[n.id()]);
+                }
+            }
+
+            for (auto n : remove_nets) {
+                HC_list[nc_par].remove_net_by_index(HC_list[nc_par].local_id_net(n));
+            }
+            world.sync();
         }
-
-        // for (auto n = 0u; n < HC_list[nc_par].nets().size(); n++) {
-        //     if(ids[HC_list[nc_par].nets()[n].vertices()] != HC_list[nc_par].nets()[n].id()) {
-        //         HC_list[nc_par].nets()[n].set_cost(0);
-        //     }
-        //     else {
-        //         HC_list[nc_par].nets()[n].set_cost(edge_counts[HC_list[nc_par].nets()[n].vertices()]);
-        //     }
-        // }
 
         // we now communicate the entire hypergraph to all processors using a queue containing id, weight and nets
         auto vertex_queue = bulk::queue<long, long, long[]>(world);
@@ -163,35 +265,19 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         auto net_cost_queue = bulk::queue<long, long>(world);
         for (auto& n : HC_list[nc_par].nets()) {
             for (long t = 0; t < world.rank(); t++) {
-
-
-                //net_cost_queue(t).send(n.id(), n.cost());
-
-
-                if(ids[n.vertices()] != n.id()) {
-                    net_cost_queue(t).send(n.id(), 0);
-                }
-                else {
-                    net_cost_queue(t).send(n.id(), edge_counts[n.vertices()]);
-                }
+                net_cost_queue(t).send(n.id(), n.cost());
             }
             for (long t = world.rank() + 1; t < world.active_processors(); t++) {
-
-
-                //net_cost_queue(t).send(n.id(), n.cost());
-
-
-                if(ids[n.vertices()] != n.id()) {
-                    net_cost_queue(t).send(n.id(), 0);
-                }
-                else {
-                    net_cost_queue(t).send(n.id(), edge_counts[n.vertices()]);
-                }
+                net_cost_queue(t).send(n.id(), n.cost());
             }
         }
-        HC_list.push_back(HC_list[nc_par]);
-        C_list.push_back({});
-        nc_par++;
+
+        if (simplify_mode != "complete") {
+            HC_list.push_back(HC_list[nc_par]);
+            C_list.push_back({});
+            nc_par++;
+        }
+
         world.sync();
 
         if (print_time && (world.rank() == 0)) {
@@ -206,22 +292,14 @@ std::vector<long> bisect_multilevel(bulk::world& world,
             HC_list[nc_par].add_vertex(id, nets, weight);
             HC_list[nc_par].add_to_nets(HC_list[nc_par].vertices().back());
         }
-        
-        for (auto n = 0u; n < HC_list[nc_par].nets().size(); n++) {
-            if(HC_list[nc_par].nets()[n].cost() == 0) {
-                remove_nets.insert(HC_list[nc_par].nets()[n].id());
-            }
-        }
-
-        for (auto n : remove_nets) {
-            HC_list[nc_par].remove_net_by_index(HC_list[nc_par].local_id_net(n));
-        }
 
         if (print_time && (world.rank() == 0)) {
             world.log("s: %d, time in creating new hypergraph: %lf",
                       world.rank(), time.get_change());
         }
-
+    }
+    if (world.rank() == 0) {
+        world.log("Size after par simplify: %d", HC_list[nc_par].nets().size());
     }
 
     time.get();
@@ -237,9 +315,13 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         time.get();
 
         HC_list.push_back(coarsen_hypergraph_seq(world, HC_list[nc_tot],
-                                                 C_list[nc_tot + 1], opts, rng));
+                                                 C_list[nc_tot + 1], opts, rng, limit_edge_size, simplify_mode));
 
         nc_tot++;
+        if (simplify_mode != "initial") {
+            simplify_duplicate_nets(HC_list[nc_tot]);
+        }
+
         if (world.rank() == 0) {
             if (print_time) {
                 world.log("s: %d, time in iteration seq coarsening: %lf",
@@ -252,7 +334,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
 
     time.get();
     auto cut = pmondriaan::initial_partitioning(HC_list[nc_tot], max_weight_0,
-                                                max_weight_1, opts, rng);
+                                                max_weight_1, opts, rng, breaking_mode);
 
     if (world.rank() == 0) {
         if (print_time) {
