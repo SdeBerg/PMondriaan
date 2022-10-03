@@ -17,6 +17,8 @@
 #include "multilevel_bisect/coarsen.hpp"
 #include "multilevel_bisect/sample.hpp"
 
+#include <boost/container/vector.hpp>
+
 namespace pmondriaan {
 
 /**
@@ -88,14 +90,14 @@ void request_matches(pmondriaan::hypergraph& H,
 
     // compute the inner products of the samples and the local vertices
     auto best_ip =
-    std::vector<std::pair<double, long>>(H.size(), std::make_pair(0.0, -1));
-    auto current_ip = std::vector<double>(H.size(), 0.0);
+    std::vector<std::pair<float, long>>(H.size(), std::make_pair(0.0, -1));
+    auto current_ip = std::vector<float>(H.size(), 0.0);
     std::unordered_set<long> changed_indices;
 
     for (const auto& [t, number_sample, sample_nets] : sample_queue) {
         for (auto n_id : sample_nets) {
             if (H.is_local_net(n_id)) {
-                double scaled_cost = H.net(n_id).scaled_cost();
+                float scaled_cost = H.net(n_id).scaled_cost();
                 for (auto u_id : H.net(n_id).vertices()) {
                     current_ip[H.local_id(u_id)] += scaled_cost;
                     changed_indices.insert(H.local_id(u_id));
@@ -104,7 +106,7 @@ void request_matches(pmondriaan::hypergraph& H,
         }
         for (auto index : changed_indices) {
             size_t min_degree = std::min(H(index).degree(), sample_nets.size());
-            current_ip[index] *= 1.0 / (double)min_degree;
+            current_ip[index] *= 1.0 / (float)min_degree;
             if (current_ip[index] > best_ip[index].first) {
                 best_ip[index] =
                 std::make_pair(current_ip[index], t * opts.sample_size + number_sample);
@@ -121,7 +123,7 @@ void request_matches(pmondriaan::hypergraph& H,
 
     // find best sample for vertex v and add it to the list of that sample
     auto requested_matches =
-    std::vector<std::vector<std::pair<long, double>>>(total_samples);
+    std::vector<std::vector<std::pair<long, float>>>(total_samples);
     for (auto& v : H.vertices()) {
         auto local_id = H.local_id(v.id());
         if (best_ip[local_id].second != -1) {
@@ -141,7 +143,7 @@ void request_matches(pmondriaan::hypergraph& H,
     }
 
     // queue for the vertex requests with the sender, the vertex to match with, the id of the vertex that wants to match and their ip
-    auto request_queue = bulk::queue<long, long, long, double>(world);
+    auto request_queue = bulk::queue<long, long, long, float>(world);
     for (long sample = 0; sample < total_samples; sample++) {
         long t = sample / opts.sample_size;
         long number_to_send =
@@ -156,7 +158,7 @@ void request_matches(pmondriaan::hypergraph& H,
     world.sync();
 
     auto matches =
-    std::vector<std::vector<std::tuple<long, long, double>>>(number_local_samples);
+    std::vector<std::vector<std::tuple<long, long, float>>>(number_local_samples);
     for (const auto& [sender, sample, proposer, scip] : request_queue) {
         matches[sample].push_back(std::make_tuple(sender, proposer, scip));
     }
@@ -322,25 +324,32 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
                                               pmondriaan::hypergraph& H,
                                               pmondriaan::contraction& C,
                                               pmondriaan::options& opts,
-                                              std::mt19937& rng) {
-    auto matches = std::vector<std::vector<long>>(H.size(), std::vector<long>());
-    auto matched = std::vector<bool>(H.size(), false);
+                                              std::mt19937& rng,
+                                              std::string limit_edge_size,
+                                              std::string simplify_mode) {
+    auto matches = boost::container::vector<std::vector<long>>(H.size(), std::vector<long>());
+    bool matched[H.size()]{};
     // contains the vertices of the contracted hypergraph
     auto new_v = std::vector<pmondriaan::vertex>();
 
-    auto ip = std::vector<double>(H.size(), 0.0);
+    auto ip = std::vector<float>(H.size(), 0.0);
     // we visit the vertices in a random order
     std::vector<long> indices(H.size());
     std::iota(indices.begin(), indices.end(), 0);
     std::shuffle(indices.begin(), indices.end(), rng);
 
+    auto max_size = H.size();
+    if (limit_edge_size == "true") {
+        max_size = opts.coarsening_max_edge_size;
+    }
     for (auto i : indices) {
         auto& v = H(i);
         if (matches[i].empty()) {
             auto visited = std::vector<long>();
             for (auto n_id : v.nets()) {
-                double scaled_cost = H.net(n_id).scaled_cost();
-                for (auto u_id : H.net(n_id).vertices()) {
+                float scaled_cost = H.net(n_id).scaled_cost();
+                for (auto j = 0u; j < H.net(n_id).vertices().size() && (j < max_size || limit_edge_size != "true"); j++) {
+                    auto u_id = H.net(n_id).vertices()[j];
                     auto u_local = H.local_id(u_id);
                     if ((!matched[u_local]) && (u_local != i)) {
                         if (ip[u_local] == 0.0) {
@@ -351,10 +360,11 @@ pmondriaan::hypergraph coarsen_hypergraph_seq(bulk::world& world,
                 }
             }
 
-            double max_ip = 0.0;
+            float max_ip = 0.0;
             long best_match = -1;
             for (auto u : visited) {
-                ip[u] *= (1.0 / (double)std::min(v.degree(), H(u).degree()));
+                ip[u] *= (1.0 / (float)std::min(v.weight(), H(u).weight()));
+
                 if ((ip[u] > max_ip) && (matches[u].size() < opts.coarsening_max_clustersize)) {
                     max_ip = ip[u];
                     best_match = u;
@@ -387,7 +397,7 @@ void add_v_to_list(std::vector<pmondriaan::vertex>& v_list, pmondriaan::vertex& 
 pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
                                            pmondriaan::hypergraph& H,
                                            pmondriaan::contraction& C,
-                                           std::vector<std::vector<long>>& matches,
+                                           boost::container::vector<std::vector<long>>& matches,
                                            std::vector<pmondriaan::vertex>& new_vertices) {
     // we new nets to which we will later add the vertices
     auto new_nets = std::vector<pmondriaan::net>();
@@ -432,3 +442,4 @@ pmondriaan::hypergraph contract_hypergraph(bulk::world& world,
 }
 
 } // namespace pmondriaan
+

@@ -14,7 +14,7 @@ TEST(InitialPartitioning, initial_partitioning) {
     opts.KLFM_max_passes = 1;
     opts.metric = pmondriaan::m::cut_net;
 
-    auto sol = pmondriaan::initial_partitioning(H, 31, 31, opts, rng);
+    auto sol = pmondriaan::initial_partitioning(H, 31, 31, opts, rng, "none");
     ASSERT_LE(H.weight_part(0), 31);
     ASSERT_LE(H.weight_part(1), 31);
     ASSERT_GE(sol, 6); 

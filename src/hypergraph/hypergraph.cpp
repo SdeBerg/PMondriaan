@@ -17,13 +17,35 @@
 #include "options.hpp"
 #include "util/interval.hpp"
 
+#include <boost/functional/hash.hpp>
+#include <boost/unordered_map.hpp>
+
 namespace pmondriaan {
+
+// Naive and inefficient way to hash nets for mapping.
+struct VectorHasher {
+    std::size_t operator()(const std::vector<long> &V) const {
+        return boost::hash_range(V.begin(), V.end());
+    }
+};
 
 void vertex::remove_net(long n) {
     auto it = std::find(nets_.begin(), nets_.end(), n);
     if (it != nets_.end()) {
         std::iter_swap(it, nets_.end() - 1);
         nets_.pop_back();
+    }
+}
+
+void vertex::add_net(long n) {
+    nets_.push_back(n);
+}
+
+void net::remove_vertex(long v) {
+    auto it = std::find(vertices_.begin(), vertices_.end(), v);
+    if (it != vertices_.end()) {
+        std::iter_swap(it, vertices_.end() - 1);
+        vertices_.pop_back();
     }
 }
 
@@ -66,6 +88,9 @@ void hypergraph::add_net(long id, std::vector<long> vertices, long cost) {
     if (net_global_to_local.count(id) == 0) {
         nets_.push_back(pmondriaan::net(id, vertices, cost));
         net_global_to_local[id] = (long)nets_.size() - 1;
+        for (auto v : vertices) {
+            vertices_[global_to_local[v]].add_net(id);
+        }
     }
 }
 
@@ -288,18 +313,43 @@ std::vector<std::vector<long>> init_counts(bulk::world& world, pmondriaan::hyper
         C_my_nets[net_partition.local(net)[0]] += count;
     }
 
-    // We get the correct values for the needed counts
+    // The following comment contains the more elegant version that seems to be inefficient on some versions of MPI.
+
+    /*// We get the correct values for the needed counts
     auto future_counts = std::vector<bulk::future<long>>();
     for (auto i = 0u; i < local_counts.size(); i++) {
         auto net = H.nets()[i].id();
         future_counts.push_back(
         C_my_nets(net_partition.owner(net))[net_partition.local(net)[0]].get());
     }
+
     world.sync();
+
     for (auto i = 0u; i < local_counts.size(); i++) {
         local_counts[i][0] = future_counts[i].value();
         local_counts[i][1] = (long)H.nets()[i].global_size() - future_counts[i].value();
+    }*/
+
+    auto request_queue = bulk::queue<int, int, long>(world);
+    for (auto i = 0u; i < local_counts.size(); i++) {
+        auto net = H.nets()[i].id();
+        request_queue(net_partition.owner(net)).send(s, i, net);
     }
+    world.sync();
+
+    auto response_queue = bulk::queue<int, long>(world);
+
+    for (const auto& [sender, idx, net] : request_queue) {
+        response_queue(sender).send(idx, C_my_nets[net_partition.local(net)[0]]);
+    }
+
+    world.sync();
+
+    for (const auto& [i, countresponse] : response_queue) {
+        local_counts[i][0] = countresponse;
+        local_counts[i][1] = (long)H.nets()[i].global_size() - countresponse;
+    }
+
     return local_counts;
 }
 
@@ -557,6 +607,94 @@ void remove_free_nets(pmondriaan::hypergraph& H, size_t max_size) {
     for (auto n : remove_nets) {
         H.remove_net_by_index(H.local_id_net(n));
     }
+}
+
+/**
+ * Simplifies all duplicate nets.
+ */
+void simplify_duplicate_nets(pmondriaan::hypergraph& H) {
+    // Initialize maps
+    boost::unordered_map<std::vector<long>, long, VectorHasher> edge_counts;
+    std::vector<long> remove_nets;
+
+    // Simplify nets that are not too large.
+    // Note that smaller hyperedges are more common in most cases, if not then simplification
+    // is of questionable use anyways.
+    // Other than this we just sum the costs for some set of vertices found to map to
+    // a set of identifyer long integers in the pins of a hyperedges.
+    for (auto& n : H.nets()) {
+        if(n.vertices().size() < 100) {
+            if(edge_counts.find(n.vertices()) == edge_counts.end()) {
+                edge_counts[n.vertices()] = n.id();
+            }
+            else {
+                auto& net = H.nets()[H.local_id_net(edge_counts[n.vertices()])];
+                net.set_cost(n.cost() + net.cost());
+                remove_nets.push_back(n.id());
+            }
+        }
+    }
+
+    for (auto n : remove_nets) {
+        H.remove_net_by_index(H.local_id_net(n));
+    }
+
+}
+
+/**
+ * Break triples, this does not account for the policy around the usage..
+ */
+void break_triples(pmondriaan::hypergraph& H) {
+    std::vector<long> remove_nets;
+
+    long cid = 1;
+
+    for (auto n = 0u; n < H.nets().size(); n++) {
+        if (H.nets()[n].id() >= cid) {
+            cid = H.nets()[n].id() + 1;
+        }
+    }
+
+    // Needs to be done through indices because we add nets.
+    for (auto n = 0u; n < H.nets().size(); n++) {
+        long cost = H.nets()[n].cost();
+        if(H.nets()[n].size() != 3) {
+            H.nets()[n].set_cost(cost * 2);
+        }
+    }
+
+    for (auto n = 0u; n < H.nets().size(); n++) {
+        long cost = H.nets()[n].cost();
+        if(H.nets()[n].size() == 3) {
+            remove_nets.push_back(H.nets()[n].id());
+            std::vector<long> verts1;
+            std::vector<long> verts2;
+            std::vector<long> verts3;
+            verts1.push_back(H.nets()[n].vertices()[0]);
+            verts1.push_back(H.nets()[n].vertices()[1]);
+            verts2.push_back(H.nets()[n].vertices()[1]);
+            verts2.push_back(H.nets()[n].vertices()[2]);
+            verts3.push_back(H.nets()[n].vertices()[0]);
+            verts3.push_back(H.nets()[n].vertices()[2]);
+            H.add_net(cid + 0, verts1, cost);
+            H.add_net(cid + 1, verts2, cost);
+            H.add_net(cid + 2, verts3, cost);
+            cid += 3;
+        }
+    }
+
+    for (auto n : remove_nets) {
+        H.remove_net_by_index(H.local_id_net(n));
+    }
+
+    simplify_duplicate_nets(H);
+}
+
+/**
+ * Sorts vertices.
+ */
+void sort_verts(pmondriaan::hypergraph& H) {
+    std::sort(H.vertices().begin(), H.vertices().end());
 }
 
 /**

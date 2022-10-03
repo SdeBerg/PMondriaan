@@ -31,7 +31,7 @@ TEST(BisectMultilevel, SeqBisectMultilevel) {
         opts.coarsening_nrvertices = 40;
         opts.coarsening_maxrounds = 1;
         pmondriaan::interval labels = {0, 3};
-        bisect_multilevel(world, H, opts, 163, 163, 0, H.size(), labels, rng);
+        bisect_multilevel(world, H, opts, 163, 163, 0, H.size(), labels, rng, "none");
         ASSERT_LE(H.weight_part(0), 163);
         ASSERT_LE(H.weight_part(3), 163);
         for (auto v : H.vertices()) {
@@ -60,7 +60,7 @@ TEST(BisectMultilevel, ParBisectMultilevel) {
         opts.coarsening_maxrounds = 1;
         opts.KLFM_par_number_send_moves = 4;
         pmondriaan::interval labels = {0, 3};
-        bisect_multilevel(world, H, opts, 163, 163, 0, H.size(), labels, rng);
+        bisect_multilevel(world, H, opts, 163, 163, 0, H.size(), labels, rng, "none");
         ASSERT_LE(global_weight_part(world, H, 0), 163);
         ASSERT_LE(global_weight_part(world, H, 3), 163);
         ASSERT_EQ(global_weight_part(world, H, 1), 0);

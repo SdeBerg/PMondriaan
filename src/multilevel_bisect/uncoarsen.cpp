@@ -53,9 +53,12 @@ long uncoarsen_hypergraph_par(bulk::world& world,
                               long cut_size,
                               std::mt19937& rng) {
     // We first assign the free vertices of HC greedily such that the imbalance is minimized
+
     auto new_weights = C.assign_free_vertices(world, HC, max_weight_0, max_weight_1, rng);
     uncoarsen_hypergraph(world, HC, H, C);
+
     auto counts = pmondriaan::init_counts(world, H);
+
     return KLFM_par(world, H, counts, new_weights[0], new_weights[1],
                     max_weight_0, max_weight_1, opts, rng, cut_size);
 }

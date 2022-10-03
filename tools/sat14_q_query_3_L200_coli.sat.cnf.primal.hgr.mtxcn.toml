@@ -1,0 +1,17 @@
+p=64
+k=2
+file="../test/data/matrices/benchmark_set_a/sat14_q_query_3_L200_coli.sat.cnf.primal.hgr.mtx"
+eps=0.03
+eta=0.03
+weights="one"
+bisect="multilevel"
+metric="cutnet"
+sampling="random"
+sample_size=6709
+max_cluster_size=50
+lp_max_iter=25
+coarsening_nrvertices = 200
+coarsening_max_rounds = 128
+KLFM_max_passes = 25
+KLFM_max_no_gain_moves = 200
+KLFM_par_send_moves = 20

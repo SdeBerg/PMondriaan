@@ -1,4 +1,5 @@
 #include <random>
+#include <string>
 
 #include <bulk/bulk.hpp>
 #ifdef BACKEND_MPI
@@ -19,6 +20,7 @@ long initial_partitioning(pmondriaan::hypergraph& H,
                           long max_weight_0,
                           long max_weight_1,
                           pmondriaan::options& opts,
-                          std::mt19937& rng);
+                          std::mt19937& rng,
+                          std::string breaking_mode);
 
 } // namespace pmondriaan
