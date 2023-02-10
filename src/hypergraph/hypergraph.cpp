@@ -107,6 +107,14 @@ void hypergraph::remove_net_by_index(long index) {
     net_global_to_local.erase(id);
 }
 
+// sorts the vertices in the nets on their value
+void hypergraph::sort_vertices() {
+    for (auto i = 0u; i < nets_.size(); i++) {
+        auto& net = nets_[i].vertices();
+        std::sort(net.begin(), net.end());
+    }
+}
+
 // sorts the vertices in the nets of part 0 and 1 on their part
 void hypergraph::sort_vertices_on_part(std::vector<std::vector<long>>& C) {
     for (auto i = 0u; i < nets_.size(); i++) {
@@ -556,6 +564,34 @@ void remove_free_nets(pmondriaan::hypergraph& H, size_t max_size) {
     }
     for (auto n : remove_nets) {
         H.remove_net_by_index(H.local_id_net(n));
+    }
+}
+
+/**
+ * Simplifies all duplicate nets for a local hypergraph.
+ */
+void simplify_duplicate_nets(pmondriaan::hypergraph& H) {
+    H.sort_vertices();
+    std::map<std::vector<long>, int> edge_counts;
+    std::map<std::vector<long>, long> ids;
+
+    for (auto n : H.nets()) {
+        edge_counts[n.vertices()] += n.cost();
+        ids[n.vertices()] = n.id();
+    }
+
+    std::vector<long> remove_nets;
+
+    for (auto n : H.nets()) {
+        if (ids[n.vertices()] != n.id()) {
+            remove_nets.push_back(n.id());
+        } else {
+            n.set_cost(edge_counts[n.vertices()]);
+        }
+    }
+
+    for (auto net_id : remove_nets) {
+        H.remove_net(net_id);
     }
 }
 

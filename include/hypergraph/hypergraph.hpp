@@ -62,6 +62,7 @@ class net {
     auto size() const { return vertices_.size(); }
     auto global_size() const { return global_size_; }
 
+    void set_cost(long cost) { cost_ = cost; }
     void set_global_size(size_t size) { global_size_ = size; }
     void add_vertex(long v) { vertices_.push_back(v); }
 
@@ -141,6 +142,9 @@ class hypergraph {
 
     // removes a net and the net from all net lists of vertices
     void remove_net_by_index(long index);
+
+    // sorts the vertices in the nets on their value
+    void sort_vertices();
 
     // sorts the vertices in the nets of part 0 and 1 on their part
     void sort_vertices_on_part(std::vector<std::vector<long>>& C);
@@ -290,6 +294,11 @@ void remove_free_nets(bulk::world& world, pmondriaan::hypergraph& H, size_t max_
  * Removes all free nets.
  */
 void remove_free_nets(pmondriaan::hypergraph& H, size_t max_size);
+
+/**
+ * Simplifies all duplicate nets for a local hypergraph.
+ */
+void simplify_duplicate_nets(pmondriaan::hypergraph& H);
 
 /**
  * Creates a new hypergraph that only contains the vertices of H with local id between start and end.

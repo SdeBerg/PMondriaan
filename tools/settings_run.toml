@@ -1,5 +1,5 @@
 file="../test/data/matrices/dolphins/dolphins.mtx"
-processors=2
+processors=4
 parts=2
 eps=0.03
 eta=0.03
