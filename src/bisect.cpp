@@ -17,6 +17,7 @@ namespace parameters {
 constexpr long stopping_time_par = 3;
 }
 constexpr bool print_time = true;
+constexpr bool simplify_duplicates = true;
 
 namespace pmondriaan {
 
@@ -197,6 +198,17 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         C_list.push_back({});
         time.get();
 
+        if (simplify_duplicates) {
+            simplify_duplicate_nets(HC_list[nc_tot]);
+            if (world.rank() == 0) {
+                if (print_time) {
+                    world.log("s: %d, time seq simplifying duplicate nets: %lf",
+                              world.rank(), time.get_change());
+                    time.get();
+                }
+            }
+        }
+
         HC_list.push_back(coarsen_hypergraph_seq(world, HC_list[nc_tot],
                                                  C_list[nc_tot + 1], opts, rng));
 
@@ -230,6 +242,7 @@ std::vector<long> bisect_multilevel(bulk::world& world,
         cut = pmondriaan::uncoarsen_hypergraph_seq(HC_list[nc_tot + 1], HC_list[nc_tot],
                                                    C_list[nc_tot + 1], opts, max_weight_0,
                                                    max_weight_1, cut, rng);
+
         HC_list.pop_back();
         C_list.pop_back();
 
@@ -239,6 +252,18 @@ std::vector<long> bisect_multilevel(bulk::world& world,
                           world.rank(), time.get_change());
             }
             world.log("s %d: cut after seq uncoarsening: %d", world.rank(), cut);
+        }
+
+        if (simplify_duplicates) {
+            time.get();
+            HC_list[nc_tot].reset_duplicate_nets();
+            if (world.rank() == 0) {
+                if (print_time) {
+                    world.log("s: %d, time in seq resetting duplicate nets: "
+                              "%lf",
+                              world.rank(), time.get_change());
+                }
+            }
         }
     }
 
