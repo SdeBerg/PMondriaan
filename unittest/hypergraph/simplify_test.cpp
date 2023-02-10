@@ -34,6 +34,21 @@ TEST(Simplify, SimplifyDuplicateNets) {
     ASSERT_EQ(H.nets().size(), 5);
     simplify_duplicate_nets(H);
     ASSERT_EQ(H.nets().size(), 3);
+    for (auto net : H.nets()) {
+        if (net.id() == 0 || net.id() == 1) {
+            ASSERT_EQ(net.cost(), 2);
+        }
+        if (net.id() == 2) {
+            ASSERT_EQ(net.cost(), 1);
+        } else {
+            ASSERT_EQ(net.cost(), 2);
+        }
+    }
+    H.reset_duplicate_nets();
+    ASSERT_EQ(H.nets().size(), 5);
+    for (auto net : H.nets()) {
+        ASSERT_EQ(net.cost(), 1);
+    }
 }
 
 } // namespace

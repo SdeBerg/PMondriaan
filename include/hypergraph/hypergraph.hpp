@@ -126,6 +126,10 @@ class hypergraph {
     // add a vertex
     void add_vertex(long id, std::vector<long> nets, long weight = 1);
 
+    void add_net(pmondriaan::net& net) {
+        add_net(net.id(), net.vertices(), net.cost());
+    }
+
     // add a net if it does not exist yet
     void add_net(long id, std::vector<long> vertices, long cost = 1);
 
@@ -142,6 +146,12 @@ class hypergraph {
 
     // removes a net and the net from all net lists of vertices
     void remove_net_by_index(long index);
+
+    // moves a duplicate net to the duplicate_nets vector
+    void remove_duplicate_net(long id, long duplicate_id);
+
+    // moves all duplicate nets back to the hypergraph
+    void reset_duplicate_nets();
 
     // sorts the vertices in the nets on their value
     void sort_vertices();
@@ -223,6 +233,7 @@ class hypergraph {
     size_t nr_nz_;
     std::unordered_map<long, long> global_to_local;
     std::unordered_map<long, long> net_global_to_local;
+    std::vector<std::pair<pmondriaan::net, long>> duplicate_nets_;
 };
 
 /**

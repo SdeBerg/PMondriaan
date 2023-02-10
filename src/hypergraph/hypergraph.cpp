@@ -107,6 +107,21 @@ void hypergraph::remove_net_by_index(long index) {
     net_global_to_local.erase(id);
 }
 
+// moves a duplicate net to the duplicate_nets vector
+void hypergraph::remove_duplicate_net(long id, long duplicate_id) {
+    duplicate_nets_.push_back(std::make_pair(net(id), duplicate_id));
+    remove_net(id);
+}
+
+// moves all duplicate nets back to the hypergraph
+void hypergraph::reset_duplicate_nets() {
+    for (auto& duplicate : duplicate_nets_) {
+        add_net(duplicate.first);
+        long new_cost = net(duplicate.second).cost() - duplicate.first.cost();
+        net(duplicate.second).set_cost(new_cost);
+    }
+}
+
 // sorts the vertices in the nets on their value
 void hypergraph::sort_vertices() {
     for (auto i = 0u; i < nets_.size(); i++) {
@@ -571,27 +586,28 @@ void remove_free_nets(pmondriaan::hypergraph& H, size_t max_size) {
  * Simplifies all duplicate nets for a local hypergraph.
  */
 void simplify_duplicate_nets(pmondriaan::hypergraph& H) {
+    // sort the vertices in each net so that each duplicate is considered equal
     H.sort_vertices();
-    std::map<std::vector<long>, int> edge_counts;
+    std::map<std::vector<long>, int> edge_costs;
     std::map<std::vector<long>, long> ids;
 
     for (auto n : H.nets()) {
-        edge_counts[n.vertices()] += n.cost();
+        edge_costs[n.vertices()] += n.cost();
         ids[n.vertices()] = n.id();
     }
 
-    std::vector<long> remove_nets;
+    std::vector<std::pair<long, long>> remove_nets;
 
-    for (auto n : H.nets()) {
+    for (auto& n : H.nets()) {
         if (ids[n.vertices()] != n.id()) {
-            remove_nets.push_back(n.id());
+            remove_nets.push_back(std::make_pair(n.id(), ids[n.vertices()]));
         } else {
-            n.set_cost(edge_counts[n.vertices()]);
+            n.set_cost(edge_costs[n.vertices()]);
         }
     }
 
-    for (auto net_id : remove_nets) {
-        H.remove_net(net_id);
+    for (auto net : remove_nets) {
+        H.remove_duplicate_net(net.first, net.second);
     }
 }
 
