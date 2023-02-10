@@ -44,10 +44,22 @@ TEST(Simplify, SimplifyDuplicateNets) {
             ASSERT_EQ(net.cost(), 2);
         }
     }
+    for (auto v : H.vertices()) {
+        ASSERT_EQ(v.nets().size(), 1);
+    }
+
+
     H.reset_duplicate_nets();
     ASSERT_EQ(H.nets().size(), 5);
     for (auto net : H.nets()) {
         ASSERT_EQ(net.cost(), 1);
+    }
+    for (auto v : H.vertices()) {
+        if (v.id() == 0 || v.id() == 2 || v.id() == 1) {
+            ASSERT_EQ(v.nets().size(), 2);
+        } else {
+            ASSERT_EQ(v.nets().size(), 1);
+        }
     }
 }
 

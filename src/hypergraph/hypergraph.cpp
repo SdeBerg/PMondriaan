@@ -61,6 +61,14 @@ void hypergraph::add_vertex(long id, std::vector<long> nets, long weight) {
     global_to_local[id] = (long)vertices_.size() - 1;
 }
 
+// add a local net that was previously removed as duplicate
+void hypergraph::add_local_net(pmondriaan::net& net) {
+    add_net(net.id(), net.vertices(), net.cost());
+    for (auto& vertex : net.vertices()) {
+        vertices_[local_id(vertex)].add_net(net.id());
+    }
+}
+
 // add a net if it does not exist yet
 void hypergraph::add_net(long id, std::vector<long> vertices, long cost) {
     if (net_global_to_local.count(id) == 0) {
@@ -116,7 +124,7 @@ void hypergraph::remove_duplicate_net(long id, long duplicate_id) {
 // moves all duplicate nets back to the hypergraph
 void hypergraph::reset_duplicate_nets() {
     for (auto& duplicate : duplicate_nets_) {
-        add_net(duplicate.first);
+        add_local_net(duplicate.first);
         long new_cost = net(duplicate.second).cost() - duplicate.first.cost();
         net(duplicate.second).set_cost(new_cost);
     }

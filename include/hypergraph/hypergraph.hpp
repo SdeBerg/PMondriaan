@@ -35,6 +35,7 @@ class vertex {
     void set_id(long value) { id_ = value; }
     void add_weight(long value) { weight_ += value; }
     void set_part(long value) { part_ = value; }
+    void add_net(long id) { nets_.push_back(id); }
 
     void remove_net(long n);
 
@@ -126,9 +127,8 @@ class hypergraph {
     // add a vertex
     void add_vertex(long id, std::vector<long> nets, long weight = 1);
 
-    void add_net(pmondriaan::net& net) {
-        add_net(net.id(), net.vertices(), net.cost());
-    }
+    // adds a local net that was previously removed as duplicate
+    void add_local_net(pmondriaan::net& net);
 
     // add a net if it does not exist yet
     void add_net(long id, std::vector<long> vertices, long cost = 1);
