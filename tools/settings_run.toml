@@ -1,5 +1,5 @@
-file="../test/data/matrices/dolphins/dolphins.mtx"
-processors=4
+file="../test/data/matrices/marine1/marine1.mtx"
+processors=32
 parts=2
 eps=0.03
 eta=0.03
@@ -7,7 +7,7 @@ weights="degree"
 bisect=1
 sampling=0
 metric=1
-sample_size=10000
+sample_size=5000
 max_cluster_size=50
 lp_max_iter=25
 coarsening_nrvertices=200

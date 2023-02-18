@@ -31,7 +31,7 @@ long initial_partitioning(pmondriaan::hypergraph& H,
     long best_cut = std::numeric_limits<long>::max();
     long best_imbalance = std::numeric_limits<long>::max();
     auto time = bulk::util::timer();
-    std::cout << "Nets size " << H.nets().size();
+    
     for (long i = 0; i < 10; i++) {
         time.get();
         // counts of all labels for each net

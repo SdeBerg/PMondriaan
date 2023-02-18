@@ -14,4 +14,3 @@ build/
 
 !test/data/matrices/dolphins/*.mtx
 !test/data/matrices/cage3/*.mtx
-!tools/results/*
